@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "home": "Home",
+    "concerts": "Concerts",
+    "dashboard": "Dashboard",
+    "backToHome": "Back to Home",
+    "backToConcerts": "Back to Concerts",
+    "browseConcerts": "Browse Concerts"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "getStarted": "Get Started",
+    "welcomeBack": "Welcome back!",
+    "signedInMessage": "You're already signed in. Ready to explore your organ music library?",
+    "goToDashboard": "Go to Dashboard"
+  },
+  "home": {
+    "title": "Welcome to 🎹 Orgle Stream",
+    "subtitle": "Stream your local organ music with a modern, secure platform. Discover, share, and enjoy beautiful organ compositions from around the world.",
+    "browseConcerts": "Browse Upcoming Concerts",
+    "features": {
+      "highQualityAudio": {
+        "title": "High-Quality Audio",
+        "description": "Crystal-clear organ recordings with lossless audio quality"
+      },
+      "organLibrary": {
+        "title": "Organ Library",
+        "description": "Extensive collection of classical and contemporary organ works"
+      },
+      "communityRecordings": {
+        "title": "Community Recordings",
+        "description": "Share your organ performances and discover new talent"
+      }
+    }
+  },
+  "concerts": {
+    "title": "Upcoming Organ Concerts",
+    "subtitle": "Discover live organ performances from around the world",
+    "viewDetails": "View Concert Details",
+    "programHighlights": "Program Highlights",
+    "morePieces": "more pieces",
+    "newsletter": {
+      "title": "Get Concert Updates",
+      "description": "Be the first to know about new concerts and special performances. Sign up for our newsletter!",
+      "subscribe": "Subscribe",
+      "emailPlaceholder": "Enter your email"
+    }
+  },
+  "concert": {
+    "notFound": "Concert Not Found",
+    "notFoundMessage": "The concert you're looking for doesn't exist.",
+    "viewAllConcerts": "View All Concerts",
+    "countdown": "Countdown to Concert",
+    "liveNow": "🔴 LIVE NOW!",
+    "watchLive": "🎥 Watch Live Stream",
+    "venue": "Venue Information",
+    "program": "Concert Program",
+    "totalDuration": "Total Duration",
+    "quickActions": "Quick Actions",
+    "setReminder": "🔔 Set Reminder",
+    "shareConcert": "📧 Share Concert",
+    "getTickets": "🎫 Get Tickets",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "seconds": "Seconds",
+    "recentActivity": "Recent Organ Activity"
+  },
+  "dashboard": {
+    "title": "Your Organ Music Dashboard",
+    "welcome": "Welcome to your Dashboard",
+    "listeningTime": "Listening Time",
+    "favoritePieces": "Favorite Pieces",
+    "organPlaylists": "Organ Playlists",
+    "savedCompositions": "Saved compositions",
+    "createdCollections": "Created collections",
+    "thisMonth": "This month",
+    "recentActivity": "Recent Activity",
+    "listenedTo": "Listened to",
+    "addedToFavorites": "Added to favorites",
+    "createdPlaylist": "Created playlist",
+    "ago": "ago"
+  },
+  "languages": {
+    "english": "English",
+    "slovenian": "Slovenščina",
+    "italian": "Italiano",
+    "selectLanguage": "Select Language"
+  }
+}

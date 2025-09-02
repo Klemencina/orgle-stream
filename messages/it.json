@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "home": "Home",
+    "concerts": "Concerti",
+    "dashboard": "Dashboard",
+    "backToHome": "Torna alla Home",
+    "backToConcerts": "Torna ai Concerti",
+    "browseConcerts": "Sfoglia Concerti"
+  },
+  "auth": {
+    "signIn": "Accedi",
+    "signUp": "Registrati",
+    "getStarted": "Inizia",
+    "welcomeBack": "Bentornato!",
+    "signedInMessage": "Sei già connesso. Pronto a esplorare la tua libreria di musica per organo?",
+    "goToDashboard": "Vai alla Dashboard"
+  },
+  "home": {
+    "title": "Benvenuto in 🎹 Orgle Stream",
+    "subtitle": "Trasmetti la tua musica per organo locale con una piattaforma moderna e sicura. Scopri, condividi e goditi bellissime composizioni per organo da tutto il mondo.",
+    "browseConcerts": "Sfoglia Concerti in Arrivo",
+    "features": {
+      "highQualityAudio": {
+        "title": "Audio di Alta Qualità",
+        "description": "Registrazioni di organo cristalline con qualità audio lossless"
+      },
+      "organLibrary": {
+        "title": "Biblioteca Organo",
+        "description": "Vasta collezione di opere classiche e contemporanee per organo"
+      },
+      "communityRecordings": {
+        "title": "Registrazioni della Comunità",
+        "description": "Condividi le tue esecuzioni d'organo e scopri nuovi talenti"
+      }
+    }
+  },
+  "concerts": {
+    "title": "Prossimi Concerti di Organo",
+    "subtitle": "Scopri esecuzioni dal vivo di organo da tutto il mondo",
+    "viewDetails": "Visualizza Dettagli Concerto",
+    "programHighlights": "Punti Salienti del Programma",
+    "morePieces": "altri pezzi",
+    "newsletter": {
+      "title": "Ricevi Aggiornamenti sui Concerti",
+      "description": "Sii il primo a sapere di nuovi concerti e performance speciali. Iscriviti alla nostra newsletter!",
+      "subscribe": "Iscriviti",
+      "emailPlaceholder": "Inserisci la tua email"
+    }
+  },
+  "concert": {
+    "notFound": "Concerto Non Trovato",
+    "notFoundMessage": "Il concerto che stai cercando non esiste.",
+    "viewAllConcerts": "Visualizza Tutti i Concerti",
+    "countdown": "Conto alla Rovescia per il Concerto",
+    "liveNow": "🔴 IN DIRETTA!",
+    "watchLive": "🎥 Guarda in Diretta",
+    "venue": "Informazioni sul Luogo",
+    "program": "Programma del Concerto",
+    "totalDuration": "Durata Totale",
+    "quickActions": "Azioni Rapide",
+    "setReminder": "🔔 Imposta Promemoria",
+    "shareConcert": "📧 Condividi Concerto",
+    "getTickets": "🎫 Ottieni Biglietti",
+    "days": "Giorni",
+    "hours": "Ore",
+    "minutes": "Minuti",
+    "seconds": "Secondi",
+    "recentActivity": "Attività Recente di Organo"
+  },
+  "dashboard": {
+    "title": "La Tua Dashboard di Musica per Organo",
+    "welcome": "Benvenuto nella tua Dashboard",
+    "listeningTime": "Tempo di Ascolto",
+    "favoritePieces": "Pezzi Preferiti",
+    "organPlaylists": "Playlist di Organo",
+    "savedCompositions": "Composizioni salvate",
+    "createdCollections": "Collezioni create",
+    "thisMonth": "Questo mese",
+    "recentActivity": "Attività Recente",
+    "listenedTo": "Ascoltato",
+    "addedToFavorites": "Aggiunto ai preferiti",
+    "createdPlaylist": "Playlist creata",
+    "ago": "fa"
+  },
+  "languages": {
+    "english": "English",
+    "slovenian": "Slovenščina",
+    "italian": "Italiano",
+    "selectLanguage": "Seleziona Lingua"
+  }
+}

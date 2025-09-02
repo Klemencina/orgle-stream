@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "home": "Domov",
+    "concerts": "Koncerti",
+    "dashboard": "Nadzorna plošča",
+    "backToHome": "Nazaj na domov",
+    "backToConcerts": "Nazaj na koncerte",
+    "browseConcerts": "Prebrskaj koncerte"
+  },
+  "auth": {
+    "signIn": "Prijava",
+    "signUp": "Registracija",
+    "getStarted": "Začnite",
+    "welcomeBack": "Dobrodošli nazaj!",
+    "signedInMessage": "Že ste prijavljeni. Ste pripravljeni raziskati svojo knjižnico orgelske glasbe?",
+    "goToDashboard": "Pojdite na nadzorno ploščo"
+  },
+  "home": {
+    "title": "Dobrodošli v 🎹 Orgle Stream",
+    "subtitle": "Predvajajte svojo lokalno orgelsko glasbo z moderno in varno platformo. Odkrijte, delite in uživajte v čudovitih orgelskih skladbah z vsega sveta.",
+    "browseConcerts": "Prebrskaj prihajajoče koncerte",
+    "features": {
+      "highQualityAudio": {
+        "title": "Visokokakovostni zvok",
+        "description": "Kristalno čisti posnetki orgelske glasbe z brezizgubnim zvokom"
+      },
+      "organLibrary": {
+        "title": "Knjižnica orgelske glasbe",
+        "description": "Obsežna zbirka klasičnih in sodobnih orgelskih del"
+      },
+      "communityRecordings": {
+        "title": "Posnetki skupnosti",
+        "description": "Delite svoje orgelske izvedbe in odkrijte nove talente"
+      }
+    }
+  },
+  "concerts": {
+    "title": "Prihajajoči koncerti orgelske glasbe",
+    "subtitle": "Odkrijte žive orgelske izvedbe z vsega sveta",
+    "viewDetails": "Ogled podrobnosti koncerta",
+    "programHighlights": "Poudarki programa",
+    "morePieces": "več skladb",
+    "newsletter": {
+      "title": "Prejemajte novice o koncertih",
+      "description": "Bodite prvi, ki boste izvedeli za nove koncerte in posebne prireditve. Prijavite se na našo e-poštno listo!",
+      "subscribe": "Naroči se",
+      "emailPlaceholder": "Vnesite svoj e-poštni naslov"
+    }
+  },
+  "concert": {
+    "notFound": "Koncert ni najden",
+    "notFoundMessage": "Koncerta, ki ga iščete, ni mogoče najti.",
+    "viewAllConcerts": "Ogled vseh koncertov",
+    "countdown": "Odštevanje do koncerta",
+    "liveNow": "🔴 V ŽIVO!",
+    "watchLive": "🎥 Glejte v živo",
+    "venue": "Informacije o prizorišču",
+    "program": "Program koncerta",
+    "totalDuration": "Skupni čas trajanja",
+    "quickActions": "Hitra dejanja",
+    "setReminder": "🔔 Nastavi opomnik",
+    "shareConcert": "📧 Deli koncert",
+    "getTickets": "🎫 Pridobi vstopnice",
+    "days": "Dni",
+    "hours": "Ure",
+    "minutes": "Minute",
+    "seconds": "Sekunde",
+    "recentActivity": "Nedavna orgelska dejavnost"
+  },
+  "dashboard": {
+    "title": "Vaša nadzorna plošča orgelske glasbe",
+    "welcome": "Dobrodošli na nadzorni plošči",
+    "listeningTime": "Čas poslušanja",
+    "favoritePieces": "Priljubljene skladbe",
+    "organPlaylists": "Seznami predvajanja orgelske glasbe",
+    "savedCompositions": "Shranjene skladbe",
+    "createdCollections": "Ustvarjene zbirke",
+    "thisMonth": "Ta mesec",
+    "recentActivity": "Nedavna dejavnost",
+    "listenedTo": "Poslušal sem",
+    "addedToFavorites": "Dodal med priljubljene",
+    "createdPlaylist": "Ustvaril seznam predvajanja",
+    "ago": "nazaj"
+  },
+  "languages": {
+    "english": "English",
+    "slovenian": "Slovenščina",
+    "italian": "Italiano",
+    "selectLanguage": "Izberite jezik"
+  }
+}
