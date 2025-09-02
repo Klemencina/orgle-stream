@@ -1,4 +1,3 @@
-import { notFound } from 'next/navigation';
 import { getRequestConfig } from 'next-intl/server';
 
 // Can be imported from a shared config
@@ -12,7 +11,7 @@ export default getRequestConfig(async ({ locale }) => {
   }
 
   // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as any)) {
+  if (!locales.includes(locale as unknown as Locale)) {
     console.log('Invalid locale:', locale, 'falling back to sl');
     locale = 'sl';
   }

@@ -74,14 +74,16 @@ export default function Home() {
       </SignedOut>
 
       <SignedIn>
-        {(() => {
-          // Redirect to concerts page for signed-in users
-          useEffect(() => {
-            redirect(`/${locale}/concerts`);
-          }, [locale]);
-          return null;
-        })()}
+        <SignedInRedirect locale={locale} />
       </SignedIn>
     </div>
   );
+}
+
+function SignedInRedirect({ locale }: { locale: string }) {
+  useEffect(() => {
+    redirect(`/${locale}/concerts`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
 }

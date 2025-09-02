@@ -1,11 +1,8 @@
 'use client';
 
-import { SignedIn, SignedOut, UserProfile, useUser } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { useTranslations } from 'next-intl';
-import { redirect } from "next/navigation";
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
 
 export default function Dashboard() {
   return (
@@ -30,7 +27,6 @@ export default function Dashboard() {
 
 function DashboardContent() {
   const { user } = useUser();
-  const t = useTranslations();
   const params = useParams();
   const locale = params.locale as string;
 
@@ -99,21 +95,21 @@ function DashboardContent() {
           <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded">
             <span className="text-2xl">🎵</span>
             <div>
-              <p className="font-medium">Listened to "Bach's Toccata and Fugue"</p>
+              <p className="font-medium">Listened to &quot;Bach&apos;s Toccata and Fugue&quot;</p>
               <p className="text-sm text-gray-600">2 hours ago</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded">
             <span className="text-2xl">❤️</span>
             <div>
-              <p className="font-medium">Added to favorites "Messiah Organ Prelude"</p>
+              <p className="font-medium">Added to favorites &quot;Messiah Organ Prelude&quot;</p>
               <p className="text-sm text-gray-600">5 hours ago</p>
             </div>
           </div>
           <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded">
             <span className="text-2xl">📝</span>
             <div>
-              <p className="font-medium">Created playlist "Classical Organ Works"</p>
+              <p className="font-medium">Created playlist &quot;Classical Organ Works&quot;</p>
               <p className="text-sm text-gray-600">1 day ago</p>
             </div>
           </div>
