@@ -117,7 +117,7 @@ export default function ConcertsPage() {
 
                 {/* Program Preview */}
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Program Highlights:</h4>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t('concerts.programHighlights')}:</h4>
                   <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                     {concert.program.slice(0, 2).map((piece, index) => (
                       <li key={index} className="flex items-center">
@@ -126,7 +126,7 @@ export default function ConcertsPage() {
                       </li>
                     ))}
                     {concert.program.length > 2 && (
-                      <li className="text-gray-500">+{concert.program.length - 2} more pieces</li>
+                      <li className="text-gray-500">+{concert.program.length - 2} {t('concerts.morePieces')}</li>
                     )}
                   </ul>
                 </div>

@@ -12,37 +12,37 @@
     "signUp": "Sign Up",
     "getStarted": "Get Started",
     "welcomeBack": "Welcome back!",
-    "signedInMessage": "You're already signed in. Ready to explore your organ music library?",
+    "signedInMessage": "You're already signed in. Ready to watch Orgle Koper streams?",
     "goToDashboard": "Go to Dashboard"
   },
   "home": {
-    "title": "Welcome to 🎹 Orgle Stream",
-    "subtitle": "Stream your local organ music with a modern, secure platform. Discover, share, and enjoy beautiful organ compositions from around the world.",
-    "browseConcerts": "Browse Upcoming Concerts",
+    "title": "Welcome to 🎹 Orgle Koper Stream",
+    "subtitle": "Stream the Orgle Koper from our church. Live and on-demand performances of our historic organ.",
+    "browseConcerts": "Browse Orgle Koper Streams",
     "features": {
       "highQualityAudio": {
         "title": "High-Quality Audio",
-        "description": "Crystal-clear organ recordings with lossless audio quality"
+        "description": "Crystal-clear live and recorded audio from Orgle Koper"
       },
       "organLibrary": {
-        "title": "Organ Library",
-        "description": "Extensive collection of classical and contemporary organ works"
+        "title": "Orgle Koper Archive",
+        "description": "Archive of Orgle Koper performances"
       },
       "communityRecordings": {
-        "title": "Community Recordings",
-        "description": "Share your organ performances and discover new talent"
+        "title": "Selected Recordings",
+        "description": "Highlights from services and concerts at our church"
       }
     }
   },
   "concerts": {
-    "title": "Upcoming Organ Concerts",
-    "subtitle": "Discover live organ performances from around the world",
+    "title": "Upcoming Orgle Koper Streams",
+    "subtitle": "Watch live performances from our church",
     "viewDetails": "View Concert Details",
     "programHighlights": "Program Highlights",
     "morePieces": "more pieces",
     "newsletter": {
-      "title": "Get Concert Updates",
-      "description": "Be the first to know about new concerts and special performances. Sign up for our newsletter!",
+      "title": "Get Orgle Koper Stream Updates",
+      "description": "Be the first to know about new Orgle Koper streams and special events. Sign up for our newsletter!",
       "subscribe": "Subscribe",
       "emailPlaceholder": "Enter your email"
     }
@@ -65,14 +65,14 @@
     "hours": "Hours",
     "minutes": "Minutes",
     "seconds": "Seconds",
-    "recentActivity": "Recent Organ Activity"
+    "recentActivity": "Recent Orgle Koper Activity"
   },
   "dashboard": {
-    "title": "Your Organ Music Dashboard",
+    "title": "Your Orgle Koper Dashboard",
     "welcome": "Welcome to your Dashboard",
     "listeningTime": "Listening Time",
     "favoritePieces": "Favorite Pieces",
-    "organPlaylists": "Organ Playlists",
+    "organPlaylists": "Orgle Koper Playlists",
     "savedCompositions": "Saved compositions",
     "createdCollections": "Created collections",
     "thisMonth": "This month",
