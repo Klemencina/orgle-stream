@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { LocalizedConcert } from '@/types/concert'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 interface TranslationInput {
   locale: string
   title: string
