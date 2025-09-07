@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Concert {
+  id          String   @id @default(cuid())
+  date        DateTime
+  image       String
+  streamUrl   String?
+  isVisible   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  program     ProgramPiece[]
+  translations ConcertTranslation[]
+  
+  @@map("concerts")
+}
+
+model ConcertTranslation {
+  id           String @id @default(cuid())
+  locale       String
+  title        String
+  venue        String
+  performer    String
+  description  String
+  venueDetails String?
+  concertId    String
+  
+  concert      Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
+  
+  @@unique([concertId, locale])
+  @@map("concert_translations")
+}
+
+model ProgramPiece {
+  id        String  @id @default(cuid())
+  duration  String
+  order     Int
+  concertId String
+  
+  concert      Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
+  translations ProgramPieceTranslation[]
+  
+  @@map("program_pieces")
+}
+
+model ProgramPieceTranslation {
+  id            String @id @default(cuid())
+  locale        String
+  title         String
+  composer      String
+  programPieceId String
+  
+  programPiece  ProgramPiece @relation(fields: [programPieceId], references: [id], onDelete: Cascade)
+  
+  @@unique([programPieceId, locale])
+  @@map("program_piece_translations")
+}

@@ -4,70 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-
-// Mock concert data - in a real app, this would come from an API
-const concerts = [
-  {
-    id: "bach-evening",
-    title: "Bach Organ Masterpieces",
-    date: "2024-12-15T19:00:00",
-    venue: "St. Mary's Cathedral",
-    performer: "Dr. Michael Chen",
-    description: "An evening of Johann Sebastian Bach's most beloved organ works performed on our historic 1892 organ.",
-    image: "🎹",
-    program: [
-      { title: "Toccata and Fugue in D minor, BWV 565", composer: "J.S. Bach", duration: "8:30" },
-      { title: "Passacaglia in C minor, BWV 582", composer: "J.S. Bach", duration: "12:45" },
-      { title: "Jesu, Joy of Man's Desiring, BWV 147", composer: "J.S. Bach", duration: "6:20" },
-      { title: "Prelude and Fugue in C major, BWV 531", composer: "J.S. Bach", duration: "7:15" },
-      { title: "Intermission", composer: "", duration: "15:00" },
-      { title: "Fantasia in G major, BWV 572", composer: "J.S. Bach", duration: "9:30" },
-      { title: "Chorale Prelude 'Wachet auf', BWV 645", composer: "J.S. Bach", duration: "4:45" }
-    ],
-    streamUrl: "#", // Placeholder for streaming URL
-    venueDetails: "Historic cathedral with stunning acoustics and a 1892 organ by Cavaillé-Coll"
-  },
-  {
-    id: "christmas-organ",
-    title: "Christmas Organ Spectacular",
-    date: "2024-12-22T20:00:00",
-    venue: "Central Concert Hall",
-    performer: "Sarah Williams",
-    description: "Celebrate the holiday season with festive organ music from around the world.",
-    image: "🎄",
-    program: [
-      { title: "Christmas Fantasy", composer: "Traditional", duration: "10:00" },
-      { title: "Silent Night Variations", composer: "Franz Gruber arr. Williams", duration: "8:15" },
-      { title: "Joy to the World", composer: "G.F. Handel", duration: "6:30" },
-      { title: "O Holy Night", composer: "Adolphe Adam", duration: "7:45" },
-      { title: "Intermission", composer: "", duration: "15:00" },
-      { title: "Carols from Around the World", composer: "Various", duration: "12:20" },
-      { title: "Hallelujah Chorus Organ Transcription", composer: "G.F. Handel", duration: "5:50" }
-    ],
-    streamUrl: "#",
-    venueDetails: "Modern concert hall with state-of-the-art acoustics and lighting"
-  },
-  {
-    id: "contemporary-organ",
-    title: "Modern Organ Works",
-    date: "2025-01-10T18:30:00",
-    venue: "Contemporary Arts Center",
-    performer: "Ensemble Nova",
-    description: "Exploring the boundaries of organ music with contemporary compositions and experimental works.",
-    image: "🎵",
-    program: [
-      { title: "Digital Landscapes", composer: "Maria Rodriguez", duration: "11:30" },
-      { title: "Urban Rhythms", composer: "James Thompson", duration: "9:45" },
-      { title: "Electronic Organ Suite", composer: "Ensemble Nova", duration: "15:20" },
-      { title: "Minimalist Meditation", composer: "Sarah Chen", duration: "7:10" },
-      { title: "Intermission", composer: "", duration: "15:00" },
-      { title: "Experimental Soundscapes", composer: "Various Artists", duration: "13:40" },
-      { title: "Contemporary Chorale", composer: "Michael Park", duration: "8:25" }
-    ],
-    streamUrl: "#",
-    venueDetails: "Cutting-edge arts center featuring experimental music and multimedia performances"
-  }
-];
+import { LocalizedConcert } from '@/types/concert';
 
 interface CountdownTime {
   days: number;
@@ -79,12 +16,46 @@ interface CountdownTime {
 export default function ConcertPage() {
   const params = useParams();
   const concertId = params.id as string;
+  const locale = params.locale as string;
   const t = useTranslations();
 
   const [timeLeft, setTimeLeft] = useState<CountdownTime>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLive, setIsLive] = useState(false);
+  const [concert, setConcert] = useState<LocalizedConcert | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const concert = concerts.find(c => c.id === concertId);
+  useEffect(() => {
+    async function fetchConcert() {
+      try {
+        const currentLocale = locale || 'en';
+        const response = await fetch(`/api/concerts/${concertId}?locale=${currentLocale}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          if (response.status === 404) {
+            setConcert(null);
+          } else {
+            throw new Error('Failed to fetch concert');
+          }
+        } else {
+          const data = await response.json();
+          setConcert(data);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (concertId && locale) {
+      fetchConcert();
+    }
+  }, [concertId, locale]);
 
   useEffect(() => {
     if (!concert) return;
@@ -111,6 +82,35 @@ export default function ConcertPage() {
 
     return () => clearInterval(timer);
   }, [concert]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🎹</div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Loading Concert...</h2>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Concert</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+          <Link href="/concerts">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
+              {t('concert.viewAllConcerts')}
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!concert) {
     return (
@@ -211,7 +211,7 @@ export default function ConcertPage() {
                     🎹 CONCERT IS LIVE! 🎹
                   </div>
                   <button
-                    onClick={() => window.open(concert.streamUrl, '_blank')}
+                    onClick={() => concert.streamUrl && window.open(concert.streamUrl, '_blank')}
                     className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl text-lg"
                   >
                     🎥 {t('concert.watchLive')}

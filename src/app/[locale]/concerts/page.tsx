@@ -3,45 +3,73 @@
 import Link from "next/link";
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-
-// Mock concert data
-const concerts = [
-  {
-    id: "bach-evening",
-    title: "Bach Organ Masterpieces",
-    date: "2024-12-15T19:00:00",
-    venue: "St. Mary's Cathedral",
-    performer: "Dr. Michael Chen",
-    description: "An evening of Johann Sebastian Bach's most beloved organ works performed on our historic 1892 organ.",
-    image: "🎹",
-    program: ["Toccata and Fugue in D minor", "Passacaglia in C minor", "Jesu, Joy of Man's Desiring"]
-  },
-  {
-    id: "christmas-organ",
-    title: "Christmas Organ Spectacular",
-    date: "2024-12-22T20:00:00",
-    venue: "Central Concert Hall",
-    performer: "Sarah Williams",
-    description: "Celebrate the holiday season with festive organ music from around the world.",
-    image: "🎄",
-    program: ["Christmas Fantasy", "Silent Night Variations", "Joy to the World"]
-  },
-  {
-    id: "contemporary-organ",
-    title: "Modern Organ Works",
-    date: "2025-01-10T18:30:00",
-    venue: "Contemporary Arts Center",
-    performer: "Ensemble Nova",
-    description: "Exploring the boundaries of organ music with contemporary compositions and experimental works.",
-    image: "🎵",
-    program: ["Digital Landscapes", "Urban Rhythms", "Electronic Organ Suite"]
-  }
-];
+import { useState, useEffect } from 'react';
+import { LocalizedConcert } from '@/types/concert';
 
 export default function ConcertsPage() {
   const t = useTranslations();
   const params = useParams();
   const locale = params.locale as string;
+  const [concerts, setConcerts] = useState<LocalizedConcert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchConcerts() {
+      try {
+        const currentLocale = locale || 'en';
+        const response = await fetch(`/api/concerts?locale=${currentLocale}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch concerts');
+        }
+        const data = await response.json();
+        setConcerts(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (locale) {
+      fetchConcerts();
+    }
+  }, [locale]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🎹</div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Loading Concerts...</h2>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Concerts</h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800">
@@ -120,9 +148,9 @@ export default function ConcertsPage() {
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t('concerts.programHighlights')}:</h4>
                   <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                     {concert.program.slice(0, 2).map((piece, index) => (
-                      <li key={index} className="flex items-center">
+                      <li key={piece.id} className="flex items-center">
                         <span className="mr-2">♪</span>
-                        {piece}
+                        {piece.title}
                       </li>
                     ))}
                     {concert.program.length > 2 && (
