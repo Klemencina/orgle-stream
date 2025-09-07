@@ -29,7 +29,7 @@ export default clerkMiddleware(async (auth, req) => {
     // Check admin role for admin routes
     if (isAdminRoute(req)) {
       const { sessionClaims } = await auth();
-      const userRole = (sessionClaims?.metadata as any)?.role;
+      const userRole = (sessionClaims?.metadata as { role?: string } | undefined)?.role;
       
       if (userRole !== 'admin') {
         // Redirect non-admin users to the dashboard
@@ -52,7 +52,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Check admin role for admin routes
   if (isAdminRoute(req)) {
     const { sessionClaims } = await auth();
-    const userRole = (sessionClaims?.metadata as any)?.role;
+    const userRole = (sessionClaims?.metadata as { role?: string } | undefined)?.role;
     
     if (userRole !== 'admin') {
       // Redirect non-admin users to the dashboard

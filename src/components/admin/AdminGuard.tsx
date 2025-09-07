@@ -59,7 +59,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
           <div className="text-6xl mb-4">🚫</div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Access Denied</h1>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            You don't have permission to access the admin dashboard. Only administrators can manage concerts.
+            You don&apos;t have permission to access the admin dashboard. Only administrators can manage concerts.
           </p>
           <div className="flex gap-4 justify-center">
             <Link href={`/${locale}/dashboard`}>

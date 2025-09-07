@@ -36,6 +36,7 @@ function AdminContent() {
 
   useEffect(() => {
     fetchConcerts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
   const fetchConcerts = async () => {
@@ -72,6 +73,7 @@ function AdminContent() {
       concert.id === updatedConcert.id ? updatedConcert : concert
     ));
     setEditingConcert(null);
+    setShowForm(false);
     setSuccess(t('concertUpdated'));
     setTimeout(() => setSuccess(null), 3000);
   };

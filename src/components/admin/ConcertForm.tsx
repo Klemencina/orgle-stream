@@ -41,6 +41,7 @@ export default function ConcertForm({
   locale 
 }: ConcertFormProps) {
   const t = useTranslations('admin.form');
+  const isEditing = Boolean(concert && concert.id);
   // Non-translatable fields
   const [basicData, setBasicData] = useState({
     date: '',
@@ -163,6 +164,7 @@ export default function ConcertForm({
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [concert, locale]);
 
   const fetchAllTranslations = async (concertId: string) => {
@@ -178,7 +180,7 @@ export default function ConcertForm({
       const newProgram: Record<string, ProgramPiece[]> = {};
       
       locales.forEach(loc => {
-        const translation = data.translations.find((t: any) => t.locale === loc);
+        const translation = data.translations.find((t: { locale: string }) => t.locale === loc);
         if (translation) {
           newTranslations[loc] = {
             title: translation.title,
@@ -192,8 +194,8 @@ export default function ConcertForm({
         }
         
         // Group program pieces by locale
-        const programPieces = data.program.map((piece: any) => {
-          const pieceTranslation = piece.translations.find((t: any) => t.locale === loc);
+        const programPieces = data.program.map((piece: { duration: string; translations: { locale: string; title: string; composer: string }[] }) => {
+          const pieceTranslation = piece.translations.find((t: { locale: string }) => t.locale === loc);
           return {
             title: pieceTranslation?.title || '',
             composer: pieceTranslation?.composer || '',
@@ -458,8 +460,8 @@ export default function ConcertForm({
       };
 
 
-      const url = concert ? `/api/concerts/${concert.id}` : '/api/concerts';
-      const method = concert ? 'PUT' : 'POST';
+      const url = isEditing ? `/api/concerts/${concert?.id}` : '/api/concerts';
+      const method = isEditing ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
@@ -480,7 +482,7 @@ export default function ConcertForm({
       
       setSuccess(concert ? 'Concert updated successfully!' : 'Concert created successfully!');
       
-      if (concert) {
+      if (isEditing) {
         onConcertUpdated(result);
       } else {
         onConcertCreated(result);
@@ -811,14 +813,14 @@ export default function ConcertForm({
         </button>
         <button
           type="submit"
-          disabled={loading || (concert ? !hasChanges() : false)}
+          disabled={loading || (isEditing ? !hasChanges() : false)}
           className={`px-6 py-2 rounded-lg transition-colors duration-200 ${
-            loading || (concert ? !hasChanges() : false)
+            loading || (isEditing ? !hasChanges() : false)
               ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
-          {loading ? t('saving') : (concert ? t('updateConcert') : t('createConcert'))}
+          {loading ? t('saving') : (isEditing ? t('updateConcert') : t('createConcert'))}
         </button>
       </div>
     </form>

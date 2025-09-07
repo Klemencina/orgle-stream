@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { Concert } from '@/types/concert';
+// import { useTranslations } from 'next-intl';
+import { LocalizedConcert } from '@/types/concert';
 
 export default function AdminConcertsPage() {
-  const t = useTranslations();
-  const [concerts, setConcerts] = useState<Concert[]>([]);
+  // const t = useTranslations(); // Unused
+  const [concerts, setConcerts] = useState<LocalizedConcert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

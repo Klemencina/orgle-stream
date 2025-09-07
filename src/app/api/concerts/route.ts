@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { LocalizedConcert } from '@/types/concert'
 
+interface TranslationInput {
+  locale: string
+  title: string
+  venue: string
+  performer: string
+  description: string
+  venueDetails?: string | null
+}
+
+interface ProgramPieceInput {
+  title: string
+  composer: string
+  duration: string
+}
+
+interface ProgramLocaleInput {
+  locale: string
+  pieces: ProgramPieceInput[]
+}
+
+interface CreateConcertBody {
+  date: string
+  image?: string
+  streamUrl?: string | null
+  isVisible?: boolean
+  translations: TranslationInput[]
+  program: ProgramLocaleInput[]
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -32,7 +61,7 @@ export async function GET(request: NextRequest) {
       orderBy: {
         date: 'desc'
       }
-    } as any)
+    })
 
     // Handle case where no concerts exist
     if (concerts.length === 0) {
@@ -41,7 +70,7 @@ export async function GET(request: NextRequest) {
 
     // Transform to localized format
     const localizedConcerts: LocalizedConcert[] = concerts.map(concert => {
-      const translation = (concert as any).translations[0]
+      const translation = concert.translations[0]
       if (!translation) {
         console.error(`No translation found for concert ${concert.id} in locale ${locale}`)
         // Return a fallback concert instead of throwing an error
@@ -55,7 +84,7 @@ export async function GET(request: NextRequest) {
           image: concert.image,
           streamUrl: concert.streamUrl,
           venueDetails: null,
-          isVisible: (concert as any).isVisible,
+          isVisible: concert.isVisible,
           createdAt: concert.createdAt.toISOString(),
           updatedAt: concert.updatedAt.toISOString(),
           program: []
@@ -72,10 +101,10 @@ export async function GET(request: NextRequest) {
         image: concert.image,
         streamUrl: concert.streamUrl,
         venueDetails: translation.venueDetails,
-        isVisible: (concert as any).isVisible,
+        isVisible: concert.isVisible,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
-        program: (concert as any).program.map((piece: any) => {
+        program: concert.program.map(piece => {
           const pieceTranslation = piece.translations[0]
           if (!pieceTranslation) {
             console.error(`No translation found for program piece ${piece.id} in locale ${locale}`)
@@ -129,7 +158,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { date, image, streamUrl, isVisible, translations, program } = body
+    const { date, image, streamUrl, isVisible, translations, program } = body as CreateConcertBody
     const { searchParams } = new URL(request.url)
     const locale = searchParams.get('locale') || 'en'
 
@@ -167,7 +196,7 @@ export async function POST(request: NextRequest) {
         streamUrl: streamUrl || null,
         isVisible: isVisible !== false, // Default to true if not specified
         translations: {
-          create: translations.map((translation: any) => ({
+          create: translations.map((translation) => ({
             locale: translation.locale,
             title: translation.title,
             venue: translation.venue,
@@ -177,11 +206,11 @@ export async function POST(request: NextRequest) {
           }))
         },
         program: {
-          create: program[0].pieces.map((piece: any, index: number) => ({
+          create: program[0].pieces.map((piece, index: number) => ({
             duration: piece.duration,
             order: index,
             translations: {
-              create: program.map((programData: any) => ({
+              create: program.map((programData) => ({
                 locale: programData.locale,
                 title: programData.pieces[index].title,
                 composer: programData.pieces[index].composer
@@ -209,10 +238,10 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-    } as any)
+    })
 
     // Transform to localized format
-    const translation = (concert as any).translations[0]
+    const translation = concert.translations[0]
     if (!translation) {
       return NextResponse.json(
         { error: `No translation found for concert ${concert.id} in locale ${locale}` },
@@ -230,10 +259,10 @@ export async function POST(request: NextRequest) {
       image: concert.image,
       streamUrl: concert.streamUrl,
       venueDetails: translation.venueDetails,
-      isVisible: (concert as any).isVisible,
+      isVisible: concert.isVisible,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
-      program: (concert as any).program.map((piece: any) => {
+      program: concert.program.map((piece) => {
         const pieceTranslation = piece.translations[0]
         if (!pieceTranslation) {
           throw new Error(`No translation found for program piece ${piece.id} in locale ${locale}`)
