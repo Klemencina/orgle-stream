@@ -3,8 +3,7 @@
 import { SignedOut, SignedIn, SignInButton, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { useTranslations } from 'next-intl';
-import { useParams } from 'next/navigation';
-import { redirect } from "next/navigation";
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function Home() {
@@ -81,8 +80,10 @@ export default function Home() {
 }
 
 function SignedInRedirect({ locale }: { locale: string }) {
+  const router = useRouter();
+
   useEffect(() => {
-    redirect(`/${locale}/concerts`);
+    router.push(`/${locale}/concerts`);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return null;

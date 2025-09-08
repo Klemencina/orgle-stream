@@ -90,7 +90,7 @@ export default function StreamPlayer({ concertId }: StreamPlayerProps) {
 						}, 1000);
 					});
 
-					hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
+					hls.on(Hls.Events.ERROR, (_event: unknown, data: { fatal?: boolean; details?: string; type?: string }) => {
 						if (!hls) return;
 						const isFatal = Boolean(data?.fatal);
 						const details = data?.details;
@@ -130,7 +130,7 @@ export default function StreamPlayer({ concertId }: StreamPlayerProps) {
 						}
 					});
 
-					hls.on(Hls.Events.LEVEL_SWITCHED, (_event: any, data: any) => {
+					hls.on(Hls.Events.LEVEL_SWITCHED, (_event: unknown, data: { level?: number }) => {
 						console.log('HLS level switched:', data);
 					});
 				} else {
