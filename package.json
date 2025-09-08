@@ -13,6 +13,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.31.6",
     "@prisma/client": "^6.15.0",
+    "hls.js": "^1.5.15",
     "next": "15.5.2",
     "next-intl": "^4.3.5",
     "prisma": "^6.15.0",

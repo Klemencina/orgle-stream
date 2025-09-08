@@ -41,6 +41,8 @@ export async function GET(
   try {
     const { searchParams } = new URL(request.url)
     const locale = searchParams.get('locale') || 'en'
+    const wantStream = searchParams.get('stream') === 'true'
+    const checkOnly = searchParams.get('check') === 'true'
     const allTranslations = searchParams.get('allTranslations') === 'true'
     const { id } = await params
 
@@ -106,6 +108,62 @@ export async function GET(
         }))
       }
       return NextResponse.json(allTranslationsData)
+    }
+
+    // If the client is requesting the gated stream URL, enforce time window and return an opaque value
+    if (wantStream || checkOnly) {
+      const now = Date.now()
+      const startTime = concert.date.getTime()
+      const fifteenMinutesBefore = startTime - 15 * 60 * 1000
+      const threeHoursAfter = startTime + 3 * 60 * 60 * 1000
+
+      if (now < fifteenMinutesBefore || now > threeHoursAfter) {
+        if (checkOnly) {
+          return NextResponse.json({ available: false, now })
+        }
+        return NextResponse.json({ error: 'Stream not available at this time' }, { status: 403 })
+      }
+
+      // Within viewing window
+      const playbackUrl = process.env.IVS_PLAYBACK_URL || concert.streamUrl || null
+
+      if (checkOnly) {
+        // Only report available when the HLS master playlist is reachable
+        if (!playbackUrl) {
+          return NextResponse.json({ available: false, now })
+        }
+
+        // Probe playback availability with a short timeout
+        try {
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 2500)
+          const res = await fetch(playbackUrl, {
+            method: 'GET',
+            headers: { 'cache-control': 'no-cache' },
+            signal: controller.signal,
+          })
+          clearTimeout(timeout)
+          if (!res.ok) {
+            return NextResponse.json({ available: false, now })
+          }
+          const contentType = res.headers.get('content-type') || ''
+          if (!contentType.includes('application/vnd.apple.mpegurl') && !contentType.includes('application/x-mpegURL')) {
+            return NextResponse.json({ available: false, now })
+          }
+          const text = await res.text()
+          const hasPlaylistMarkers = text.includes('#EXTM3U')
+          // If playlist exists at all during live, IVS typically returns a valid M3U8; weak check here
+          return NextResponse.json({ available: hasPlaylistMarkers, now })
+        } catch {
+          return NextResponse.json({ available: false, now })
+        }
+      } else {
+        if (!playbackUrl) {
+          return NextResponse.json({ error: 'Stream not configured' }, { status: 404 })
+        }
+        // Do not expose the raw URL in client-rendered props; return directly from the API
+        return NextResponse.json({ playbackUrl })
+      }
     }
 
     // Single translation for public viewing

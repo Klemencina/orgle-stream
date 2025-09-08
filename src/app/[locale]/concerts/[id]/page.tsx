@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { LocalizedConcert } from '@/types/concert';
+import dynamic from 'next/dynamic';
+
+// Define the dynamic component at module scope to avoid remounting on every render
+const StreamPlayer = dynamic(() => import('@/components/StreamPlayer'), { ssr: false });
 
 interface CountdownTime {
   days: number;
@@ -21,6 +25,7 @@ export default function ConcertPage() {
 
   const [timeLeft, setTimeLeft] = useState<CountdownTime>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLive, setIsLive] = useState(false);
+  const [everLive, setEverLive] = useState(false);
   const [concert, setConcert] = useState<LocalizedConcert | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,23 +70,48 @@ export default function ConcertPage() {
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const difference = targetDate - now;
-
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((difference % (1000 * 60)) / 1000)
-        });
-        setIsLive(false);
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        setIsLive(true);
-      }
+      setTimeLeft({
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((difference % (1000 * 60)) / 1000)
+      });
     }, 1000);
 
     return () => clearInterval(timer);
   }, [concert]);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let aborted = false;
+    async function checkServerAvailability() {
+      if (!concert) return;
+      try {
+        const res = await fetch(`/api/concerts/${concert.id}?check=true`, { cache: 'no-store' });
+        if (!res.ok) {
+          if (!aborted && !everLive) setIsLive(false);
+          return;
+        }
+        const data = await res.json();
+        const available = Boolean(data?.available);
+        if (!aborted) {
+          console.log(`Stream availability check: isLive=${available}, everLive=${everLive}`);
+          setIsLive(available);
+          if (available) setEverLive(true);
+        }
+      } catch {
+        if (!aborted) setIsLive(false);
+      }
+    }
+    if (concert) {
+      checkServerAvailability();
+      interval = setInterval(checkServerAvailability, 15000);
+    }
+    return () => {
+      aborted = true;
+      if (interval) clearInterval(interval);
+    };
+  }, [concert, everLive]);
 
   if (loading) {
     return (
@@ -139,6 +169,14 @@ export default function ConcertPage() {
     const mins = Math.floor((seconds % 3600) / 60);
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
+
+  // Compute stream window state
+  const startTime = new Date(concert.date).getTime();
+  const nowTs = Date.now();
+  const windowStart = startTime - 15 * 60 * 1000;
+  const windowEnd = startTime + 3 * 60 * 60 * 1000;
+  const windowOpen = nowTs >= windowStart && nowTs <= windowEnd;
+  const hasEnded = nowTs > windowEnd;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800">
@@ -205,17 +243,22 @@ export default function ConcertPage() {
                 {isLive ? t('concert.liveNow') : t('concert.countdown')}
               </h3>
 
-              {isLive ? (
-                <div className="text-center">
-                  <div className="bg-red-500 text-white text-2xl font-bold py-8 px-4 rounded-lg mb-4">
-                    🎹 CONCERT IS LIVE! 🎹
+              {isLive || (everLive && windowOpen) ? (
+                <div>
+                  <div className="mb-4">
+                    <StreamPlayer key={`stream-${concert.id}`} concertId={concert.id} />
                   </div>
-                  <button
-                    onClick={() => concert.streamUrl && window.open(concert.streamUrl, '_blank')}
-                    className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl text-lg"
-                  >
-                    🎥 {t('concert.watchLive')}
-                  </button>
+                  <div className="text-center text-sm text-gray-600 dark:text-gray-300">
+                    {t('concert.watchLive')}
+                  </div>
+                </div>
+              ) : hasEnded ? (
+                <div className="p-6 text-center text-gray-700 dark:text-gray-200">
+                  The live stream has ended.
+                </div>
+              ) : windowOpen ? (
+                <div className="p-6 text-center text-gray-700 dark:text-gray-200">
+                  Waiting for the live stream to start…
                 </div>
               ) : (
                 <div className="grid grid-cols-4 gap-4 text-center">
