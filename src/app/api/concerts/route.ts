@@ -38,42 +38,24 @@ export async function GET(request: NextRequest) {
     const locale = searchParams.get('locale') || 'en'
     const admin = searchParams.get('admin') === 'true'
 
-    const concerts = await prisma.concert.findMany({
-      where: admin ? {} : { isVisible: true }, // Show only visible concerts unless in admin mode
+    const findManyArgs = Prisma.validator<Prisma.ConcertFindManyArgs>()({
+      where: admin ? {} : { isVisible: true },
       include: {
         program: {
           include: {
             translations: {
               where: {
-                locale: {
-                  in: [locale, 'sl', 'original']
-                }
+                locale: { in: [locale, 'sl', 'original'] }
               }
             }
           },
-          orderBy: {
-            order: 'asc'
-          }
+          orderBy: { order: 'asc' }
         },
-        translations: {
-          where: {
-            locale: locale
-          }
-        }
+        translations: { where: { locale } }
       },
-      orderBy: {
-        date: 'desc'
-      }
-    }) as Array<Prisma.ConcertGetPayload<{
-      include: {
-        program: {
-          include: {
-            translations: true
-          }
-        },
-        translations: true
-      }
-    }>>
+      orderBy: { date: 'desc' }
+    })
+    const concerts = await prisma.concert.findMany(findManyArgs)
 
     // Handle case where no concerts exist
     if (concerts.length === 0) {
@@ -107,16 +89,16 @@ export async function GET(request: NextRequest) {
         venue: translation.venue,
         performer: translation.performer,
         description: translation.description,
-        performerDetails: (translation as any).performerDetails ?? undefined,
+        performerDetails: translation.performerDetails ?? undefined,
         isVisible: concert.isVisible,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
         program: concert.program.map((piece) => {
           const preferredLocale = (locale === 'sl' || locale === 'original') ? locale : 'original'
-          const translations = (piece as any).translations || []
-          const pieceTranslation = translations.find((t: any) => t.locale === preferredLocale)
-            || translations.find((t: any) => t.locale === 'sl')
-            || translations.find((t: any) => t.locale === 'original')
+          const translations = piece.translations || []
+          const pieceTranslation = translations.find((t) => t.locale === preferredLocale)
+            || translations.find((t) => t.locale === 'sl')
+            || translations.find((t) => t.locale === 'original')
             || translations[0]
           if (!pieceTranslation) {
             console.error(`No translation found for program piece ${piece.id} in locale ${locale}`)
@@ -228,11 +210,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const concert = await prisma.concert.create({
-      data: ({
+    const createArgs = Prisma.validator<Prisma.ConcertCreateArgs>()({
+      data: {
         date: concertDate,
-        
-        isVisible: isVisible !== false, // Default to true if not specified
+        isVisible: isVisible !== false,
         translations: {
           create: filteredTranslations.map((translation) => ({
             locale: translation.locale,
@@ -244,11 +225,14 @@ export async function POST(request: NextRequest) {
           }))
         },
         program: {
-          create: ((() => {
+          create: (() => {
             const sl = program.find(p => p.locale === 'sl')!
             const original = program.find(p => p.locale === 'original')!
             const maxLen = Math.max(sl.pieces.length, original.pieces.length)
-            const rows = [] as { order: number; translations: { create: { locale: string; title: string; composer: string }[] } }[]
+            const rows = [] as {
+              order: number
+              translations: { create: { locale: 'sl' | 'original'; title: string; composer: string }[] }
+            }[]
             for (let i = 0; i < maxLen; i++) {
               rows.push({
                 order: i,
@@ -261,35 +245,25 @@ export async function POST(request: NextRequest) {
               })
             }
             return rows
-          })() as any)
+          })()
         }
-      }) as any,
+      },
       include: {
         program: {
           include: {
             translations: {
-              where: {
-                locale: {
-                  in: [locale, 'sl', 'original']
-                }
-              }
+              where: { locale: { in: [locale, 'sl', 'original'] } }
             }
           },
-          orderBy: {
-            order: 'asc'
-          }
+          orderBy: { order: 'asc' }
         },
-        translations: {
-          where: {
-            locale: locale
-          }
-        }
+        translations: { where: { locale } }
       }
     })
+    const concert = await prisma.concert.create(createArgs)
 
     // Transform to localized format
-    const cAnyConcert = concert as any
-    const translation = cAnyConcert.translations?.[0]
+    const translation = concert.translations?.[0]
     if (!translation) {
       return NextResponse.json(
         { error: `No translation found for concert ${concert.id} in locale ${locale}` },
@@ -310,12 +284,12 @@ export async function POST(request: NextRequest) {
       isVisible: concert.isVisible,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
-      program: (cAnyConcert.program as any[]).map((piece: any) => {
+      program: concert.program.map((piece) => {
         const preferredLocale = (locale === 'sl' || locale === 'original') ? locale : 'sl'
         const translations = piece.translations || []
-        const pieceTranslation = translations.find((t: any) => t.locale === preferredLocale)
-          || translations.find((t: any) => t.locale === 'sl')
-          || translations.find((t: any) => t.locale === 'original')
+        const pieceTranslation = translations.find((t) => t.locale === preferredLocale)
+          || translations.find((t) => t.locale === 'sl')
+          || translations.find((t) => t.locale === 'original')
           || translations[0]
         if (!pieceTranslation) {
           throw new Error(`No translation found for program piece ${piece.id} in locale ${locale}`)

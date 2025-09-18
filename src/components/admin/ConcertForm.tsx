@@ -169,13 +169,13 @@ export default function ConcertForm({
       // Populate all translations for i18n locales
       const newTranslations: Record<string, TranslationData> = {};
       locales.forEach(loc => {
-        const translation = data.translations.find((t: { locale: string }) => t.locale === loc);
+        const translation = data.translations.find((t: { locale: string; title: string; venue: string; performer: string; description: string; performerDetails?: string }) => t.locale === loc);
         newTranslations[loc] = translation ? {
           title: translation.title,
           venue: translation.venue,
           performer: translation.performer,
           description: translation.description,
-          performerDetails: (translation as any).performerDetails || ''
+          performerDetails: translation.performerDetails || ''
         } : { title: '', venue: '', performer: '', description: '', performerDetails: '' };
       });
       setTranslations(newTranslations);
