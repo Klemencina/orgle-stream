@@ -246,6 +246,7 @@ function AdminContent() {
         hideHiddenConcerts={hideHiddenConcerts}
         setHideHiddenConcerts={setHideHiddenConcerts}
         totalConcerts={concerts.length}
+        locale={locale}
       />
     </div>
   );

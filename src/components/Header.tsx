@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
@@ -38,7 +39,7 @@ export default function Header() {
       {/* Left side - Title */}
       <div className="flex items-center flex-shrink-0">
         <Link href={`/${currentLocale}`} className="text-xl font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
-          <span className="text-2xl">🎹</span>
+          <Image src="/logo.svg" alt="Logo" width={48} height={48} priority />
           {t('home.title')}
         </Link>
       </div>
@@ -52,31 +53,35 @@ export default function Header() {
         </Link>
         <LanguageSwitcher />
         <SignedOut>
-          <Link href={`/${currentLocale}/sign-in`}>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-              {tAuth('signIn')}
-            </button>
-          </Link>
-          <Link href={`/${currentLocale}/sign-up`}>
-            <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-              {tAuth('signUp')}
-            </button>
-          </Link>
-        </SignedOut>
-        <SignedIn>
-          {isLoaded && isAdmin && (
-            <Link href={`/${currentLocale}/admin`}>
-              <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 mr-2">
-                Admin
+          <div className="flex items-center gap-3">
+            <Link href={`/${currentLocale}/sign-in`}>
+              <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-sm">
+                {tAuth('signIn')}
               </button>
             </Link>
-          )}
-          <Link href={`/${currentLocale}/dashboard`}>
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-              Dashboard
-            </button>
-          </Link>
-          <UserButton />
+            <Link href={`/${currentLocale}/sign-up`}>
+              <button className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-sm">
+                {tAuth('signUp')}
+              </button>
+            </Link>
+          </div>
+        </SignedOut>
+        <SignedIn>
+          <div className="flex items-center gap-3">
+            {isLoaded && isAdmin && (
+              <Link href={`/${currentLocale}/admin`}>
+                <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-sm">
+                  Admin
+                </button>
+              </Link>
+            )}
+            <Link href={`/${currentLocale}/dashboard`}>
+              <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-sm">
+                Dashboard
+              </button>
+            </Link>
+            <UserButton />
+          </div>
         </SignedIn>
       </div>
     </header>

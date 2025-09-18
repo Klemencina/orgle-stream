@@ -15,18 +15,20 @@ interface ConcertListProps {
   hideHiddenConcerts: boolean;
   setHideHiddenConcerts: (value: boolean) => void;
   totalConcerts: number;
+  locale: string;
 }
 
-export default function ConcertList({ 
-  concerts, 
-  onEditConcert, 
-  onConcertDeleted, 
+export default function ConcertList({
+  concerts,
+  onEditConcert,
+  onConcertDeleted,
   loading,
   showUpcomingOnly,
   setShowUpcomingOnly,
   hideHiddenConcerts,
   setHideHiddenConcerts,
-  totalConcerts
+  totalConcerts,
+  locale
 }: ConcertListProps) {
   const t = useTranslations('admin.list');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -60,13 +62,14 @@ export default function ConcertList({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(locale, {
       weekday: 'short',
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: false
     });
   };
 

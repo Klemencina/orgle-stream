@@ -38,8 +38,8 @@
     }
   },
   "concerts": {
-    "title": "Prihodnji koncerti v živo iz koperske stolnice",
-    "subtitle": "Spremljajte koncerti v živo iz koperske stolnice",
+    "title": "Prihodnji koncerti v živo iz koprske stolnice",
+    "subtitle": "Spremljajte koncerte v živo iz koprske stolnice",
     "viewDetails": "Ogled podrobnosti koncerta",
     "programHighlights": "Poudarki programa",
     "morePieces": "več skladb",
@@ -65,10 +65,26 @@
     "setReminder": "🔔 Nastavi opomnik",
     "shareConcert": "📧 Deli koncert",
     "getTickets": "🎫 Pridobi vstopnice",
-    "days": "Dni",
-    "hours": "Ure",
-    "minutes": "Minute",
-    "seconds": "Sekunde",
+    "days": {
+      "one": "Dan",
+      "few": "Dni",
+      "many": "Dni"
+    },
+    "hours": {
+      "one": "Ura",
+      "few": "Ure",
+      "many": "Ur"
+    },
+    "minutes": {
+      "one": "Minuta",
+      "few": "Minute",
+      "many": "Minut"
+    },
+    "seconds": {
+      "one": "Sekunda",
+      "few": "Sekunde",
+      "many": "Sekund"
+    },
     "recentActivity": "Nedavna dejavnost Orgle Koper",
     "smallConcertDescription": "odspidaj na majho orgeljski koncert"
   },

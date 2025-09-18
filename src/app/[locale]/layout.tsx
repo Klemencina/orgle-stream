@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 
 export const metadata: Metadata = {
   title: "Orgle koprske stolnice",
-  description: "Neposredni prenosi in posnetki orgelskih koncertov iz koperske stolnice.",
+  description: "Neposredni prenosi in posnetki orgelskih koncertov iz koprske stolnice.",
 };
 
 export default async function LocaleLayout({

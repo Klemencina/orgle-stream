@@ -10,6 +10,25 @@ import dynamic from 'next/dynamic';
 // Define the dynamic component at module scope to avoid remounting on every render
 const StreamPlayer = dynamic(() => import('@/components/StreamPlayer'), { ssr: false });
 
+// Helper function for Slovenian pluralization
+const getSlovenianPlural = (count: number, unitKey: string, t: any) => {
+  // Slovenian plural rules:
+  // 1 = one (singular)
+  // 2-4 = few (paucal)
+  // 5+ = many (plural)
+  let form: string;
+  if (count === 1) {
+    form = 'one';
+  } else if (count >= 2 && count <= 4) {
+    form = 'few';
+  } else {
+    form = 'many';
+  }
+
+  const unitData = t.raw(`concert.${unitKey}`);
+  return unitData?.[form] || unitData?.few || unitData || unitKey;
+};
+
 interface CountdownTime {
   days: number;
   hours: number;
@@ -213,7 +232,7 @@ export default function ConcertPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">📅</span>
-                      <span>{new Date(concert.date).toLocaleDateString('en-US', {
+                      <span>{new Date(concert.date).toLocaleDateString(locale, {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -222,9 +241,10 @@ export default function ConcertPage() {
                     </div>
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">🕒</span>
-                      <span>{new Date(concert.date).toLocaleTimeString('en-US', {
+                      <span>{new Date(concert.date).toLocaleTimeString(locale, {
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
+                        hour12: false
                       })}</span>
                     </div>
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
@@ -263,19 +283,19 @@ export default function ConcertPage() {
                 <div className="grid grid-cols-4 gap-4 text-center">
                   <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
                     <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.days}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.days')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.days, 'days', t)}</div>
                   </div>
                   <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
                     <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.hours}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.hours')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.hours, 'hours', t)}</div>
                   </div>
                   <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
                     <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.minutes}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.minutes')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.minutes, 'minutes', t)}</div>
                   </div>
                   <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
                     <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.seconds}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.seconds')}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.seconds, 'seconds', t)}</div>
                   </div>
                 </div>
               )}

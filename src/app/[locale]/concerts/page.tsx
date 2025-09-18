@@ -115,7 +115,7 @@ export default function ConcertsPage() {
                   <div className="flex items-center text-gray-600 dark:text-gray-300">
                     <span className="text-lg mr-2">📅</span>
                     <span className="text-sm">
-                      {new Date(concert.date).toLocaleDateString('en-US', {
+                      {new Date(concert.date).toLocaleDateString(locale, {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -127,9 +127,10 @@ export default function ConcertsPage() {
                   <div className="flex items-center text-gray-600 dark:text-gray-300">
                     <span className="text-lg mr-2">🕒</span>
                     <span className="text-sm">
-                      {new Date(concert.date).toLocaleTimeString('en-US', {
+                      {new Date(concert.date).toLocaleTimeString(locale, {
                         hour: '2-digit',
-                        minute: '2-digit'
+                        minute: '2-digit',
+                        hour12: false
                       })}
                     </span>
                   </div>
