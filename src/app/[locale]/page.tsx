@@ -4,11 +4,29 @@ import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   const t = useTranslations();
   const params = useParams();
   const locale = params.locale as string;
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Detect theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const isDark = mediaQuery.matches;
+    console.log('Main page theme detection:', { isDark, prefersDark: mediaQuery.matches });
+    setIsDarkMode(isDark);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      console.log('Main page theme changed:', { isDark: e.matches });
+      setIsDarkMode(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="flex flex-col items-center justify-center min-h-screen p-8">
@@ -21,12 +39,13 @@ export default function Home() {
           </h1>
           <div className="mb-8 flex justify-center">
             <Image
-              src="/logo.svg"
+              src={isDarkMode ? "/logo.svg" : "/logo-white.svg"}
               alt="Koper Cathedral Organ Logo"
-              width={360}
-              height={360}
+              width={320}
+              height={320}
               className="drop-shadow-lg"
               priority
+              onLoad={() => console.log('Main page logo loaded:', isDarkMode ? "/logo.svg" : "/logo-white.svg")}
             />
           </div>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">

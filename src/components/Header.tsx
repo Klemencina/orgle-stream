@@ -42,9 +42,12 @@ export default function Header() {
   // Detect theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    setIsDarkMode(mediaQuery.matches);
+    const isDark = mediaQuery.matches;
+    console.log('Theme detection:', { isDark, prefersDark: mediaQuery.matches });
+    setIsDarkMode(isDark);
 
     const handleChange = (e: MediaQueryListEvent) => {
+      console.log('Theme changed:', { isDark: e.matches });
       setIsDarkMode(e.matches);
     };
 
@@ -59,7 +62,14 @@ export default function Header() {
         {/* Left side - Title */}
         <div className="flex items-center flex-shrink-0">
           <Link href={`/${currentLocale}`} className="text-xl font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
-            <Image src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} alt="Logo" width={48} height={48} priority />
+            <Image 
+              src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} 
+              alt="Logo" 
+              width={48} 
+              height={48} 
+              priority 
+              onLoad={() => console.log('Desktop logo loaded:', isDarkMode ? "/logo.svg" : "/logo-white.svg")}
+            />
             {t('home.title')}
           </Link>
         </div>
@@ -109,7 +119,14 @@ export default function Header() {
         {/* Left side - Title */}
         <div className="flex items-center flex-shrink-0">
           <Link href={`/${currentLocale}`} className="text-lg font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
-            <Image src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} alt="Logo" width={36} height={36} priority />
+            <Image 
+              src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} 
+              alt="Logo" 
+              width={36} 
+              height={36} 
+              priority 
+              onLoad={() => console.log('Mobile logo loaded:', isDarkMode ? "/logo.svg" : "/logo-white.svg")}
+            />
             <span className="truncate">{t('home.title')}</span>
           </Link>
         </div>
