@@ -43,11 +43,11 @@ export default function ConcertsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🎹</div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Loading Concerts...</h2>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
         </div>
       </div>
     );
@@ -55,14 +55,14 @@ export default function ConcertsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Concerts</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
           >
             Try Again
           </button>
@@ -72,7 +72,7 @@ export default function ConcertsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -91,13 +91,19 @@ export default function ConcertsPage() {
         </div>
 
         {/* Concerts Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          className={
+            `grid gap-6 ` +
+            (concerts.length === 1
+              ? 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1 justify-items-center'
+              : concerts.length === 2
+                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2 justify-items-center'
+                : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3')
+          }
+        >
           {concerts.map((concert) => (
             <div key={concert.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-              {/* Concert Image/Icon */}
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-32 flex items-center justify-center">
-                <span className="text-6xl">{concert.image}</span>
-              </div>
+              
 
               {/* Concert Details */}
               <div className="p-6">
@@ -161,7 +167,7 @@ export default function ConcertsPage() {
 
                 {/* View Concert Button */}
                 <Link href={`/${locale}/concerts/${concert.id}`}>
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
+                  <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     {t('concerts.viewDetails')}
                   </button>
                 </Link>
@@ -170,27 +176,7 @@ export default function ConcertsPage() {
           ))}
         </div>
 
-        {/* Call to Action */}
-        <div className="mt-12 text-center">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              🎟️ {t('concerts.newsletter.title')}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
-              {t('concerts.newsletter.description')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <input
-                type="email"
-                placeholder={t('concerts.newsletter.emailPlaceholder')}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              />
-              <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
-                {t('concerts.newsletter.subscribe')}
-              </button>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   );

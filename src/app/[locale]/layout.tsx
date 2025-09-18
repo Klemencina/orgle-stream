@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import Header from "@/components/Header";
 
 export const metadata: Metadata = {
-  title: "Orgle Stream - Organ Music Streaming",
-  description: "Stream your local organ music with a modern, secure platform.",
+  title: "Orgle koprske stolnice",
+  description: "Neposredni prenosi in posnetki orgelskih koncertov iz koperske stolnice.",
 };
 
 export default async function LocaleLayout({
@@ -28,6 +29,7 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages}>
+      <Header />
       {children}
     </NextIntlClientProvider>
   );

@@ -181,12 +181,7 @@ export default function ConcertList({
               <tr key={concert.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 h-12 w-12">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-2xl">
-                        {concert.image}
-                      </div>
-                    </div>
-                    <div className="ml-4">
+                    <div className="ml-0">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {concert.title}
                       </div>
@@ -214,11 +209,7 @@ export default function ConcertList({
                   }`}>
                     {isUpcoming(concert.date) ? t('upcoming') : t('past')}
                   </span>
-                  {concert.streamUrl && (
-                    <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                      {t('stream')}
-                    </span>
-                  )}
+                  
                   {!concert.isVisible && (
                     <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
                       {t('hidden')}

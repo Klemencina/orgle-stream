@@ -107,7 +107,7 @@ function AdminContent() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('loading')}</h2>
         </div>
       </div>
@@ -135,7 +135,7 @@ function AdminContent() {
               </button>
             </Link>
             <Link href={`/${locale}/dashboard`}>
-              <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+              <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
                 {t('userDashboard')}
               </button>
             </Link>
@@ -147,14 +147,14 @@ function AdminContent() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
           <h3 className="font-semibold text-gray-600 dark:text-gray-300 mb-2">{t('totalConcerts')}</h3>
-          <p className="text-3xl font-bold text-blue-600">{concerts.length}</p>
+          <p className="text-3xl font-bold text-orange-500">{concerts.length}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {filteredConcerts.length} {t('shown')}
           </p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
           <h3 className="font-semibold text-gray-600 dark:text-gray-300 mb-2">{t('upcoming')}</h3>
-          <p className="text-3xl font-bold text-green-600">
+          <p className="text-3xl font-bold text-orange-500">
             {concerts.filter(c => new Date(c.date) > new Date()).length}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -163,35 +163,27 @@ function AdminContent() {
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
           <h3 className="font-semibold text-gray-600 dark:text-gray-300 mb-2">{t('hidden')}</h3>
-          <p className="text-3xl font-bold text-orange-600">
+          <p className="text-3xl font-bold text-orange-500">
             {concerts.filter(c => !c.isVisible).length}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {filteredConcerts.filter(c => !c.isVisible).length} {t('shown')}
           </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-          <h3 className="font-semibold text-gray-600 dark:text-gray-300 mb-2">{t('withStreams')}</h3>
-          <p className="text-3xl font-bold text-purple-600">
-            {concerts.filter(c => c.streamUrl).length}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {filteredConcerts.filter(c => c.streamUrl).length} {t('shown')}
-          </p>
-        </div>
+        
       </div>
 
       {/* Action Buttons */}
       <div className="mb-6">
         <button
           onClick={() => setShowForm(true)}
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg mr-4"
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg mr-4"
         >
           + {t('addNewConcert')}
         </button>
         <button
           onClick={fetchConcerts}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
         >
           🔄 {t('refresh')}
         </button>

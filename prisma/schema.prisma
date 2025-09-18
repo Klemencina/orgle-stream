@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,57 +8,50 @@ datasource db {
 }
 
 model Concert {
-  id          String   @id @default(cuid())
-  date        DateTime
-  image       String
-  streamUrl   String?
-  isVisible   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  program     ProgramPiece[]
+  id           String               @id @default(cuid())
+  date         DateTime
+  isVisible    Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
   translations ConcertTranslation[]
-  
+  program      ProgramPiece[]
+
   @@map("concerts")
 }
 
 model ConcertTranslation {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   locale       String
   title        String
   venue        String
   performer    String
   description  String
-  venueDetails String?
+  performerDetails String?
   concertId    String
-  
   concert      Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
-  
+
   @@unique([concertId, locale])
   @@map("concert_translations")
 }
 
 model ProgramPiece {
-  id        String  @id @default(cuid())
-  duration  String
-  order     Int
-  concertId String
-  
-  concert      Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
+  id           String                    @id @default(cuid())
+  order        Int
+  concertId    String
   translations ProgramPieceTranslation[]
-  
+  concert      Concert                   @relation(fields: [concertId], references: [id], onDelete: Cascade)
+
   @@map("program_pieces")
 }
 
 model ProgramPieceTranslation {
-  id            String @id @default(cuid())
-  locale        String
-  title         String
-  composer      String
+  id             String       @id @default(cuid())
+  locale         String
+  title          String
+  composer       String
   programPieceId String
-  
-  programPiece  ProgramPiece @relation(fields: [programPieceId], references: [id], onDelete: Cascade)
-  
+  programPiece   ProgramPiece @relation(fields: [programPieceId], references: [id], onDelete: Cascade)
+
   @@unique([programPieceId, locale])
   @@map("program_piece_translations")
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 import { LocalizedConcert } from '@/types/concert'
 
 export const runtime = 'nodejs'
@@ -10,14 +11,13 @@ interface TranslationInput {
   title: string
   venue: string
   performer: string
-  description: string
-  venueDetails?: string | null
+  description?: string
+  performerDetails?: string
 }
 
 interface ProgramPieceInput {
   title: string
   composer: string
-  duration: string
 }
 
 interface ProgramLocaleInput {
@@ -27,8 +27,6 @@ interface ProgramLocaleInput {
 
 interface UpdateConcertBody {
   date: string
-  image?: string
-  streamUrl?: string | null
   isVisible?: boolean
   translations: TranslationInput[]
   program: ProgramLocaleInput[]
@@ -55,7 +53,9 @@ export async function GET(
           include: {
             translations: allTranslations ? true : {
               where: {
-                locale: locale
+                locale: {
+                  in: [locale, 'sl', 'original']
+                }
               }
             }
           },
@@ -83,8 +83,7 @@ export async function GET(
       const allTranslationsData = {
         id: concert.id,
         date: concert.date.toISOString(),
-        image: concert.image,
-        streamUrl: concert.streamUrl,
+        
         isVisible: concert.isVisible,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
@@ -94,11 +93,10 @@ export async function GET(
           venue: translation.venue,
           performer: translation.performer,
           description: translation.description,
-          venueDetails: translation.venueDetails
+          performerDetails: (translation as any).performerDetails ?? null
         })),
         program: concert.program.map((piece) => ({
           id: piece.id,
-          duration: piece.duration,
           order: piece.order,
           translations: piece.translations.map((translation) => ({
             locale: translation.locale,
@@ -107,7 +105,7 @@ export async function GET(
           }))
         }))
       }
-      return NextResponse.json(allTranslationsData)
+        return NextResponse.json(allTranslationsData)
     }
 
     // If the client is requesting the gated stream URL, enforce time window and return an opaque value
@@ -125,7 +123,7 @@ export async function GET(
       }
 
       // Within viewing window
-      const playbackUrl = process.env.IVS_PLAYBACK_URL || concert.streamUrl || null
+      const playbackUrl = process.env.IVS_PLAYBACK_URL || null
 
       if (checkOnly) {
         // Only report available when the HLS master playlist is reachable
@@ -183,14 +181,17 @@ export async function GET(
       venue: translation.venue,
       performer: translation.performer,
       description: translation.description,
-      image: concert.image,
-      streamUrl: concert.streamUrl,
-      venueDetails: translation.venueDetails,
+      performerDetails: (translation as any).performerDetails ?? undefined,
       isVisible: concert.isVisible,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
       program: concert.program.map((piece) => {
-        const pieceTranslation = piece.translations[0]
+        const preferredLocale = (locale === 'sl' || locale === 'original') ? locale : 'sl'
+        const translations = (piece as any).translations || []
+        const pieceTranslation = translations.find((t: any) => t.locale === preferredLocale)
+          || translations.find((t: any) => t.locale === 'sl')
+          || translations.find((t: any) => t.locale === 'original')
+          || translations[0]
         if (!pieceTranslation) {
           throw new Error(`No translation found for program piece ${piece.id} in locale ${locale}`)
         }
@@ -199,7 +200,6 @@ export async function GET(
           id: piece.id,
           title: pieceTranslation.title,
           composer: pieceTranslation.composer,
-          duration: piece.duration,
           order: piece.order
         }
       })
@@ -221,24 +221,53 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { date, image, streamUrl, isVisible, translations, program } = body as UpdateConcertBody
+    const { date, isVisible, translations, program } = body as UpdateConcertBody
     const { searchParams } = new URL(request.url)
     const locale = searchParams.get('locale') || 'en'
     const { id } = await params
 
+    // Prepare and validate translations: allow blank locales by filtering them out
+    const preparedTranslations = (translations || []).map((t) => ({
+      ...t,
+      title: (t.title || '').trim(),
+      venue: (t.venue || '').trim(),
+      performer: (t.performer || '').trim(),
+      description: (t.description || '').toString(),
+      performerDetails: t.performerDetails ?? null
+    }))
+    const filteredTranslations = preparedTranslations.filter((t) => t.title || t.venue || t.performer)
+
     // Validate required fields
-    if (!date || !translations || !Array.isArray(translations) || translations.length === 0) {
+    if (!date || !Array.isArray(translations) || filteredTranslations.length === 0) {
       return NextResponse.json(
         { error: 'Missing required fields: date and translations are required' },
         { status: 400 }
       )
     }
 
-    // Validate that all required translations are present
-    for (const translation of translations) {
-      if (!translation.locale || !translation.title || !translation.venue || !translation.performer || !translation.description) {
+    // Validate that all required translations are present (description optional)
+    for (const translation of filteredTranslations) {
+      if (!translation.locale || !translation.title || !translation.venue || !translation.performer) {
         return NextResponse.json(
-          { error: `Missing required fields in ${translation.locale} translation: title, venue, performer, and description are required` },
+          { error: `Missing required fields in ${translation.locale} translation: title, venue, and performer are required` },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Validate program locales: exactly 'sl' and 'original'
+    if (!program || !Array.isArray(program) || program.length < 1) {
+      return NextResponse.json(
+        { error: 'Program is required' },
+        { status: 400 }
+      )
+    }
+    const requiredLocales = new Set(['sl', 'original'])
+    const localesProvided = new Set(program.map(p => p.locale))
+    for (const req of requiredLocales) {
+      if (!localesProvided.has(req)) {
+        return NextResponse.json(
+          { error: "Program must include 'sl' and 'original'" },
           { status: 400 }
         )
       }
@@ -273,31 +302,37 @@ export async function PUT(
       },
       data: {
         date: concertDate,
-        image: image || '🎹',
-        streamUrl: streamUrl || null,
+        
         isVisible: isVisible !== false, // Default to true if not specified
         translations: {
-          create: translations.map((translation) => ({
+          create: filteredTranslations.map((translation) => ({
             locale: translation.locale,
             title: translation.title,
             venue: translation.venue,
             performer: translation.performer,
-            description: translation.description,
-            venueDetails: translation.venueDetails || null
+            description: translation.description ?? '',
+            performerDetails: translation.performerDetails ?? null
           }))
         },
         program: {
-          create: program[0].pieces.map((piece, index: number) => ({
-            duration: piece.duration,
-            order: index,
-            translations: {
-              create: program.map((programData) => ({
-                locale: programData.locale,
-                title: programData.pieces[index].title,
-                composer: programData.pieces[index].composer
-              }))
+          create: ((() => {
+            const sl = program.find(p => p.locale === 'sl')!
+            const original = program.find(p => p.locale === 'original')!
+            const maxLen = Math.max(sl.pieces.length, original.pieces.length)
+            const rows = [] as { order: number; translations: { create: { locale: string; title: string; composer: string }[] } }[]
+            for (let i = 0; i < maxLen; i++) {
+              rows.push({
+                order: i,
+                translations: {
+                  create: [
+                    { locale: 'sl', title: sl.pieces[i]?.title || '', composer: sl.pieces[i]?.composer || '' },
+                    { locale: 'original', title: original.pieces[i]?.title || '', composer: original.pieces[i]?.composer || '' }
+                  ]
+                }
+              })
             }
-          }))
+            return rows
+          })() as any)
         }
       },
       include: {
@@ -305,7 +340,9 @@ export async function PUT(
           include: {
             translations: {
               where: {
-                locale: locale
+                locale: {
+                  in: [locale, 'sl', 'original']
+                }
               }
             }
           },
@@ -322,7 +359,8 @@ export async function PUT(
     })
 
     // Transform to localized format
-    const translation = concert.translations[0]
+    const cAnyConcert = concert as any
+    const translation = cAnyConcert.translations?.[0]
     if (!translation) {
       return NextResponse.json(
         { error: `No translation found for concert ${concert.id} in locale ${locale}` },
@@ -337,14 +375,17 @@ export async function PUT(
       venue: translation.venue,
       performer: translation.performer,
       description: translation.description,
-      image: concert.image,
-      streamUrl: concert.streamUrl,
-      venueDetails: translation.venueDetails,
+      performerDetails: translation.performerDetails ?? undefined,
       isVisible: concert.isVisible,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
-      program: concert.program.map((piece) => {
-        const pieceTranslation = piece.translations[0]
+      program: (cAnyConcert.program as any[]).map((piece: any) => {
+        const preferredLocale = (locale === 'sl' || locale === 'original') ? locale : 'sl'
+        const translations = piece.translations || []
+        const pieceTranslation = translations.find((t: any) => t.locale === preferredLocale)
+          || translations.find((t: any) => t.locale === 'sl')
+          || translations.find((t: any) => t.locale === 'original')
+          || translations[0]
         if (!pieceTranslation) {
           throw new Error(`No translation found for program piece ${piece.id} in locale ${locale}`)
         }
@@ -353,7 +394,6 @@ export async function PUT(
           id: piece.id,
           title: pieceTranslation.title,
           composer: pieceTranslation.composer,
-          duration: piece.duration,
           order: piece.order
         }
       })

@@ -11,7 +11,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Please sign in to view your dashboard</h1>
-            <Link href="/" className="bg-blue-500 text-white px-4 py-2 rounded">
+            <Link href="/" className="bg-orange-500 text-white px-4 py-2 rounded">
               Go to Home
             </Link>
           </div>
@@ -40,7 +40,7 @@ function DashboardContent() {
 
         <div className="flex gap-4 mb-6">
           <Link href={`/${locale}/concerts`}>
-            <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+            <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded">
               Browse Concerts
             </button>
           </Link>
@@ -56,7 +56,7 @@ function DashboardContent() {
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+          <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
             {user?.firstName?.charAt(0) || user?.username?.charAt(0) || "U"}
           </div>
           <div>
@@ -73,17 +73,17 @@ function DashboardContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
           <h3 className="font-semibold">Listening Time</h3>
-          <p className="text-2xl font-bold text-blue-600">24h 32m</p>
+          <p className="text-2xl font-bold text-orange-500">24h 32m</p>
           <p className="text-sm text-gray-600">This month</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
           <h3 className="font-semibold">Favorite Pieces</h3>
-          <p className="text-2xl font-bold text-red-600">12</p>
+          <p className="text-2xl font-bold text-orange-500">12</p>
           <p className="text-sm text-gray-600">Saved compositions</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
           <h3 className="font-semibold">Playlists</h3>
-          <p className="text-2xl font-bold text-green-600">5</p>
+          <p className="text-2xl font-bold text-orange-500">5</p>
           <p className="text-sm text-gray-600">Created collections</p>
         </div>
       </div>

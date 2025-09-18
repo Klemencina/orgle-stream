@@ -8,7 +8,6 @@ export interface ProgramPieceTranslation {
 
 export interface ProgramPiece {
   id: string
-  duration: string
   order: number
   concertId: string
   translations: ProgramPieceTranslation[]
@@ -21,15 +20,13 @@ export interface ConcertTranslation {
   venue: string
   performer: string
   description: string
-  venueDetails?: string | null
+  performerDetails?: string
   concertId: string
 }
 
 export interface Concert {
   id: string
   date: string
-  image: string
-  streamUrl?: string | null
   isVisible: boolean
   createdAt: string
   updatedAt: string
@@ -42,7 +39,6 @@ export interface LocalizedProgramPiece {
   id: string
   title: string
   composer: string
-  duration: string
   order: number
 }
 
@@ -53,9 +49,7 @@ export interface LocalizedConcert {
   venue: string
   performer: string
   description: string
-  image: string
-  streamUrl?: string | null
-  venueDetails?: string | null
+  performerDetails?: string
   isVisible: boolean
   createdAt: string
   updatedAt: string

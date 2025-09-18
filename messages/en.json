@@ -16,9 +16,12 @@
     "goToDashboard": "Go to Dashboard"
   },
   "home": {
-    "title": "Welcome to 🎹 Orgle Koper Stream",
-    "subtitle": "Stream the Orgle Koper from our church. Live and on-demand performances of our historic organ.",
-    "browseConcerts": "Browse Orgle Koper Streams",
+    "title": "Koper Cathedral Organ",
+    "subtitle": "Multimedia portal of the Koper Cathedral organ",
+    "tagline": "Live streams and recordings of organ concerts",
+    "upcomingConcerts": "Upcoming Concerts",
+    "recommendedConcert": "Recommended Concert",
+    "archiveConcerts": "Archive of Old Concerts",
     "features": {
       "highQualityAudio": {
         "title": "High-Quality Audio",
@@ -35,8 +38,8 @@
     }
   },
   "concerts": {
-    "title": "Upcoming Orgle Koper Streams",
-    "subtitle": "Watch live performances from our church",
+    "title": "Upcoming Live Concerts from Koper Cathedral",
+    "subtitle": "Watch live concerts from Koper Cathedral",
     "viewDetails": "View Concert Details",
     "programHighlights": "Program Highlights",
     "morePieces": "more pieces",
@@ -55,6 +58,7 @@
     "liveNow": "🔴 LIVE NOW!",
     "watchLive": "🎥 Watch Live Stream",
     "venue": "Venue Information",
+    "performerInfo": "Performer Information",
     "program": "Concert Program",
     "totalDuration": "Total Duration",
     "quickActions": "Quick Actions",
@@ -65,7 +69,8 @@
     "hours": "Hours",
     "minutes": "Minutes",
     "seconds": "Seconds",
-    "recentActivity": "Recent Orgle Koper Activity"
+    "recentActivity": "Recent Orgle Koper Activity",
+    "smallConcertDescription": "play on small organ concert"
   },
   "dashboard": {
     "title": "Your Orgle Koper Dashboard",
@@ -105,6 +110,7 @@
       "performer": "Performer",
       "description": "Description",
       "venueDetails": "Venue Details",
+      "performerInfo": "Performer Details",
       "composer": "Composer",
       "duration": "Duration",
       "addPiece": "Add Piece",

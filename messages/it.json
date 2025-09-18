@@ -16,9 +16,12 @@
     "goToDashboard": "Vai alla Dashboard"
   },
   "home": {
-    "title": "Benvenuto in 🎹 Orgle Stream",
-    "subtitle": "Trasmetti la tua musica per organo locale con una piattaforma moderna e sicura. Scopri, condividi e goditi bellissime composizioni per organo da tutto il mondo.",
-    "browseConcerts": "Sfoglia Concerti in Arrivo",
+    "title": "Organo del Duomo di Capodistria",
+    "subtitle": "Portale multimediale dell'organo del Duomo di Capodistria",
+    "tagline": "Dirette e registrazioni dei concerti d'organo",
+    "upcomingConcerts": "Prossimi Concerti",
+    "recommendedConcert": "Concerto Consigliato",
+    "archiveConcerts": "Archivio Vecchi Concerti",
     "features": {
       "highQualityAudio": {
         "title": "Audio di Alta Qualità",
@@ -35,8 +38,8 @@
     }
   },
   "concerts": {
-    "title": "Prossimi Concerti di Organo",
-    "subtitle": "Scopri esecuzioni dal vivo di organo da tutto il mondo",
+    "title": "Prossimi Concerti dal Vivo del Duomo di Capodistria",
+    "subtitle": "Guarda concerti dal vivo dal Duomo di Capodistria",
     "viewDetails": "Visualizza Dettagli Concerto",
     "programHighlights": "Punti Salienti del Programma",
     "morePieces": "altri pezzi",
@@ -55,6 +58,7 @@
     "liveNow": "🔴 IN DIRETTA!",
     "watchLive": "🎥 Guarda in Diretta",
     "venue": "Informazioni sul Luogo",
+    "performerInfo": "Informazioni sugli esecutori",
     "program": "Programma del Concerto",
     "totalDuration": "Durata Totale",
     "quickActions": "Azioni Rapide",
@@ -65,7 +69,8 @@
     "hours": "Ore",
     "minutes": "Minuti",
     "seconds": "Secondi",
-    "recentActivity": "Attività Recente di Organo"
+    "recentActivity": "Attività Recente di Organo",
+    "smallConcertDescription": "suona su piccolo concerto d'organo"
   },
   "dashboard": {
     "title": "La Tua Dashboard di Musica per Organo",
@@ -105,6 +110,7 @@
       "performer": "Esecutore",
       "description": "Descrizione",
       "venueDetails": "Dettagli del Luogo",
+      "performerInfo": "Dettagli Esecutore",
       "composer": "Compositore",
       "duration": "Durata",
       "addPiece": "Aggiungi Pezzo",

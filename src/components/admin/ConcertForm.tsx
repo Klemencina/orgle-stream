@@ -16,7 +16,6 @@ interface ConcertFormProps {
 interface ProgramPiece {
   title: string;
   composer: string;
-  duration: string;
 }
 
 interface TranslationData {
@@ -24,7 +23,7 @@ interface TranslationData {
   venue: string;
   performer: string;
   description: string;
-  venueDetails: string;
+  performerDetails?: string;
 }
 
 const localeNames = {
@@ -46,26 +45,24 @@ export default function ConcertForm({
   const [basicData, setBasicData] = useState({
     date: '',
     time: '',
-    image: '🎹',
-    streamUrl: '',
     isVisible: true,
   });
 
   // Translatable fields for each locale
   const [translations, setTranslations] = useState<Record<string, TranslationData>>({
-    en: { title: '', venue: '', performer: '', description: '', venueDetails: '' },
-    sl: { title: '', venue: '', performer: '', description: '', venueDetails: '' },
-    it: { title: '', venue: '', performer: '', description: '', venueDetails: '' }
+    en: { title: '', venue: '', performer: '', description: '', performerDetails: '' },
+    sl: { title: '', venue: '', performer: '', description: '', performerDetails: '' },
+    it: { title: '', venue: '', performer: '', description: '', performerDetails: '' }
   });
 
-  // Program pieces with translations
+  // Program pieces: only two versions, Slovenian and Original
   const [program, setProgram] = useState<Record<string, ProgramPiece[]>>({
-    en: [{ title: '', composer: '', duration: '' }],
-    sl: [{ title: '', composer: '', duration: '' }],
-    it: [{ title: '', composer: '', duration: '' }]
+    sl: [{ title: '', composer: '' }],
+    original: [{ title: '', composer: '' }]
   });
 
   const [activeTab, setActiveTab] = useState('en');
+  const [programActiveTab, setProgramActiveTab] = useState<'sl' | 'original'>('sl');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -102,8 +99,6 @@ export default function ConcertForm({
       setBasicData({
         date: concertDate.toISOString().split('T')[0],
         time: concertDate.toTimeString().split(' ')[0].substring(0, 5),
-        image: concert.image,
-        streamUrl: concert.streamUrl || '',
         isVisible: concert.isVisible !== false, // Default to true if not set
       });
 
@@ -119,7 +114,7 @@ export default function ConcertForm({
             venue: concert.venue,
             performer: concert.performer,
             description: concert.description,
-            venueDetails: concert.venueDetails || ''
+            performerDetails: ''
           }
         }));
 
@@ -128,7 +123,6 @@ export default function ConcertForm({
           [locale]: concert.program.map(piece => ({
             title: piece.title,
             composer: piece.composer,
-            duration: piece.duration,
           }))
         }));
         
@@ -138,8 +132,6 @@ export default function ConcertForm({
             basicData: {
               date: concertDate.toISOString().split('T')[0],
               time: concertDate.toTimeString().split(' ')[0].substring(0, 5),
-              image: concert.image,
-              streamUrl: concert.streamUrl || '',
               isVisible: concert.isVisible !== false,
             },
             translations: {
@@ -149,7 +141,7 @@ export default function ConcertForm({
                 venue: concert.venue,
                 performer: concert.performer,
                 description: concert.description,
-                venueDetails: concert.venueDetails || ''
+                performerDetails: ''
               }
             },
             program: {
@@ -157,7 +149,6 @@ export default function ConcertForm({
               [locale]: concert.program.map(piece => ({
                 title: piece.title,
                 composer: piece.composer,
-                duration: piece.duration,
               }))
             }
           });
@@ -175,38 +166,32 @@ export default function ConcertForm({
       }
       const data = await response.json();
       
-      // Populate all translations
+      // Populate all translations for i18n locales
       const newTranslations: Record<string, TranslationData> = {};
-      const newProgram: Record<string, ProgramPiece[]> = {};
-      
       locales.forEach(loc => {
         const translation = data.translations.find((t: { locale: string }) => t.locale === loc);
-        if (translation) {
-          newTranslations[loc] = {
-            title: translation.title,
-            venue: translation.venue,
-            performer: translation.performer,
-            description: translation.description,
-            venueDetails: translation.venueDetails || ''
-          };
-        } else {
-          newTranslations[loc] = { title: '', venue: '', performer: '', description: '', venueDetails: '' };
-        }
-        
-        // Group program pieces by locale
-        const programPieces = data.program.map((piece: { duration: string; translations: { locale: string; title: string; composer: string }[] }) => {
-          const pieceTranslation = piece.translations.find((t: { locale: string }) => t.locale === loc);
-          return {
-            title: pieceTranslation?.title || '',
-            composer: pieceTranslation?.composer || '',
-            duration: piece.duration
-          };
-        });
-        newProgram[loc] = programPieces.length > 0 ? programPieces : [{ title: '', composer: '', duration: '' }];
+        newTranslations[loc] = translation ? {
+          title: translation.title,
+          venue: translation.venue,
+          performer: translation.performer,
+          description: translation.description,
+          performerDetails: (translation as any).performerDetails || ''
+        } : { title: '', venue: '', performer: '', description: '', performerDetails: '' };
       });
-      
       setTranslations(newTranslations);
-      setProgram(newProgram);
+
+      // Build program only for 'sl' and 'original'
+      const buildProgramFor = (loc: string): ProgramPiece[] => {
+        const pieces = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+          const tr = piece.translations.find((t: { locale: string }) => t.locale === loc);
+          return { title: tr?.title || '', composer: tr?.composer || '' };
+        });
+        return pieces.length > 0 ? pieces : [{ title: '', composer: '' }];
+      };
+      setProgram({
+        sl: buildProgramFor('sl'),
+        original: buildProgramFor('original')
+      });
       
       // Store original data for change detection
       if (concert) {
@@ -215,12 +200,22 @@ export default function ConcertForm({
           basicData: {
             date: concertDate.toISOString().split('T')[0],
             time: concertDate.toTimeString().split(' ')[0].substring(0, 5),
-            image: concert.image,
-            streamUrl: concert.streamUrl || '',
             isVisible: concert.isVisible !== false,
           },
           translations: newTranslations,
-          program: newProgram
+          program: (() => {
+            const sl = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+              const tr = piece.translations.find((t: { locale: string }) => t.locale === 'sl');
+              return { title: tr?.title || '', composer: tr?.composer || '' };
+            });
+            const original = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+              const tr = piece.translations.find((t: { locale: string }) => t.locale === 'original');
+              return { title: tr?.title || '', composer: tr?.composer || '' };
+            });
+            const maxLen = Math.max(sl.length, original.length);
+            const pad = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '' }));
+            return { sl: pad(sl), original: pad(original) };
+          })()
         });
       }
     } catch (error) {
@@ -232,8 +227,7 @@ export default function ConcertForm({
           title: concert?.title || '',
           venue: concert?.venue || '',
           performer: concert?.performer || '',
-          description: concert?.description || '',
-          venueDetails: concert?.venueDetails || ''
+          description: concert?.description || ''
         }
       }));
     }
@@ -258,28 +252,43 @@ export default function ConcertForm({
   };
 
   const handleProgramChange = (locale: string, index: number, field: keyof ProgramPiece, value: string) => {
-    setProgram(prev => ({
-      ...prev,
-      [locale]: prev[locale].map((piece, i) => 
-        i === index ? { ...piece, [field]: value } : piece
-      )
-    }));
+    setProgram(prev => {
+      const other = locale === 'sl' ? 'original' : 'sl';
+      const next = { ...prev };
+      // Ensure paired index exists in both locales
+      const maxLen = Math.max(next.sl.length, next.original.length, index + 1);
+      const ensureLen = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '' }));
+      next.sl = ensureLen(next.sl);
+      next.original = ensureLen(next.original);
+      // Update the value
+      next[locale] = next[locale].map((piece, i) => (i === index ? { ...piece, [field]: value } : piece));
+      return next;
+    });
   };
 
   const addProgramPiece = (locale: string) => {
-    setProgram(prev => ({
-      ...prev,
-      [locale]: [...prev[locale], { title: '', composer: '', duration: '' }]
-    }));
+    setProgram(prev => {
+      const other = locale === 'sl' ? 'original' : 'sl';
+      const next = { ...prev };
+      const newLength = Math.max(next.sl.length, next.original.length) + 1;
+      const padTo = (arr: ProgramPiece[], len: number) => arr.concat(Array(Math.max(0, len - arr.length)).fill({ title: '', composer: '' }));
+      next.sl = padTo(next.sl, newLength);
+      next.original = padTo(next.original, newLength);
+      return next;
+    });
   };
 
-  const removeProgramPiece = (locale: string, index: number) => {
-    if (program[locale].length > 1) {
-      setProgram(prev => ({
-        ...prev,
-        [locale]: prev[locale].filter((_, i) => i !== index)
-      }));
-    }
+  const removeProgramPiece = (_locale: string, index: number) => {
+    // Remove at the same index in both locales, ensure at least one row remains
+    setProgram(prev => {
+      const minLen = Math.min(prev.sl.length, prev.original.length);
+      if (minLen <= 1) return prev;
+      const removeAt = (arr: ProgramPiece[]) => arr.filter((_, i) => i !== index);
+      const next = { sl: removeAt(prev.sl), original: removeAt(prev.original) };
+      if (next.sl.length === 0) next.sl = [{ title: '', composer: '' }];
+      if (next.original.length === 0) next.original = [{ title: '', composer: '' }];
+      return next;
+    });
   };
 
   const copyToAllLocales = (sourceLocale: string) => {
@@ -309,128 +318,83 @@ export default function ConcertForm({
     setBasicData({
       date: randomDate.toISOString().split('T')[0],
       time: randomTime,
-      image: ['🎹', '🎵', '🎼', '🎶', '🎤', '🎧', '🎺', '🎷', '🎸', '🎻'][Math.floor(Math.random() * 10)],
-      streamUrl: Math.random() > 0.5 ? 'https://example.com/stream' : '',
       isVisible: Math.random() > 0.3, // 70% chance of being visible
     });
 
     // Random concert data for each locale
     const concertTemplates = {
-      en: [
-        {
-          title: "Symphony of the Stars",
-          venue: "Grand Concert Hall",
-          performer: "Dr. Sarah Johnson",
-          description: "An evening of classical masterpieces performed by world-renowned musicians in an intimate setting.",
-          venueDetails: "Historic venue with exceptional acoustics and elegant architecture."
-        },
-        {
-          title: "Jazz Under the Moon",
-          venue: "Blue Note Lounge",
-          performer: "The Midnight Quartet",
-          description: "Experience the magic of jazz in an intimate setting with our resident quartet.",
-          venueDetails: "Cozy underground venue with dim lighting and vintage decor."
-        },
-        {
-          title: "Chamber Music Evening",
-          venue: "St. Cecilia's Chapel",
-          performer: "Ensemble Aurora",
-          description: "A refined evening of chamber music featuring works by Mozart, Beethoven, and contemporary composers.",
-          venueDetails: "Sacred space with natural acoustics and beautiful stained glass windows."
-        }
-      ],
       sl: [
         {
           title: "Simfonija zvezd",
           venue: "Velika koncertna dvorana",
           performer: "Dr. Sarah Johnson",
-          description: "Večer klasičnih mojstrovin, ki jih izvajajo svetovno priznani glasbeniki v intimnem okolju.",
-          venueDetails: "Zgodovinski prostor z izjemno akustiko in elegantno arhitekturo."
+          description: "Večer klasičnih mojstrovin, ki jih izvajajo svetovno priznani glasbeniki v intimnem okolju."
         },
         {
           title: "Jazz pod mesecem",
           venue: "Blue Note Lounge",
           performer: "The Midnight Quartet",
-          description: "Doživite čarovnijo jazza v intimnem okolju z našim rezidenčnim kvartetom.",
-          venueDetails: "Udobno podzemno mesto z prigušenim osvetlitvijo in vintage dekorjem."
+          description: "Doživite čarovnijo jazza v intimnem okolju z našim rezidenčnim kvartetom."
         },
         {
           title: "Večer komorne glasbe",
           venue: "Kapela sv. Cecilije",
           performer: "Ensemble Aurora",
-          description: "Rafiniran večer komorne glasbe z deli Mozarta, Beethovna in sodobnih skladateljev.",
-          venueDetails: "Svet prostor z naravno akustiko in lepimi vitražnimi okni."
+          description: "Rafiniran večer komorne glasbe z deli Mozarta, Beethovna in sodobnih skladateljev."
         }
       ],
-      it: [
+      original: [
         {
           title: "Sinfonia delle Stelle",
           venue: "Gran Sala da Concerto",
           performer: "Dr. Sarah Johnson",
-          description: "Una serata di capolavori classici eseguiti da musicisti di fama mondiale in un ambiente intimo.",
-          venueDetails: "Spazio storico con acustica eccezionale e architettura elegante."
+          description: "Una serata di capolavori classici eseguiti da musicisti di fama mondiale in un ambiente intimo."
         },
         {
           title: "Jazz Sotto la Luna",
           venue: "Blue Note Lounge",
           performer: "The Midnight Quartet",
-          description: "Vivi la magia del jazz in un ambiente intimo con il nostro quartetto residente.",
-          venueDetails: "Locale sotterraneo accogliente con illuminazione soffusa e arredamento vintage."
+          description: "Vivi la magia del jazz in un ambiente intimo con il nostro quartetto residente."
         },
         {
           title: "Serata di Musica da Camera",
           venue: "Cappella di Santa Cecilia",
           performer: "Ensemble Aurora",
-          description: "Una serata raffinata di musica da camera con opere di Mozart, Beethoven e compositori contemporanei.",
-          venueDetails: "Spazio sacro con acustica naturale e belle vetrate colorate."
+          description: "Una serata raffinata di musica da camera con opere di Mozart, Beethoven e compositori contemporanei."
         }
       ]
     };
 
     const programTemplates = {
-      en: [
-        { title: "Prelude in C Major", composer: "J.S. Bach", duration: "3:45" },
-        { title: "Sonata No. 14 'Moonlight'", composer: "L. van Beethoven", duration: "15:30" },
-        { title: "Intermezzo", composer: "J. Brahms", duration: "4:20" },
-        { title: "Nocturne in E-flat Major", composer: "F. Chopin", duration: "6:15" },
-        { title: "Intermission", composer: "", duration: "15:00" },
-        { title: "Rhapsody in Blue", composer: "G. Gershwin", duration: "12:45" },
-        { title: "Clair de Lune", composer: "C. Debussy", duration: "5:30" }
-      ],
       sl: [
-        { title: "Predigra v C-duru", composer: "J.S. Bach", duration: "3:45" },
-        { title: "Sonata št. 14 'Mesečina'", composer: "L. van Beethoven", duration: "15:30" },
-        { title: "Intermezzo", composer: "J. Brahms", duration: "4:20" },
-        { title: "Nokturno v Es-duru", composer: "F. Chopin", duration: "6:15" },
-        { title: "Odmor", composer: "", duration: "15:00" },
-        { title: "Rapsodija v modrem", composer: "G. Gershwin", duration: "12:45" },
-        { title: "Mesečina", composer: "C. Debussy", duration: "5:30" }
+        { title: "Predigra v C-duru", composer: "J.S. Bach" },
+        { title: "Sonata št. 14 'Mesečina'", composer: "L. van Beethoven" },
+        { title: "Intermezzo", composer: "J. Brahms" },
+        { title: "Nokturno v Es-duru", composer: "F. Chopin" },
+        { title: "Odmor", composer: "" },
+        { title: "Rapsodija v modrem", composer: "G. Gershwin" },
+        { title: "Mesečina", composer: "C. Debussy" }
       ],
-      it: [
-        { title: "Preludio in Do Maggiore", composer: "J.S. Bach", duration: "3:45" },
-        { title: "Sonata n. 14 'Chiaro di Luna'", composer: "L. van Beethoven", duration: "15:30" },
-        { title: "Intermezzo", composer: "J. Brahms", duration: "4:20" },
-        { title: "Notturno in Mi bemolle Maggiore", composer: "F. Chopin", duration: "6:15" },
-        { title: "Intervallo", composer: "", duration: "15:00" },
-        { title: "Rapsodia in Blu", composer: "G. Gershwin", duration: "12:45" },
-        { title: "Chiaro di Luna", composer: "C. Debussy", duration: "5:30" }
+      original: [
+        { title: "Prélude en Do Majeur", composer: "J.S. Bach" },
+        { title: "Sonata No. 14 'Moonlight'", composer: "L. van Beethoven" },
+        { title: "Intermezzo", composer: "J. Brahms" },
+        { title: "Nocturne en Mi bémol majeur", composer: "F. Chopin" },
+        { title: "Intermission", composer: "" },
+        { title: "Rhapsody in Blue", composer: "G. Gershwin" },
+        { title: "Clair de Lune", composer: "C. Debussy" }
       ]
     };
 
-    // Select random template for each locale
-    locales.forEach(locale => {
-      const randomTemplate = concertTemplates[locale as keyof typeof concertTemplates][Math.floor(Math.random() * concertTemplates[locale as keyof typeof concertTemplates].length)];
-      const randomProgram = programTemplates[locale as keyof typeof programTemplates];
-      
-      setTranslations(prev => ({
-        ...prev,
-        [locale]: { ...randomTemplate }
-      }));
-      
-      setProgram(prev => ({
-        ...prev,
-        [locale]: randomProgram.map(piece => ({ ...piece }))
-      }));
+    // Select random templates for 'sl' and use 'original' program for original
+    const randomSlTemplate = concertTemplates.sl[Math.floor(Math.random() * concertTemplates.sl.length)];
+    setTranslations(prev => ({
+      ...prev,
+      sl: { ...randomSlTemplate }
+    }));
+    setProgram({
+      sl: programTemplates.sl.map(piece => ({ ...piece })),
+      original: programTemplates.original.map(piece => ({ ...piece }))
     });
   };
 
@@ -446,17 +410,16 @@ export default function ConcertForm({
       
       const concertData = {
         date: dateTime.toISOString(),
-        image: basicData.image,
-        streamUrl: basicData.streamUrl,
+        
         isVisible: basicData.isVisible,
         translations: Object.entries(translations).map(([locale, translation]) => ({
           locale,
           ...translation
         })),
-        program: Object.entries(program).map(([locale, pieces]) => ({
-          locale,
-          pieces: pieces.filter(piece => piece.title.trim() !== '')
-        }))
+        program: [
+          { locale: 'sl', pieces: program.sl },
+          { locale: 'original', pieces: program.original }
+        ]
       };
 
 
@@ -530,12 +493,10 @@ export default function ConcertForm({
               setBasicData({
                 date: randomDate.toISOString().split('T')[0],
                 time: randomTime,
-                image: ['🎹', '🎵', '🎼', '🎶', '🎤', '🎧', '🎺', '🎷', '🎸', '🎻'][Math.floor(Math.random() * 10)],
-                streamUrl: Math.random() > 0.5 ? 'https://example.com/stream' : '',
                 isVisible: Math.random() > 0.3, // 70% chance of being visible
               });
             }}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
           >
             🎲 {t('fillWithSample')}
           </button>
@@ -551,7 +512,7 @@ export default function ConcertForm({
               value={basicData.date}
               onChange={handleBasicDataChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
             />
           </div>
 
@@ -565,37 +526,11 @@ export default function ConcertForm({
               value={basicData.time}
               onChange={handleBasicDataChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('image')}
-            </label>
-            <input
-              type="text"
-              name="image"
-              value={basicData.image}
-              onChange={handleBasicDataChange}
-              placeholder="🎹"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('streamUrl')}
-            </label>
-            <input
-              type="url"
-              name="streamUrl"
-              value={basicData.streamUrl}
-              onChange={handleBasicDataChange}
-              placeholder="https://example.com/stream"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-            />
-          </div>
+          
 
           <div className="md:col-span-2">
             <div className="flex items-center">
@@ -605,7 +540,7 @@ export default function ConcertForm({
                 name="isVisible"
                 checked={basicData.isVisible}
                 onChange={(e) => setBasicData(prev => ({ ...prev, isVisible: e.target.checked }))}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
               />
               <label htmlFor="isVisible" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                 <span className="font-medium">{t('isVisible')}</span>
@@ -626,7 +561,7 @@ export default function ConcertForm({
             <button
               type="button"
               onClick={randomFill}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
             >
               🎲 Random Fill
             </button>
@@ -650,7 +585,7 @@ export default function ConcertForm({
                 onClick={() => setActiveTab(loc)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === loc
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    ? 'border-orange-500 text-orange-500 dark:text-orange-400'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
                 }`}
               >
@@ -676,7 +611,7 @@ export default function ConcertForm({
                       value={translations[loc].title}
                       onChange={(e) => handleTranslationChange(loc, 'title', e.target.value)}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                   </div>
 
@@ -689,7 +624,7 @@ export default function ConcertForm({
                       value={translations[loc].performer}
                       onChange={(e) => handleTranslationChange(loc, 'performer', e.target.value)}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                   </div>
                 </div>
@@ -703,99 +638,106 @@ export default function ConcertForm({
                     value={translations[loc].venue}
                     onChange={(e) => handleTranslationChange(loc, 'venue', e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('description')} *
+                    {t('description')}
                   </label>
                   <textarea
                     value={translations[loc].description}
                     onChange={(e) => handleTranslationChange(loc, 'description', e.target.value)}
-                    required
                     rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('venueDetails')}
+                    {t('performerInfo')}
                   </label>
                   <textarea
-                    value={translations[loc].venueDetails}
-                    onChange={(e) => handleTranslationChange(loc, 'venueDetails', e.target.value)}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    value={translations[loc].performerDetails || ''}
+                    onChange={(e) => handleTranslationChange(loc, 'performerDetails', e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
 
-                {/* Program Section */}
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-md font-semibold text-gray-900 dark:text-white">{t('program')}</h4>
-                    <button
-                      type="button"
-                      onClick={() => addProgramPiece(loc)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      + {t('addPiece')}
-                    </button>
-                  </div>
+                
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-                  <div className="space-y-4">
-                    {program[loc].map((piece, index) => (
-                      <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('title')}
-                          </label>
-                          <input
-                            type="text"
-                            value={piece.title}
-                            onChange={(e) => handleProgramChange(loc, index, 'title', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('composer')}
-                          </label>
-                          <input
-                            type="text"
-                            value={piece.composer}
-                            onChange={(e) => handleProgramChange(loc, index, 'composer', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('duration')}
-                          </label>
-                          <input
-                            type="text"
-                            value={piece.duration}
-                            onChange={(e) => handleProgramChange(loc, index, 'duration', e.target.value)}
-                            placeholder="e.g., 5:30"
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            type="button"
-                            onClick={() => removeProgramPiece(loc, index)}
-                            disabled={program[loc].length === 1}
-                            className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-3 py-2 rounded text-sm"
-                          >
-                            {t('removePiece')}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+      {/* Program Editor (Slovenian & Original) */}
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('program')}</h3>
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+              <button
+                type="button"
+                onClick={() => setProgramActiveTab('sl')}
+                className={`px-3 py-1 text-sm ${programActiveTab === 'sl' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+              >
+                Slovensko
+              </button>
+              <button
+                type="button"
+                onClick={() => setProgramActiveTab('original')}
+                className={`px-3 py-1 text-sm ${programActiveTab === 'original' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+              >
+                Original
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => addProgramPiece(programActiveTab)}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
+            >
+              + {t('addPiece')}
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {program[programActiveTab].map((piece, index) => (
+            <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('title')}
+                </label>
+                <input
+                  type="text"
+                  value={piece.title}
+                  onChange={(e) => handleProgramChange(programActiveTab, index, 'title', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('composer')}
+                </label>
+                <input
+                  type="text"
+                  value={piece.composer}
+                  onChange={(e) => handleProgramChange(programActiveTab, index, 'composer', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                />
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => removeProgramPiece(programActiveTab, index)}
+                  disabled={program[programActiveTab].length === 1}
+                  className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-3 py-2 rounded text-sm"
+                >
+                  {t('removePiece')}
+                </button>
               </div>
             </div>
           ))}
@@ -817,7 +759,7 @@ export default function ConcertForm({
           className={`px-6 py-2 rounded-lg transition-colors duration-200 ${
             loading || (isEditing ? !hasChanges() : false)
               ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 text-white'
+              : 'bg-orange-500 hover:bg-orange-600 text-white'
           }`}
         >
           {loading ? t('saving') : (isEditing ? t('updateConcert') : t('createConcert'))}

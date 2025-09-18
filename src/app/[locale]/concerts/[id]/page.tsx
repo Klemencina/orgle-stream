@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { LocalizedConcert } from '@/types/concert';
+import { LocalizedConcert, ProgramPiece } from '@/types/concert';
 import dynamic from 'next/dynamic';
 
 // Define the dynamic component at module scope to avoid remounting on every render
@@ -27,8 +27,10 @@ export default function ConcertPage() {
   const [isLive, setIsLive] = useState(false);
   const [everLive, setEverLive] = useState(false);
   const [concert, setConcert] = useState<LocalizedConcert | null>(null);
+  const [fullProgram, setFullProgram] = useState<ProgramPiece[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [programView, setProgramView] = useState<'sl' | 'original'>('sl');
 
   useEffect(() => {
     async function fetchConcert() {
@@ -49,6 +51,20 @@ export default function ConcertPage() {
         } else {
           const data = await response.json();
           setConcert(data);
+        }
+        // Also fetch full translations for program display (Slovenian + Original)
+        const fullRes = await fetch(`/api/concerts/${concertId}?allTranslations=true`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (fullRes.ok) {
+          const fullData = await fullRes.json();
+          if (fullData && Array.isArray(fullData.program)) {
+            setFullProgram(fullData.program);
+            setProgramView(locale === 'sl' ? 'sl' : 'original');
+          }
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -115,11 +131,11 @@ export default function ConcertPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🎹</div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Loading Concert...</h2>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
         </div>
       </div>
     );
@@ -127,13 +143,13 @@ export default function ConcertPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Concert</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
           <Link href="/concerts">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
+            <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
               {t('concert.viewAllConcerts')}
             </button>
           </Link>
@@ -144,12 +160,12 @@ export default function ConcertPage() {
 
   if (!concert) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{t('concert.notFound')}</h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">{t('concert.notFoundMessage')}</p>
           <Link href="/concerts">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
+            <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
               {t('concert.viewAllConcerts')}
             </button>
           </Link>
@@ -158,17 +174,7 @@ export default function ConcertPage() {
     );
   }
 
-  const totalDuration = concert.program.reduce((total, piece) => {
-    if (piece.composer === "") return total; // Skip intermission
-    const [minutes, seconds] = piece.duration.split(':').map(Number);
-    return total + minutes * 60 + seconds;
-  }, 0);
-
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
+  // Duration no longer displayed in the program
 
   // Compute stream window state
   const startTime = new Date(concert.date).getTime();
@@ -179,7 +185,7 @@ export default function ConcertPage() {
   const hasEnded = nowTs > windowEnd;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -188,10 +194,10 @@ export default function ConcertPage() {
               ← Back to Concerts
             </button>
           </Link>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
-            <span className="text-4xl">{concert.image}</span>
-            {concert.title}
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            {concert.performer}
           </h1>
+          <div className="text-lg text-gray-600 dark:text-gray-300 mb-2">{concert.title}</div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -200,12 +206,9 @@ export default function ConcertPage() {
             {/* Concert Info Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex flex-col md:flex-row md:items-center gap-6">
-                <div className="text-6xl">{concert.image}</div>
                 <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    {concert.title}
-                  </h2>
                   <p className="text-gray-600 dark:text-gray-300 mb-4">{concert.description}</p>
+                  
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
@@ -227,10 +230,6 @@ export default function ConcertPage() {
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">📍</span>
                       <span>{concert.venue}</span>
-                    </div>
-                    <div className="flex items-center text-gray-600 dark:text-gray-300">
-                      <span className="text-lg mr-2">🎤</span>
-                      <span>{concert.performer}</span>
                     </div>
                   </div>
                 </div>
@@ -262,20 +261,20 @@ export default function ConcertPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-4 gap-4 text-center">
-                  <div className="bg-blue-100 dark:bg-blue-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{timeLeft.days}</div>
+                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.days}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.days')}</div>
                   </div>
-                  <div className="bg-green-100 dark:bg-green-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-green-600 dark:text-green-400">{timeLeft.hours}</div>
+                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.hours}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.hours')}</div>
                   </div>
-                  <div className="bg-yellow-100 dark:bg-yellow-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{timeLeft.minutes}</div>
+                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.minutes}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.minutes')}</div>
                   </div>
-                  <div className="bg-purple-100 dark:bg-purple-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{timeLeft.seconds}</div>
+                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.seconds}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">{t('concert.seconds')}</div>
                   </div>
                 </div>
@@ -283,68 +282,71 @@ export default function ConcertPage() {
             </div>
 
             {/* Venue Details */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">📍 {t('concert.venue')}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{concert.venueDetails}</p>
-            </div>
+            
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Concert Program */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <span>🎼</span>
-                {t('concert.program')}
-              </h3>
-
-              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium text-gray-900 dark:text-white">{t('concert.totalDuration')}:</span>
-                  <span className="text-gray-600 dark:text-gray-300">{formatDuration(totalDuration)}</span>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>🎼</span>
+                  {t('concert.program')}
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                    <button
+                      className={`px-3 py-1 text-sm ${programView === 'sl' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+                      onClick={() => setProgramView('sl')}
+                      type="button"
+                    >
+                      Slovensko
+                    </button>
+                    <button
+                      className={`px-3 py-1 text-sm ${programView === 'original' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+                      onClick={() => setProgramView('original')}
+                      type="button"
+                    >
+                      Original
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {concert.program.map((piece, index) => (
-                  <div key={index} className={`flex justify-between items-center py-2 px-3 rounded-lg ${
-                    piece.composer === "" ? "bg-gray-100 dark:bg-gray-700 italic" : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                  }`}>
-                    <div className="flex-1">
-                      <div className={`font-medium ${piece.composer === "" ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"}`}>
-                        {piece.title}
+              {/* Program list: show either Slovenian or Original based on user choice */}
+              <div className="space-y-2">
+                {(fullProgram ?? []).sort((a, b) => a.order - b.order).map((piece) => {
+                  const sl = piece.translations.find(t => t.locale === 'sl') || null;
+                  const original = piece.translations.find(t => t.locale === 'original') || null;
+                  const chosen = programView === 'sl' ? sl : original;
+                  const isIntermission = !chosen?.composer;
+                  return (
+                    <div key={piece.id} className={`py-2 px-3 rounded-lg ${
+                      isIntermission ? 'bg-gray-100 dark:bg-gray-700 italic' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}>
+                      <div className={`font-medium ${isIntermission ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                        {chosen?.title || ''}
                       </div>
-                      {piece.composer && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {piece.composer}
-                        </div>
+                      {chosen?.composer && (
+                        <div className="text-xs text-gray-600 dark:text-gray-400">{chosen.composer}</div>
                       )}
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-                      {piece.duration}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">{t('concert.quickActions')}</h3>
-              <div className="space-y-3">
-                <button className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                  {t('concert.setReminder')}
-                </button>
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                  {t('concert.shareConcert')}
-                </button>
-                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                  {t('concert.getTickets')}
-                </button>
-              </div>
-            </div>
+            
           </div>
         </div>
+        {concert.performerDetails && (
+          <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div className="prose dark:prose-invert max-w-none text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
+              {concert.performerDetails}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

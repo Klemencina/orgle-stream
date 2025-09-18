@@ -16,9 +16,12 @@
     "goToDashboard": "Pojdite na nadzorno ploščo"
   },
   "home": {
-    "title": "Dobrodošli v 🎹 Orgle Koper Stream",
-    "subtitle": "Pretakanje Orgle Koper iz naše cerkve. Prenosi v živo in posnetki naših orgel.",
-    "browseConcerts": "Prebrskaj prenose Orgle Koper",
+    "title": "Orgle koprske stolnice",
+    "subtitle": "Multimedijski portal orgle koprske stolnice",
+    "tagline": "Neposredni prenosi in posnetki orgelskih koncertov",
+    "upcomingConcerts": "Prihodnji koncerti",
+    "recommendedConcert": "Priporočen koncert",
+    "archiveConcerts": "Arhiv starih koncertov",
     "features": {
       "highQualityAudio": {
         "title": "Visokokakovostni zvok",
@@ -35,8 +38,8 @@
     }
   },
   "concerts": {
-    "title": "Prihajajoči prenosi Orgle Koper",
-    "subtitle": "Spremljajte prenose v živo iz naše cerkve",
+    "title": "Prihodnji koncerti v živo iz koperske stolnice",
+    "subtitle": "Spremljajte koncerti v živo iz koperske stolnice",
     "viewDetails": "Ogled podrobnosti koncerta",
     "programHighlights": "Poudarki programa",
     "morePieces": "več skladb",
@@ -55,6 +58,7 @@
     "liveNow": "🔴 V ŽIVO!",
     "watchLive": "🎥 Glejte v živo",
     "venue": "Informacije o prizorišču",
+    "performerInfo": "Informacije o izvajalcih",
     "program": "Program koncerta",
     "totalDuration": "Skupni čas trajanja",
     "quickActions": "Hitra dejanja",
@@ -65,7 +69,8 @@
     "hours": "Ure",
     "minutes": "Minute",
     "seconds": "Sekunde",
-    "recentActivity": "Nedavna dejavnost Orgle Koper"
+    "recentActivity": "Nedavna dejavnost Orgle Koper",
+    "smallConcertDescription": "odspidaj na majho orgeljski koncert"
   },
   "dashboard": {
     "title": "Vaša nadzorna plošča Orgle Koper",
@@ -105,6 +110,7 @@
       "performer": "Izvajalec",
       "description": "Opis",
       "venueDetails": "Podrobnosti prizorišča",
+      "performerInfo": "Informacije o izvajalcu",
       "composer": "Skladatelj",
       "duration": "Trajanje",
       "addPiece": "Dodaj skladbo",

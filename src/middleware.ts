@@ -1,5 +1,5 @@
 import createMiddleware from 'next-intl/middleware';
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { locales } from './i18n/request';
 
@@ -11,11 +11,12 @@ const intlMiddleware = createMiddleware({
 });
 
 const isProtectedRoute = createRouteMatcher([
-  '/dashboard(.*)',
+  '/(.*)/dashboard(.*)',
+  '/(.*)/admin(.*)'
 ]);
 
 const isAdminRoute = createRouteMatcher([
-  '/admin(.*)',
+  '/(.*)/admin(.*)'
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -28,12 +29,24 @@ export default clerkMiddleware(async (auth, req) => {
 
     // Check admin role for admin routes
     if (isAdminRoute(req)) {
-      const { sessionClaims } = await auth();
-      const userRole = (sessionClaims?.metadata as { role?: string } | undefined)?.role;
-      
-      if (userRole !== 'admin') {
-        // Redirect non-admin users to the dashboard
-        const url = new URL('/dashboard', req.url);
+      const { userId } = await auth();
+      const locale = req.nextUrl.pathname.split('/')[1] || 'sl';
+
+      if (!userId) {
+        const url = new URL(`/${locale}/dashboard`, req.url);
+        return NextResponse.redirect(url);
+      }
+
+      try {
+        const client = await clerkClient();
+        const user = await client.users.getUser(userId);
+        const userRole = (user.publicMetadata as { role?: string } | undefined)?.role;
+        if (userRole !== 'admin') {
+          const url = new URL(`/${locale}/dashboard`, req.url);
+          return NextResponse.redirect(url);
+        }
+      } catch {
+        const url = new URL(`/${locale}/dashboard`, req.url);
         return NextResponse.redirect(url);
       }
     }
@@ -51,12 +64,24 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Check admin role for admin routes
   if (isAdminRoute(req)) {
-    const { sessionClaims } = await auth();
-    const userRole = (sessionClaims?.metadata as { role?: string } | undefined)?.role;
-    
-    if (userRole !== 'admin') {
-      // Redirect non-admin users to the dashboard
-      const url = new URL('/dashboard', req.url);
+    const { userId } = await auth();
+    const locale = req.nextUrl.pathname.split('/')[1] || 'sl';
+
+    if (!userId) {
+      const url = new URL(`/${locale}/dashboard`, req.url);
+      return NextResponse.redirect(url);
+    }
+
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+      const userRole = (user.publicMetadata as { role?: string } | undefined)?.role;
+      if (userRole !== 'admin') {
+        const url = new URL(`/${locale}/dashboard`, req.url);
+        return NextResponse.redirect(url);
+      }
+    } catch {
+      const url = new URL(`/${locale}/dashboard`, req.url);
       return NextResponse.redirect(url);
     }
   }

@@ -149,7 +149,7 @@ export default function AdminConcertsPage() {
                     <tr key={concert.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="text-2xl mr-3">{concert.image}</div>
+                          
                           <div>
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                               {concert.title}

@@ -6,7 +6,9 @@ interface SessionMetadata {
 
 export async function isAdmin() {
   const { sessionClaims } = await auth();
-  const userRole = (sessionClaims?.metadata as SessionMetadata | undefined)?.role;
+  const userRole =
+    (sessionClaims?.publicMetadata as SessionMetadata | undefined)?.role ??
+    (sessionClaims?.metadata as SessionMetadata | undefined)?.role;
   return userRole === 'admin';
 }
 
