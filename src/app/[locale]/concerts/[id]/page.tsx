@@ -11,7 +11,7 @@ import dynamic from 'next/dynamic';
 const StreamPlayer = dynamic(() => import('@/components/StreamPlayer'), { ssr: false });
 
 // Helper function for Slovenian pluralization
-const getSlovenianPlural = (count: number, unitKey: string, t: any) => {
+const getSlovenianPlural = (count: number, unitKey: string, t: ReturnType<typeof useTranslations>) => {
   // Slovenian plural rules:
   // 1 = one (singular)
   // 2-4 = few (paucal)

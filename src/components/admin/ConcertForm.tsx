@@ -253,7 +253,6 @@ export default function ConcertForm({
 
   const handleProgramChange = (locale: string, index: number, field: keyof ProgramPiece, value: string) => {
     setProgram(prev => {
-      const other = locale === 'sl' ? 'original' : 'sl';
       const next = { ...prev };
       // Ensure paired index exists in both locales
       const maxLen = Math.max(next.sl.length, next.original.length, index + 1);
@@ -266,9 +265,8 @@ export default function ConcertForm({
     });
   };
 
-  const addProgramPiece = (locale: string) => {
+  const addProgramPiece = () => {
     setProgram(prev => {
-      const other = locale === 'sl' ? 'original' : 'sl';
       const next = { ...prev };
       const newLength = Math.max(next.sl.length, next.original.length) + 1;
       const padTo = (arr: ProgramPiece[], len: number) => arr.concat(Array(Math.max(0, len - arr.length)).fill({ title: '', composer: '' }));
@@ -481,7 +479,7 @@ export default function ConcertForm({
 
       {/* Basic Information (Non-translatable) */}
       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('basicInfo')}</h3>
           <button
             type="button"
@@ -489,14 +487,14 @@ export default function ConcertForm({
               const today = new Date();
               const randomDate = new Date(today.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000);
               const randomTime = `${Math.floor(Math.random() * 12) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')} ${Math.random() > 0.5 ? 'PM' : 'AM'}`;
-              
+
               setBasicData({
                 date: randomDate.toISOString().split('T')[0],
                 time: randomTime,
                 isVisible: Math.random() > 0.3, // 70% chance of being visible
               });
             }}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
           >
             🎲 {t('fillWithSample')}
           </button>
@@ -675,29 +673,29 @@ export default function ConcertForm({
 
       {/* Program Editor (Slovenian & Original) */}
       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mt-8">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('program')}</h3>
-          <div className="flex items-center gap-2">
-            <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setProgramActiveTab('sl')}
-                className={`px-3 py-1 text-sm ${programActiveTab === 'sl' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+                className={`px-3 py-1 text-sm flex-1 sm:flex-none ${programActiveTab === 'sl' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
               >
                 Slovensko
               </button>
               <button
                 type="button"
                 onClick={() => setProgramActiveTab('original')}
-                className={`px-3 py-1 text-sm ${programActiveTab === 'original' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+                className={`px-3 py-1 text-sm flex-1 sm:flex-none ${programActiveTab === 'original' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
               >
                 Original
               </button>
             </div>
             <button
               type="button"
-              onClick={() => addProgramPiece(programActiveTab)}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
+              onClick={() => addProgramPiece()}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
             >
               + {t('addPiece')}
             </button>
@@ -745,18 +743,18 @@ export default function ConcertForm({
       </div>
 
       {/* Form Actions */}
-      <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-600">
+      <div className="flex flex-col sm:flex-row sm:justify-end sm:space-x-4 space-y-3 sm:space-y-0 pt-6 border-t border-gray-200 dark:border-gray-600">
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+          className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 order-2 sm:order-1"
         >
           {t('cancel')}
         </button>
         <button
           type="submit"
           disabled={loading || (isEditing ? !hasChanges() : false)}
-          className={`px-6 py-2 rounded-lg transition-colors duration-200 ${
+          className={`px-6 py-2 rounded-lg transition-colors duration-200 order-1 sm:order-2 ${
             loading || (isEditing ? !hasChanges() : false)
               ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
               : 'bg-orange-500 hover:bg-orange-600 text-white'
