@@ -19,6 +19,7 @@ export default function Header() {
   const t = useTranslations();
   const tAuth = useTranslations('auth');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Extract current locale from pathname, default to Slovenian
   const currentLocale = pathname.split('/')[1] || 'sl';
@@ -38,6 +39,19 @@ export default function Header() {
     setIsMobileMenuOpen(false);
   }, [pathname]);
 
+  // Detect theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsDarkMode(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   return (
     <header className="relative bg-white dark:bg-gray-800 shadow-sm">
       {/* Desktop Header */}
@@ -45,7 +59,7 @@ export default function Header() {
         {/* Left side - Title */}
         <div className="flex items-center flex-shrink-0">
           <Link href={`/${currentLocale}`} className="text-xl font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
-            <Image src="/logo.svg" alt="Logo" width={48} height={48} priority />
+            <Image src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} alt="Logo" width={48} height={48} priority />
             {t('home.title')}
           </Link>
         </div>
@@ -95,7 +109,7 @@ export default function Header() {
         {/* Left side - Title */}
         <div className="flex items-center flex-shrink-0">
           <Link href={`/${currentLocale}`} className="text-lg font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
-            <Image src="/logo.svg" alt="Logo" width={36} height={36} priority />
+            <Image src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} alt="Logo" width={36} height={36} priority />
             <span className="truncate">{t('home.title')}</span>
           </Link>
         </div>
