@@ -215,14 +215,11 @@ export default function ConcertPage() {
             </button>
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            {concert.performers && concert.performers.length > 0
-              ? concert.performers.map(p => p.name).join(', ')
-              : 'Concert'}
+            {concert.title}
           </h1>
           {concert.subtitle && (
             <div className="text-xl text-gray-700 dark:text-gray-200 mb-1">{concert.subtitle}</div>
           )}
-          <div className="text-lg text-gray-600 dark:text-gray-300 mb-2">{concert.title}</div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
