@@ -17,11 +17,16 @@
   },
   "home": {
     "title": "Orgle koprske stolnice",
-    "subtitle": "Multimedijski portal orgle koprske stolnice",
+    "subtitle": "Multimedijski portal orgel koprske stolnice",
     "tagline": "Neposredni prenosi in posnetki orgelskih koncertov",
     "upcomingConcerts": "Prihodnji koncerti",
-    "recommendedConcert": "Priporočen koncert",
-    "archiveConcerts": "Arhiv starih koncertov",
+    "upcomingConcertsDescription": "Pridružite se nam pri prihodnjih koncertih v živo",
+    "upcomingConcertsButton": "Ogled",
+    "recommendedConcert": "Priporočeni koncerti",
+    "recommendedConcertDescription": "Oglejte si najboljše posnetke koncertov iz naše zbirke",
+    "archiveConcerts": "Arhiv koncertov",
+    "archiveConcertsDescription": "Raziščite multimedijski arhiv",
+    "archiveConcertsButton": "Dostop do arhiva",
     "features": {
       "highQualityAudio": {
         "title": "Visokokakovostni zvok",
@@ -39,8 +44,8 @@
   },
   "concerts": {
     "title": "Prihodnji koncerti v živo iz koprske stolnice",
-    "subtitle": "Spremljajte koncerte v živo iz koprske stolnice",
-    "viewDetails": "Ogled podrobnosti koncerta",
+    "subtitle": "Spremljajte koncerte v živo",
+    "viewDetails": "Podrobnosti",
     "programHighlights": "Poudarki programa",
     "morePieces": "več skladb",
     "newsletter": {

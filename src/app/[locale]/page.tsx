@@ -58,11 +58,11 @@ export default function Home() {
                   <span className="text-3xl">📅</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('home.upcomingConcerts')}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">Pridružite se nam pri prihajajočih koncertih v živo iz koprske stolnice</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">{t('home.upcomingConcertsDescription')}</p>
               </div>
               <Link href={`/${locale}/concerts`}>
                 <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200">
-                  Oglej si koncerte
+                  {t('home.upcomingConcertsButton')}
                 </button>
               </Link>
             </div>
@@ -73,7 +73,7 @@ export default function Home() {
                   <span className="text-3xl">⭐</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('home.recommendedConcert')}</h3>
-                <p className="text-gray-600 dark:text-gray-300">Odkrijte najboljše posnetke koncertov iz naše zbirke</p>
+                <p className="text-gray-600 dark:text-gray-300">{t('home.recommendedConcertDescription')}</p>
               </div>
             </div>
 
@@ -83,11 +83,11 @@ export default function Home() {
                   <span className="text-3xl">📚</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t('home.archiveConcerts')}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">Raziskujte naš multimedijski arhiv starih koncertov</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">{t('home.archiveConcertsDescription')}</p>
               </div>
               <Link href={`https://www.youtube.com/@orglekoprskestolnice7973/videos`} target="_blank" rel="noopener noreferrer">
                 <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200">
-                  Dostop do arhiva
+                  {t('home.archiveConcertsButton')}
                 </button>
               </Link>
             </div>

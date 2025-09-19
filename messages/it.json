@@ -20,8 +20,13 @@
     "subtitle": "Portale multimediale dell'organo del Duomo di Capodistria",
     "tagline": "Dirette e registrazioni dei concerti d'organo",
     "upcomingConcerts": "Prossimi Concerti",
-    "recommendedConcert": "Concerto Consigliato",
-    "archiveConcerts": "Archivio Vecchi Concerti",
+    "upcomingConcertsDescription": "Unisciti a noi per i prossimi concerti dal vivo",
+    "upcomingConcertsButton": "Visualizza",
+    "recommendedConcert": "Concerti Consigliati",
+    "recommendedConcertDescription": "Guarda le migliori registrazioni di concerti dalla nostra collezione",
+    "archiveConcerts": "Archivio Concerti",
+    "archiveConcertsDescription": "Esplora l'archivio multimediale",
+    "archiveConcertsButton": "Accedi all'Archivio",
     "features": {
       "highQualityAudio": {
         "title": "Audio di Alta Qualità",

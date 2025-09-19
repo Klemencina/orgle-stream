@@ -20,8 +20,13 @@
     "subtitle": "Multimedia portal of the Koper Cathedral organ",
     "tagline": "Live streams and recordings of organ concerts",
     "upcomingConcerts": "Upcoming Concerts",
-    "recommendedConcert": "Recommended Concert",
-    "archiveConcerts": "Archive of Old Concerts",
+    "upcomingConcertsDescription": "Join us for upcoming live concerts",
+    "upcomingConcertsButton": "View",
+    "recommendedConcert": "Recommended Concerts",
+    "recommendedConcertDescription": "Check out the best concert recordings from our collection",
+    "archiveConcerts": "Archive of Concerts",
+    "archiveConcertsDescription": "Explore the multimedia archive",
+    "archiveConcertsButton": "Access Archive",
     "features": {
       "highQualityAudio": {
         "title": "High-Quality Audio",
