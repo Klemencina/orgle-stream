@@ -153,7 +153,7 @@ export default function ConcertPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🎹</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Loading Concert...</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('concert.loadingConcert')}</h2>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
         </div>
       </div>
@@ -165,9 +165,9 @@ export default function ConcertPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Concert</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('concert.loadingConcertError')}</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
-          <Link href="/concerts">
+          <Link href={`/${locale}/concerts`}>
             <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
               {t('concert.viewAllConcerts')}
             </button>
@@ -183,7 +183,7 @@ export default function ConcertPage() {
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">{t('concert.notFound')}</h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">{t('concert.notFoundMessage')}</p>
-          <Link href="/concerts">
+          <Link href={`/${locale}/concerts`}>
             <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl">
               {t('concert.viewAllConcerts')}
             </button>
@@ -208,9 +208,9 @@ export default function ConcertPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/concerts">
+          <Link href={`/${locale}/concerts`}>
             <button className="mb-4 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-              ← Back to Concerts
+              {t('concert.backToConcerts')}
             </button>
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
@@ -226,13 +226,14 @@ export default function ConcertPage() {
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex flex-col md:flex-row md:items-center gap-6">
                 <div className="flex-1">
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">{concert.description}</p>
+                  {concert.description && concert.description.trim().length > 0 && (
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">{concert.description}</p>
+                  )}
                   
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">📅</span>
-                      <span>{new Date(concert.date).toLocaleDateString(locale, {
+                      <span className="text-base md:text-lg font-semibold">{new Date(concert.date).toLocaleDateString(locale, {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
@@ -241,7 +242,7 @@ export default function ConcertPage() {
                     </div>
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">🕒</span>
-                      <span>{new Date(concert.date).toLocaleTimeString(locale, {
+                      <span className="text-base md:text-lg font-semibold">{new Date(concert.date).toLocaleTimeString(locale, {
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: false
@@ -273,11 +274,11 @@ export default function ConcertPage() {
                 </div>
               ) : hasEnded ? (
                 <div className="p-6 text-center text-gray-700 dark:text-gray-200">
-                  The live stream has ended.
+                  {t('concert.liveStreamEnded')}
                 </div>
               ) : windowOpen ? (
                 <div className="p-6 text-center text-gray-700 dark:text-gray-200">
-                  Waiting for the live stream to start…
+                  {t('concert.waitingForStream')}
                 </div>
               ) : (
                 <div className="grid grid-cols-4 gap-4 text-center">

@@ -46,7 +46,7 @@ export default function ConcertsPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🎹</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Loading Concerts...</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('concerts.loading')}</h2>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
         </div>
       </div>
@@ -58,13 +58,13 @@ export default function ConcertsPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Concerts</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('concerts.loadingError')}</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
           >
-            Try Again
+            {t('concerts.tryAgain')}
           </button>
         </div>
       </div>
