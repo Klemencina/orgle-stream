@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
-import { LocalizedConcert } from '@/types/concert'
+import { LocalizedConcert, Performer } from '@/types/concert'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+// Type guard to validate performers array
+function isValidPerformers(data: any): data is Performer[] {
+  if (!Array.isArray(data)) return false
+  return data.every(item =>
+    typeof item === 'object' &&
+    item !== null &&
+    typeof item.name === 'string' &&
+    typeof item.img === 'string' &&
+    typeof item.opis === 'string'
+  )
+}
 
 interface TranslationInput {
   locale: string
   title: string
   venue: string
-  performer: string
+  subtitle?: string
   description?: string
-  performerDetails?: string
+  performers?: Array<{name: string, img: string, opis: string}>
 }
 
 interface ProgramPieceInput {
@@ -90,10 +102,10 @@ export async function GET(
         translations: concert.translations.map((translation) => ({
           locale: translation.locale,
           title: translation.title,
+          subtitle: translation.subtitle,
           venue: translation.venue,
-          performer: translation.performer,
           description: translation.description,
-          performerDetails: translation.performerDetails ?? null
+          performers: translation.performers ?? null
         })),
         program: concert.program.map((piece) => ({
           id: piece.id,
@@ -177,14 +189,14 @@ export async function GET(
     const localizedConcert: LocalizedConcert = {
       id: concert.id,
       title: translation.title,
+      subtitle: translation.subtitle || undefined,
       date: concert.date.toISOString(),
       venue: translation.venue,
-      performer: translation.performer,
       description: translation.description,
-      performerDetails: translation.performerDetails ?? undefined,
       isVisible: concert.isVisible,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
+      performers: isValidPerformers(translation.performers) ? translation.performers : undefined,
       program: concert.program.map((piece) => {
         const preferredLocale = (locale === 'sl' || locale === 'original') ? locale : 'sl'
         const translations = piece.translations || []
@@ -230,12 +242,12 @@ export async function PUT(
     const preparedTranslations = (translations || []).map((t) => ({
       ...t,
       title: (t.title || '').trim(),
+      subtitle: t.subtitle ? (t.subtitle || '').trim() : null,
       venue: (t.venue || '').trim(),
-      performer: (t.performer || '').trim(),
       description: (t.description || '').toString(),
-      performerDetails: t.performerDetails ?? null
+      performers: t.performers || null
     }))
-    const filteredTranslations = preparedTranslations.filter((t) => t.title || t.venue || t.performer)
+    const filteredTranslations = preparedTranslations.filter((t) => t.title || t.venue || (t.performers && t.performers.length > 0))
 
     // Validate required fields
     if (!date || !Array.isArray(translations) || filteredTranslations.length === 0) {
@@ -247,9 +259,9 @@ export async function PUT(
 
     // Validate that all required translations are present (description optional)
     for (const translation of filteredTranslations) {
-      if (!translation.locale || !translation.title || !translation.venue || !translation.performer) {
+      if (!translation.locale || !translation.title || !translation.venue) {
         return NextResponse.json(
-          { error: `Missing required fields in ${translation.locale} translation: title, venue, and performer are required` },
+          { error: `Missing required fields in ${translation.locale} translation: title and venue are required` },
           { status: 400 }
         )
       }
@@ -302,16 +314,16 @@ export async function PUT(
       },
       data: {
         date: concertDate,
-        
+
         isVisible: isVisible !== false, // Default to true if not specified
         translations: {
           create: filteredTranslations.map((translation) => ({
             locale: translation.locale,
             title: translation.title,
+            subtitle: translation.subtitle,
             venue: translation.venue,
-            performer: translation.performer,
             description: translation.description ?? '',
-            performerDetails: translation.performerDetails ?? null
+            performers: translation.performers || null
           }))
         },
         program: {
@@ -374,14 +386,14 @@ export async function PUT(
     const localizedConcert: LocalizedConcert = {
       id: concert.id,
       title: translation.title,
+      subtitle: translation.subtitle || undefined,
       date: concert.date.toISOString(),
       venue: translation.venue,
-      performer: translation.performer,
       description: translation.description,
-      performerDetails: translation.performerDetails ?? undefined,
       isVisible: concert.isVisible,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
+      performers: isValidPerformers(translation.performers) ? translation.performers : undefined,
       program: concert.program.map((piece) => {
         const preferredLocale = (locale === 'sl' || locale === 'original') ? locale : 'sl'
         const translations = piece.translations || []

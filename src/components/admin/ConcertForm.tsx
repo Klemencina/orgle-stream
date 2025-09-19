@@ -20,10 +20,10 @@ interface ProgramPiece {
 
 interface TranslationData {
   title: string;
+  subtitle?: string;
   venue: string;
-  performer: string;
   description: string;
-  performerDetails?: string;
+  performers?: Array<{name: string, img: string, opis: string}>;
 }
 
 const localeNames = {
@@ -50,9 +50,9 @@ export default function ConcertForm({
 
   // Translatable fields for each locale
   const [translations, setTranslations] = useState<Record<string, TranslationData>>({
-    en: { title: '', venue: '', performer: '', description: '', performerDetails: '' },
-    sl: { title: '', venue: '', performer: '', description: '', performerDetails: '' },
-    it: { title: '', venue: '', performer: '', description: '', performerDetails: '' }
+    en: { title: '', subtitle: '', venue: '', description: '', performers: [] },
+    sl: { title: '', subtitle: '', venue: '', description: '', performers: [] },
+    it: { title: '', subtitle: '', venue: '', description: '', performers: [] }
   });
 
   // Program pieces: only two versions, Slovenian and Original
@@ -89,7 +89,7 @@ export default function ConcertForm({
     // Deep comparison of program
     const programChanged = JSON.stringify(program) !== JSON.stringify(originalData.program);
     if (programChanged) return true;
-    
+
     return false;
   };
 
@@ -111,10 +111,10 @@ export default function ConcertForm({
           ...prev,
           [locale]: {
             title: concert.title,
+            subtitle: concert.subtitle || '',
             venue: concert.venue,
-            performer: concert.performer,
             description: concert.description,
-            performerDetails: ''
+            performers: concert.performers || []
           }
         }));
 
@@ -138,10 +138,10 @@ export default function ConcertForm({
               ...translations,
               [locale]: {
                 title: concert.title,
+                subtitle: concert.subtitle || '',
                 venue: concert.venue,
-                performer: concert.performer,
                 description: concert.description,
-                performerDetails: ''
+                performers: concert.performers || []
               }
             },
             program: {
@@ -150,7 +150,7 @@ export default function ConcertForm({
                 title: piece.title,
                 composer: piece.composer,
               }))
-            }
+            },
           });
         }
       }
@@ -169,14 +169,14 @@ export default function ConcertForm({
       // Populate all translations for i18n locales
       const newTranslations: Record<string, TranslationData> = {};
       locales.forEach(loc => {
-        const translation = data.translations.find((t: { locale: string; title: string; venue: string; performer: string; description: string; performerDetails?: string }) => t.locale === loc);
+        const translation = data.translations.find((t: { locale: string; title: string; subtitle?: string; venue: string; description: string; performers?: Array<{name: string, img: string, opis: string}> }) => t.locale === loc);
         newTranslations[loc] = translation ? {
           title: translation.title,
+          subtitle: translation.subtitle || '',
           venue: translation.venue,
-          performer: translation.performer,
           description: translation.description,
-          performerDetails: translation.performerDetails || ''
-        } : { title: '', venue: '', performer: '', description: '', performerDetails: '' };
+          performers: translation.performers || []
+        } : { title: '', subtitle: '', venue: '', description: '', performers: [] };
       });
       setTranslations(newTranslations);
 
@@ -188,12 +188,13 @@ export default function ConcertForm({
         });
         return pieces.length > 0 ? pieces : [{ title: '', composer: '' }];
       };
-      setProgram({
-        sl: buildProgramFor('sl'),
-        original: buildProgramFor('original')
-      });
-      
-      // Store original data for change detection
+        setProgram({
+          sl: buildProgramFor('sl'),
+          original: buildProgramFor('original')
+        });
+
+
+        // Store original data for change detection
       if (concert) {
         const concertDate = new Date(concert.date);
         setOriginalData({
@@ -225,9 +226,10 @@ export default function ConcertForm({
         ...prev,
         [locale]: {
           title: concert?.title || '',
+          subtitle: concert?.subtitle || '',
           venue: concert?.venue || '',
-          performer: concert?.performer || '',
-          description: concert?.description || ''
+          description: concert?.description || '',
+          performers: concert?.performers || []
         }
       }));
     }
@@ -408,7 +410,7 @@ export default function ConcertForm({
       
       const concertData = {
         date: dateTime.toISOString(),
-        
+
         isVisible: basicData.isVisible,
         translations: Object.entries(translations).map(([locale, translation]) => ({
           locale,
@@ -417,7 +419,7 @@ export default function ConcertForm({
         program: [
           { locale: 'sl', pieces: program.sl },
           { locale: 'original', pieces: program.original }
-        ]
+        ],
       };
 
 
@@ -493,6 +495,14 @@ export default function ConcertForm({
                 time: randomTime,
                 isVisible: Math.random() > 0.3, // 70% chance of being visible
               });
+
+              // Add some sample performers
+              const samplePerformers = [
+                { name: 'Dr. Sarah Johnson', img: 'https://example.com/sarah.jpg', opis: 'Renowned pianist specializing in contemporary classical music' },
+                { name: 'The Midnight Quartet', img: 'https://example.com/quartet.jpg', opis: 'String quartet known for their innovative interpretations' },
+                { name: 'Ensemble Aurora', img: 'https://example.com/ensemble.jpg', opis: 'Chamber ensemble featuring both traditional and experimental works' }
+              ];
+              setPerformersJson(Math.random() > 0.5 ? samplePerformers.slice(0, Math.floor(Math.random() * 3) + 1) : []);
             }}
             className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
           >
@@ -615,13 +625,12 @@ export default function ConcertForm({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('performer')} *
+                      Subtitle
                     </label>
                     <input
                       type="text"
-                      value={translations[loc].performer}
-                      onChange={(e) => handleTranslationChange(loc, 'performer', e.target.value)}
-                      required
+                      value={translations[loc].subtitle || ''}
+                      onChange={(e) => handleTranslationChange(loc, 'subtitle', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
                   </div>
@@ -652,16 +661,101 @@ export default function ConcertForm({
                   />
                 </div>
 
+                {/* Performers Section */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('performerInfo')}
-                  </label>
-                  <textarea
-                    value={translations[loc].performerDetails || ''}
-                    onChange={(e) => handleTranslationChange(loc, 'performerDetails', e.target.value)}
-                    rows={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('performerInfo')}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPerformers = [...(translations[loc].performers || [])];
+                        newPerformers.push({ name: '', img: '', opis: '' });
+                        handleTranslationChange(loc, 'performers', newPerformers);
+                      }}
+                      className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
+                    >
+                      + Add Performer
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {(translations[loc].performers || []).map((performer, index) => (
+                      <div key={index} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg space-y-4">
+                        {/* Name, Image URL, and Remove button in a row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Name
+                            </label>
+                            <input
+                              type="text"
+                              value={performer.name}
+                              onChange={(e) => {
+                                const newPerformers = [...(translations[loc].performers || [])];
+                                newPerformers[index].name = e.target.value;
+                                handleTranslationChange(loc, 'performers', newPerformers);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                              placeholder="Performer name"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Image URL
+                            </label>
+                            <input
+                              type="text"
+                              value={performer.img}
+                              onChange={(e) => {
+                                const newPerformers = [...(translations[loc].performers || [])];
+                                newPerformers[index].img = e.target.value;
+                                handleTranslationChange(loc, 'performers', newPerformers);
+                              }}
+                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                              placeholder="Image URL"
+                            />
+                          </div>
+                          <div className="flex items-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newPerformers = (translations[loc].performers || []).filter((_, i) => i !== index);
+                                handleTranslationChange(loc, 'performers', newPerformers);
+                              }}
+                              className="w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm"
+                            >
+                              Remove Performer
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Full-width description textarea */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Description
+                          </label>
+                          <textarea
+                            value={performer.opis}
+                            onChange={(e) => {
+                              const newPerformers = [...(translations[loc].performers || [])];
+                              newPerformers[index].opis = e.target.value;
+                              handleTranslationChange(loc, 'performers', newPerformers);
+                            }}
+                            rows={8}
+                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-vertical min-h-[120px]"
+                            placeholder="Detailed biography and description (1-2 paragraphs)"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {(translations[loc].performers || []).length === 0 && (
+                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        No performers added yet. Click &quot;Add Performer&quot; to add one.
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 

@@ -189,7 +189,9 @@ export default function ConcertList({
                         {concert.title}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {concert.performer}
+                        {concert.performers && concert.performers.length > 0
+                          ? concert.performers.map(p => p.name).join(', ')
+                          : 'No performers'}
                       </div>
                     </div>
                   </div>

@@ -1,3 +1,9 @@
+export interface Performer {
+  name: string
+  img: string
+  opis: string
+}
+
 export interface ProgramPieceTranslation {
   id: string
   locale: string
@@ -17,10 +23,10 @@ export interface ConcertTranslation {
   id: string
   locale: string
   title: string
+  subtitle?: string
   venue: string
-  performer: string
   description: string
-  performerDetails?: string
+  performers?: Array<{name: string, img: string, opis: string}>
   concertId: string
 }
 
@@ -45,13 +51,13 @@ export interface LocalizedProgramPiece {
 export interface LocalizedConcert {
   id: string
   title: string
+  subtitle?: string
   date: string
   venue: string
-  performer: string
   description: string
-  performerDetails?: string
   isVisible: boolean
   createdAt: string
   updatedAt: string
   program: LocalizedProgramPiece[]
+  performers?: Array<{name: string, img: string, opis: string}>
 }

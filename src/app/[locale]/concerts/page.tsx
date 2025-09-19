@@ -110,6 +110,11 @@ export default function ConcertsPage() {
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                   {concert.title}
                 </h2>
+                {concert.subtitle && (
+                  <h3 className="text-lg text-gray-700 dark:text-gray-200 mb-2">
+                    {concert.subtitle}
+                  </h3>
+                )}
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-gray-600 dark:text-gray-300">
@@ -142,7 +147,11 @@ export default function ConcertsPage() {
 
                   <div className="flex items-center text-gray-600 dark:text-gray-300">
                     <span className="text-lg mr-2">🎤</span>
-                    <span className="text-sm">{concert.performer}</span>
+                    <span className="text-sm">
+                      {concert.performers && concert.performers.length > 0
+                        ? concert.performers.map(p => p.name).join(', ')
+                        : 'Concert'}
+                    </span>
                   </div>
                 </div>
 

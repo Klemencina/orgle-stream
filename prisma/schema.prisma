@@ -23,10 +23,10 @@ model ConcertTranslation {
   id           String  @id @default(cuid())
   locale       String
   title        String
+  subtitle     String?
   venue        String
-  performer    String
   description  String
-  performerDetails String?
+  performers   Json?
   concertId    String
   concert      Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
 

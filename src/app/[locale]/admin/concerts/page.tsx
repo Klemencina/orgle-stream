@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 // import { useTranslations } from 'next-intl';
 import { LocalizedConcert } from '@/types/concert';
+import ConcertForm from '@/components/admin/ConcertForm';
 
 export default function AdminConcertsPage() {
   // const t = useTranslations(); // Unused
   const [concerts, setConcerts] = useState<LocalizedConcert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingConcert, setEditingConcert] = useState<LocalizedConcert | null>(null);
 
   useEffect(() => {
     fetchConcerts();
@@ -49,6 +52,24 @@ export default function AdminConcertsPage() {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete concert');
     }
+  };
+
+  const handleCreateConcert = (newConcert: LocalizedConcert) => {
+    setConcerts(prev => [newConcert, ...prev]);
+    setShowForm(false);
+  };
+
+  const handleUpdateConcert = (updatedConcert: LocalizedConcert) => {
+    setConcerts(prev => prev.map(concert =>
+      concert.id === updatedConcert.id ? updatedConcert : concert
+    ));
+    setShowForm(false);
+    setEditingConcert(null);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingConcert(null);
   };
 
   if (loading) {
@@ -96,12 +117,26 @@ export default function AdminConcertsPage() {
             </p>
           </div>
           
-          <Link href="/admin/concerts/new">
-            <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
-              + Add New Concert
-            </button>
-          </Link>
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+          >
+            + Add New Concert
+          </button>
         </div>
+
+        {/* Concert Form */}
+        {showForm && (
+          <div className="mb-8">
+            <ConcertForm
+              concert={editingConcert}
+              onConcertCreated={handleCreateConcert}
+              onConcertUpdated={handleUpdateConcert}
+              onCancel={handleCancel}
+              locale="en"
+            />
+          </div>
+        )}
 
         {/* Concerts Table */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
@@ -116,11 +151,12 @@ export default function AdminConcertsPage() {
               <div className="text-6xl mb-4">🎹</div>
               <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">No concerts found</h3>
               <p className="text-gray-600 dark:text-gray-300 mb-4">Get started by creating your first concert.</p>
-              <Link href="/admin/concerts/new">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
-                  Create Concert
-                </button>
-              </Link>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                Create Concert
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -170,7 +206,9 @@ export default function AdminConcertsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-white">
-                          {concert.performer}
+                          {concert.performers && concert.performers.length > 0
+                            ? concert.performers.map(p => p.name).join(', ')
+                            : 'No performers'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -185,11 +223,15 @@ export default function AdminConcertsPage() {
                               View
                             </button>
                           </Link>
-                          <Link href={`/admin/concerts/${concert.id}/edit`}>
-                            <button className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                              Edit
-                            </button>
-                          </Link>
+                          <button
+                            onClick={() => {
+                              setEditingConcert(concert);
+                              setShowForm(true);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                          >
+                            Edit
+                          </button>
                           <button
                             onClick={() => deleteConcert(concert.id)}
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
