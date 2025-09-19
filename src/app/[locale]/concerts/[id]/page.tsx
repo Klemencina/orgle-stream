@@ -309,7 +309,44 @@ export default function ConcertPage() {
             </div>
 
             {/* Venue Details */}
-            
+
+            {/* Performers Section */}
+            {concert.performers && concert.performers.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                  <span>🎤</span>
+                  {t('concert.performerInfo')}
+                </h3>
+                <div className="space-y-6">
+                  {concert.performers.map((performer, index) => (
+                    <div key={index} className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      {performer.img && (
+                        <div className="flex-shrink-0">
+                          <Image
+                            src={performer.img}
+                            alt={performer.name}
+                            width={200}
+                            height={200}
+                            className="w-32 h-32 md:w-48 md:h-48 object-cover rounded-lg shadow-md"
+                            onError={(e) => {
+                              // Hide the image on error
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{performer.name}</h4>
+                        {performer.opis && (
+                          <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed whitespace-pre-wrap">{performer.opis}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* Sidebar */}
@@ -364,45 +401,6 @@ export default function ConcertPage() {
               </div>
             </div>
 
-            {/* Performers Section */}
-            {concert.performers && concert.performers.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <span>🎤</span>
-                  {t('performerInfo')}
-                </h3>
-                <div className="space-y-4">
-                  {concert.performers.map((performer, index) => (
-                    <div key={index} className="border-b border-gray-200 dark:border-gray-700 last:border-b-0 pb-4 last:pb-0">
-                      <div className="flex flex-col gap-3">
-                        {performer.img && (
-                          <div className="flex-shrink-0">
-                            <Image
-                              src={performer.img}
-                              alt={performer.name}
-                              width={400}
-                              height={128}
-                              className="w-full h-32 object-cover rounded-lg"
-                              onError={(e) => {
-                                // Hide the parent div on error
-                                const target = e.currentTarget.parentElement;
-                                if (target) target.style.display = 'none';
-                              }}
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{performer.name}</h4>
-                          {performer.opis && (
-                            <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{performer.opis}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
