@@ -7,14 +7,14 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // Type guard to validate performers array
-function isValidPerformers(data: any): data is Performer[] {
+function isValidPerformers(data: unknown): data is Performer[] {
   if (!Array.isArray(data)) return false
   return data.every(item =>
     typeof item === 'object' &&
     item !== null &&
-    typeof item.name === 'string' &&
-    typeof item.img === 'string' &&
-    typeof item.opis === 'string'
+    typeof (item as Record<string, unknown>).name === 'string' &&
+    typeof (item as Record<string, unknown>).img === 'string' &&
+    typeof (item as Record<string, unknown>).opis === 'string'
   )
 }
 
@@ -323,7 +323,7 @@ export async function PUT(
             subtitle: translation.subtitle,
             venue: translation.venue,
             description: translation.description ?? '',
-            performers: translation.performers || null
+            performers: translation.performers as Prisma.JsonValue || undefined
           }))
         },
         program: {

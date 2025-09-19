@@ -253,6 +253,16 @@ export default function ConcertForm({
     }));
   };
 
+  const handlePerformersChange = (locale: string, performers: Array<{name: string, img: string, opis: string}>) => {
+    setTranslations(prev => ({
+      ...prev,
+      [locale]: {
+        ...prev[locale],
+        performers
+      }
+    }));
+  };
+
   const handleProgramChange = (locale: string, index: number, field: keyof ProgramPiece, value: string) => {
     setProgram(prev => {
       const next = { ...prev };
@@ -502,7 +512,12 @@ export default function ConcertForm({
                 { name: 'The Midnight Quartet', img: 'https://example.com/quartet.jpg', opis: 'String quartet known for their innovative interpretations' },
                 { name: 'Ensemble Aurora', img: 'https://example.com/ensemble.jpg', opis: 'Chamber ensemble featuring both traditional and experimental works' }
               ];
-              setPerformersJson(Math.random() > 0.5 ? samplePerformers.slice(0, Math.floor(Math.random() * 3) + 1) : []);
+              const randomPerformers = Math.random() > 0.5 ? samplePerformers.slice(0, Math.floor(Math.random() * 3) + 1) : [];
+
+              // Update performers for all locales
+              handlePerformersChange('en', randomPerformers);
+              handlePerformersChange('sl', randomPerformers);
+              handlePerformersChange('it', randomPerformers);
             }}
             className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
           >
@@ -672,7 +687,7 @@ export default function ConcertForm({
                       onClick={() => {
                         const newPerformers = [...(translations[loc].performers || [])];
                         newPerformers.push({ name: '', img: '', opis: '' });
-                        handleTranslationChange(loc, 'performers', newPerformers);
+                        handlePerformersChange(loc, newPerformers);
                       }}
                       className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
                     >
@@ -695,7 +710,7 @@ export default function ConcertForm({
                               onChange={(e) => {
                                 const newPerformers = [...(translations[loc].performers || [])];
                                 newPerformers[index].name = e.target.value;
-                                handleTranslationChange(loc, 'performers', newPerformers);
+                                handlePerformersChange(loc, newPerformers);
                               }}
                               className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                               placeholder="Performer name"
@@ -711,7 +726,7 @@ export default function ConcertForm({
                               onChange={(e) => {
                                 const newPerformers = [...(translations[loc].performers || [])];
                                 newPerformers[index].img = e.target.value;
-                                handleTranslationChange(loc, 'performers', newPerformers);
+                                handlePerformersChange(loc, newPerformers);
                               }}
                               className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                               placeholder="Image URL"
@@ -722,7 +737,7 @@ export default function ConcertForm({
                               type="button"
                               onClick={() => {
                                 const newPerformers = (translations[loc].performers || []).filter((_, i) => i !== index);
-                                handleTranslationChange(loc, 'performers', newPerformers);
+                                handlePerformersChange(loc, newPerformers);
                               }}
                               className="w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm"
                             >
@@ -741,7 +756,7 @@ export default function ConcertForm({
                             onChange={(e) => {
                               const newPerformers = [...(translations[loc].performers || [])];
                               newPerformers[index].opis = e.target.value;
-                              handleTranslationChange(loc, 'performers', newPerformers);
+                              handlePerformersChange(loc, newPerformers);
                             }}
                             rows={8}
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-vertical min-h-[120px]"

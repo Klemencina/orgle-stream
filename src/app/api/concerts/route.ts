@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
-import { LocalizedConcert } from '@/types/concert'
+import { LocalizedConcert, Performer } from '@/types/concert'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+// Type guard to validate performers array
+function isValidPerformers(data: unknown): data is Performer[] {
+  if (!Array.isArray(data)) return false
+  return data.every(item =>
+    typeof item === 'object' &&
+    item !== null &&
+    typeof (item as Record<string, unknown>).name === 'string' &&
+    typeof (item as Record<string, unknown>).img === 'string' &&
+    typeof (item as Record<string, unknown>).opis === 'string'
+  )
+}
 
 interface TranslationInput {
   locale: string
@@ -93,7 +105,7 @@ export async function GET(request: NextRequest) {
         isVisible: concert.isVisible,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
-        performers: translation.performers || undefined,
+        performers: isValidPerformers(translation.performers) ? translation.performers : undefined,
         program: concert.program.map((piece) => {
           const preferredLocale = (locale === 'sl' || locale === 'original') ? locale : 'original'
           const translations = piece.translations || []
@@ -222,7 +234,7 @@ export async function POST(request: NextRequest) {
             subtitle: translation.subtitle,
             venue: translation.venue,
             description: translation.description ?? '',
-            performers: translation.performers || null
+            performers: translation.performers as Prisma.JsonValue || undefined
           }))
         },
         program: {
@@ -279,7 +291,7 @@ export async function POST(request: NextRequest) {
       date: concert.date.toISOString(),
       venue: translation.venue,
       description: translation.description,
-      performers: translation.performers || undefined,
+      performers: isValidPerformers(translation.performers) ? translation.performers : undefined,
       isVisible: concert.isVisible,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
