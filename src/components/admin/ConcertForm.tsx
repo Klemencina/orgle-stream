@@ -182,7 +182,6 @@ export default function ConcertForm({
     setSelectedFiles(new Map());
 
     if (concert) {
-      const concertDate = new Date(concert.date);
       setBasicData({
         date: formatDateForDisplay(concert.date),
         time: formatTimeForDisplay(concert.date),
@@ -290,7 +289,6 @@ export default function ConcertForm({
 
         // Store original data for change detection and track removed images
         if (concert) {
-          const concertDate = new Date(concert.date);
           setOriginalData({
             basicData: {
               date: formatDateForDisplay(concert.date),
@@ -345,7 +343,6 @@ export default function ConcertForm({
 
       // Set originalData for fallback case
       if (concert) {
-        const concertDate = new Date(concert.date);
         setOriginalData({
           basicData: {
             date: formatDateForDisplay(concert.date),
@@ -479,12 +476,6 @@ export default function ConcertForm({
     });
   };
 
-  const handleImageCleared = (fileName: string) => {
-    // Track this image for deletion when concert is updated
-    if (fileName) {
-      setImagesToDelete(prev => new Set([...prev, fileName]));
-    }
-  };
 
   const deleteImagesFromR2 = async (fileNames: Set<string>) => {
     const deletePromises = Array.from(fileNames).map(async (fileName) => {
