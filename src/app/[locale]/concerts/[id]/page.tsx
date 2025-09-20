@@ -260,50 +260,54 @@ export default function ConcertPage() {
               </div>
             </div>
 
-            {/* Countdown Timer */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                {isLive ? t('concert.liveNow') : t('concert.countdown')}
-              </h3>
+            {/* Countdown Timer - only show if concert hasn't started and hasn't ended */}
+            {!isLive && !everLive && !hasEnded && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                  {t('concert.countdown')}
+                </h3>
 
-              {isLive || (everLive && windowOpen) ? (
-                <div>
-                  <div className="mb-4">
-                    <StreamPlayer key={`stream-${concert.id}`} concertId={concert.id} />
+                {windowOpen ? (
+                  <div className="p-6 text-center text-gray-700 dark:text-gray-200">
+                    {t('concert.waitingForStream')}
                   </div>
-                  <div className="text-center text-sm text-gray-600 dark:text-gray-300">
-                    {t('concert.watchLive')}
+                ) : (
+                  <div className="grid grid-cols-4 gap-4 text-center">
+                    <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                      <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.days}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.days, 'days', t)}</div>
+                    </div>
+                    <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                      <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.hours}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.hours, 'hours', t)}</div>
+                    </div>
+                    <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                      <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.minutes}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.minutes, 'minutes', t)}</div>
+                    </div>
+                    <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
+                      <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.seconds}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.seconds, 'seconds', t)}</div>
+                    </div>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Stream Player - show when concert is live or stream is available */}
+            {(isLive || (everLive && windowOpen)) && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                  {t('concert.liveNow')}
+                </h3>
+                <div className="mb-4">
+                  <StreamPlayer key={`stream-${concert.id}`} concertId={concert.id} />
                 </div>
-              ) : hasEnded ? (
-                <div className="p-6 text-center text-gray-700 dark:text-gray-200">
-                  {t('concert.liveStreamEnded')}
+                <div className="text-center text-sm text-gray-600 dark:text-gray-300">
+                  {t('concert.watchLive')}
                 </div>
-              ) : windowOpen ? (
-                <div className="p-6 text-center text-gray-700 dark:text-gray-200">
-                  {t('concert.waitingForStream')}
-                </div>
-              ) : (
-                <div className="grid grid-cols-4 gap-4 text-center">
-                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.days}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.days, 'days', t)}</div>
-                  </div>
-                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.hours}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.hours, 'hours', t)}</div>
-                  </div>
-                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.minutes}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.minutes, 'minutes', t)}</div>
-                  </div>
-                  <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
-                    <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.seconds}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.seconds, 'seconds', t)}</div>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Venue Details */}
 
@@ -316,9 +320,10 @@ export default function ConcertPage() {
                 </h3>
                 <div className="space-y-6">
                   {concert.performers.map((performer, index) => (
-                    <div key={index} className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{performer.name}</h4>
                       {performer.img && (
-                        <div className="flex-shrink-0">
+                        <div className="float-left mr-4 mb-2">
                           <Image
                             src={performer.img}
                             alt={performer.name}
@@ -332,12 +337,10 @@ export default function ConcertPage() {
                           />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">{performer.name}</h4>
-                        {performer.opis && (
-                          <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed whitespace-pre-wrap">{performer.opis}</p>
-                        )}
-                      </div>
+                      {performer.opis && (
+                        <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed whitespace-pre-wrap overflow-wrap-anywhere break-words">{performer.opis}</p>
+                      )}
+                      <div className="clear-both"></div>
                     </div>
                   ))}
                 </div>
