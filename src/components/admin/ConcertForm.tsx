@@ -38,6 +38,14 @@ interface ConcertFormProps {
   locale: string;
 }
 
+interface Performer {
+  name: string;
+  img: string;
+  fileName?: string;
+  selectedFile?: File | null;
+  opis: string;
+}
+
 interface ProgramPiece {
   title: string;
   composer: string;
@@ -48,7 +56,7 @@ interface TranslationData {
   subtitle?: string;
   venue: string;
   description: string;
-  performers?: Array<{name: string, img: string, fileName?: string, selectedFile?: File | null, opis: string}>;
+  performers?: Performer[];
 }
 
 const localeNames = {
@@ -105,8 +113,6 @@ export default function ConcertForm({
     program: typeof program;
   } | null>(null);
 
-  // Force component re-render when data changes to trigger change detection
-  const [changeTrigger, setChangeTrigger] = useState(0);
 
   // Function to check if there are any changes
   const hasChanges = (): boolean => {
@@ -150,15 +156,9 @@ export default function ConcertForm({
     return false;
   };
 
-  // Trigger re-render when key data changes (but not original data)
-  useEffect(() => {
-    if (originalData) {
-      setChangeTrigger(prev => prev + 1);
-    }
-  }, [basicData, program, selectedFiles]);
 
   // Helper function to check if performers have changed (excluding non-serializable fields)
-  const havePerformersChanged = (currentPerformers: any[] | undefined, originalPerformers: any[] | undefined) => {
+  const havePerformersChanged = (currentPerformers: Performer[] | undefined, originalPerformers: Performer[] | undefined) => {
     if (!currentPerformers && !originalPerformers) return false;
     if (!currentPerformers || !originalPerformers) return true;
     if (currentPerformers.length !== originalPerformers.length) return true;
@@ -260,13 +260,13 @@ export default function ConcertForm({
       // Populate all translations for i18n locales
       const newTranslations: Record<string, TranslationData> = {};
       locales.forEach(loc => {
-        const translation = data.translations.find((t: { locale: string; title: string; subtitle?: string; venue: string; description: string; performers?: Array<{name: string, img: string, fileName?: string, opis: string}> }) => t.locale === loc);
+        const translation = data.translations.find((t: { locale: string; title: string; subtitle?: string; venue: string; description: string; performers?: Performer[] }) => t.locale === loc);
         newTranslations[loc] = translation ? {
           title: translation.title,
           subtitle: translation.subtitle || '',
           venue: translation.venue,
           description: translation.description,
-          performers: (translation.performers || []).map((performer: any) => ({
+          performers: (translation.performers || []).map((performer: Performer) => ({
             ...performer,
             selectedFile: null // Initialize selectedFile as null
           }))
@@ -303,11 +303,11 @@ export default function ConcertForm({
               subtitle: t.subtitle || '',
               venue: t.venue,
               description: t.description,
-              performers: (t.performers || []).map((performer: any) => ({
+              performers: (t.performers || []).map((performer: Performer) => ({
                 ...performer,
                 selectedFile: null // Initialize selectedFile as null for original data
               }))
-            })).reduce((acc: Record<string, any>, curr) => {
+            })).reduce((acc: Record<string, {locale: string; title: string; subtitle?: string; venue: string; description: string; performers: Performer[]}>, curr) => {
               acc[curr.locale] = curr;
               return acc;
             }, {}),
@@ -991,19 +991,12 @@ export default function ConcertForm({
                                 </label>
                                 <ImageUpload
                                   currentImageUrl={sharedImageUrl}
-                                  currentFileName={performer.fileName}
                                   selectedFile={performer.selectedFile || null}
                                   onImageSelected={(file) => {
                                     handleImageSelected(index, file);
                                   }}
                                   onImageRemoved={() => {
                                     handleImageRemoved(index);
-                                  }}
-                                  onImageCleared={() => {
-                                    // Track the removed image for deletion
-                                    if (performer.fileName) {
-                                      handleImageCleared(performer.fileName);
-                                    }
                                   }}
                                   label=""
                                   className="w-full"

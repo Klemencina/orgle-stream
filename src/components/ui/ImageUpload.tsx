@@ -6,9 +6,7 @@ import Image from 'next/image';
 interface ImageUploadProps {
   onImageSelected: (file: File) => void;
   onImageRemoved: () => void;
-  onImageCleared: () => void;
   currentImageUrl?: string;
-  currentFileName?: string;
   selectedFile?: File | null;
   label?: string;
   className?: string;
@@ -19,16 +17,13 @@ interface ImageUploadProps {
 export default function ImageUpload({
   onImageSelected,
   onImageRemoved,
-  onImageCleared,
   currentImageUrl,
-  currentFileName,
   selectedFile,
   label = 'Upload Image',
   className = '',
   maxSize = 5,
   acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 }: ImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
