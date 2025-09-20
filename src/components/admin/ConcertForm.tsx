@@ -4,6 +4,31 @@ import { useState, useEffect } from 'react';
 import { LocalizedConcert } from '@/types/concert';
 import { locales } from '@/i18n';
 import { useTranslations } from 'next-intl';
+import ImageUpload from '@/components/ui/ImageUpload';
+
+// Slovenian date formatting utilities
+const formatDateForDisplay = (isoDate: string): string => {
+  if (!isoDate) return '';
+  const date = new Date(isoDate);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+};
+
+const formatDateForStorage = (displayDate: string): string => {
+  if (!displayDate) return '';
+  const [day, month, year] = displayDate.split('.');
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const formatTimeForDisplay = (isoDate: string): string => {
+  if (!isoDate) return '';
+  const date = new Date(isoDate);
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
 
 interface ConcertFormProps {
   concert?: LocalizedConcert | null;
@@ -23,7 +48,7 @@ interface TranslationData {
   subtitle?: string;
   venue: string;
   description: string;
-  performers?: Array<{name: string, img: string, opis: string}>;
+  performers?: Array<{name: string, img: string, fileName?: string, selectedFile?: File | null, opis: string}>;
 }
 
 const localeNames = {
@@ -61,12 +86,18 @@ export default function ConcertForm({
     original: [{ title: '', composer: '' }]
   });
 
+  // Track images that need to be deleted from R2
+  const [imagesToDelete, setImagesToDelete] = useState<Set<string>>(new Set());
+
+  // Track selected files that need to be uploaded
+  const [selectedFiles, setSelectedFiles] = useState<Map<string, File>>(new Map());
+
   const [activeTab, setActiveTab] = useState('en');
   const [programActiveTab, setProgramActiveTab] = useState<'sl' | 'original'>('sl');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   // Store original data for change detection
   const [originalData, setOriginalData] = useState<{
     basicData: typeof basicData;
@@ -74,39 +105,92 @@ export default function ConcertForm({
     program: typeof program;
   } | null>(null);
 
+  // Force component re-render when data changes to trigger change detection
+  const [changeTrigger, setChangeTrigger] = useState(0);
+
   // Function to check if there are any changes
   const hasChanges = (): boolean => {
     if (!concert || !originalData) return true; // New concert always has changes
-    
-    // Deep comparison of basic data
+
+    // Check basic data changes
     const basicDataChanged = JSON.stringify(basicData) !== JSON.stringify(originalData.basicData);
     if (basicDataChanged) return true;
-    
-    // Deep comparison of translations
-    const translationsChanged = JSON.stringify(translations) !== JSON.stringify(originalData.translations);
-    if (translationsChanged) return true;
-    
-    // Deep comparison of program
+
+    // Check program changes
     const programChanged = JSON.stringify(program) !== JSON.stringify(originalData.program);
     if (programChanged) return true;
+
+    // Check if there are any selected files (new images to upload)
+    if (selectedFiles.size > 0) {
+      return true;
+    }
+
+    // Check translations changes
+    const translationsChanged = Object.entries(translations).some(([locale, translation]) => {
+      const originalTranslation = originalData.translations[locale];
+
+      if (!originalTranslation) return true;
+
+      // Compare basic fields
+      if (translation.title !== originalTranslation.title) return true;
+      if (translation.subtitle !== originalTranslation.subtitle) return true;
+      if (translation.venue !== originalTranslation.venue) return true;
+      if (translation.description !== originalTranslation.description) return true;
+
+      // Compare performers
+      if (havePerformersChanged(translation.performers, originalTranslation.performers)) {
+        return true;
+      }
+
+      return false;
+    });
+
+    if (translationsChanged) return true;
 
     return false;
   };
 
+  // Trigger re-render when key data changes (but not original data)
   useEffect(() => {
+    if (originalData) {
+      setChangeTrigger(prev => prev + 1);
+    }
+  }, [basicData, program, selectedFiles]);
+
+  // Helper function to check if performers have changed (excluding non-serializable fields)
+  const havePerformersChanged = (currentPerformers: any[] | undefined, originalPerformers: any[] | undefined) => {
+    if (!currentPerformers && !originalPerformers) return false;
+    if (!currentPerformers || !originalPerformers) return true;
+    if (currentPerformers.length !== originalPerformers.length) return true;
+
+    return currentPerformers.some((performer, index) => {
+      const originalPerformer = originalPerformers[index];
+
+      // Check if there's a selected file for this performer (indicates a new image was selected)
+      const hasSelectedFile = selectedFiles.has(`selected-${index}`);
+
+      return performer.name !== originalPerformer.name ||
+             performer.img !== originalPerformer.img ||
+             performer.opis !== originalPerformer.opis ||
+             hasSelectedFile; // If there's a selected file, it's a change
+    });
+  };
+
+  useEffect(() => {
+    // Clear images to delete and selected files when concert changes or component mounts
+    setImagesToDelete(new Set());
+    setSelectedFiles(new Map());
+
     if (concert) {
       const concertDate = new Date(concert.date);
       setBasicData({
-        date: concertDate.toISOString().split('T')[0],
-        time: concertDate.toTimeString().split(' ')[0].substring(0, 5),
+        date: formatDateForDisplay(concert.date),
+        time: formatTimeForDisplay(concert.date),
         isVisible: concert.isVisible !== false, // Default to true if not set
       });
 
-      // Load all translations for editing
-      if (concert.id) {
-        fetchAllTranslations(concert.id);
-      } else {
-        // For new concerts, just populate current locale
+      // For new concerts, just populate current locale
+      if (!concert.id) {
         setTranslations(prev => ({
           ...prev,
           [locale]: {
@@ -114,7 +198,10 @@ export default function ConcertForm({
             subtitle: concert.subtitle || '',
             venue: concert.venue,
             description: concert.description,
-            performers: concert.performers || []
+            performers: (concert.performers || []).map(performer => ({
+              ...performer,
+              selectedFile: null // Initialize selectedFile as null
+            }))
           }
         }));
 
@@ -125,34 +212,38 @@ export default function ConcertForm({
             composer: piece.composer,
           }))
         }));
-        
+
         // Store original data for change detection
-        if (concert) {
-          setOriginalData({
-            basicData: {
-              date: concertDate.toISOString().split('T')[0],
-              time: concertDate.toTimeString().split(' ')[0].substring(0, 5),
-              isVisible: concert.isVisible !== false,
-            },
-            translations: {
-              ...translations,
-              [locale]: {
-                title: concert.title,
-                subtitle: concert.subtitle || '',
-                venue: concert.venue,
-                description: concert.description,
-                performers: concert.performers || []
-              }
-            },
-            program: {
-              ...program,
-              [locale]: concert.program.map(piece => ({
-                title: piece.title,
-                composer: piece.composer,
+        setOriginalData({
+          basicData: {
+            date: formatDateForDisplay(concert.date),
+            time: formatTimeForDisplay(concert.date),
+            isVisible: concert.isVisible !== false,
+          },
+          translations: {
+            ...translations,
+            [locale]: {
+              title: concert.title,
+              subtitle: concert.subtitle || '',
+              venue: concert.venue,
+              description: concert.description,
+              performers: (concert.performers || []).map(performer => ({
+                ...performer,
+                selectedFile: null // Initialize selectedFile as null
               }))
-            },
-          });
-        }
+            }
+          },
+          program: {
+            ...program,
+            [locale]: concert.program.map(piece => ({
+              title: piece.title,
+              composer: piece.composer,
+            }))
+          },
+        });
+      } else {
+        // For existing concerts, fetch data but don't set originalData yet
+        fetchAllTranslations(concert.id);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,13 +260,16 @@ export default function ConcertForm({
       // Populate all translations for i18n locales
       const newTranslations: Record<string, TranslationData> = {};
       locales.forEach(loc => {
-        const translation = data.translations.find((t: { locale: string; title: string; subtitle?: string; venue: string; description: string; performers?: Array<{name: string, img: string, opis: string}> }) => t.locale === loc);
+        const translation = data.translations.find((t: { locale: string; title: string; subtitle?: string; venue: string; description: string; performers?: Array<{name: string, img: string, fileName?: string, opis: string}> }) => t.locale === loc);
         newTranslations[loc] = translation ? {
           title: translation.title,
           subtitle: translation.subtitle || '',
           venue: translation.venue,
           description: translation.description,
-          performers: translation.performers || []
+          performers: (translation.performers || []).map((performer: any) => ({
+            ...performer,
+            selectedFile: null // Initialize selectedFile as null
+          }))
         } : { title: '', subtitle: '', venue: '', description: '', performers: [] };
       });
       setTranslations(newTranslations);
@@ -194,31 +288,44 @@ export default function ConcertForm({
         });
 
 
-        // Store original data for change detection
-      if (concert) {
-        const concertDate = new Date(concert.date);
-        setOriginalData({
-          basicData: {
-            date: concertDate.toISOString().split('T')[0],
-            time: concertDate.toTimeString().split(' ')[0].substring(0, 5),
-            isVisible: concert.isVisible !== false,
-          },
-          translations: newTranslations,
-          program: (() => {
-            const sl = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
-              const tr = piece.translations.find((t: { locale: string }) => t.locale === 'sl');
-              return { title: tr?.title || '', composer: tr?.composer || '' };
-            });
-            const original = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
-              const tr = piece.translations.find((t: { locale: string }) => t.locale === 'original');
-              return { title: tr?.title || '', composer: tr?.composer || '' };
-            });
-            const maxLen = Math.max(sl.length, original.length);
-            const pad = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '' }));
-            return { sl: pad(sl), original: pad(original) };
-          })()
-        });
-      }
+        // Store original data for change detection and track removed images
+        if (concert) {
+          const concertDate = new Date(concert.date);
+          setOriginalData({
+            basicData: {
+              date: formatDateForDisplay(concert.date),
+              time: formatTimeForDisplay(concert.date),
+              isVisible: concert.isVisible !== false,
+            },
+            translations: Object.entries(newTranslations).map(([locale, t]) => ({
+              locale,
+              title: t.title,
+              subtitle: t.subtitle || '',
+              venue: t.venue,
+              description: t.description,
+              performers: (t.performers || []).map((performer: any) => ({
+                ...performer,
+                selectedFile: null // Initialize selectedFile as null for original data
+              }))
+            })).reduce((acc: Record<string, any>, curr) => {
+              acc[curr.locale] = curr;
+              return acc;
+            }, {}),
+            program: (() => {
+              const sl = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+                const tr = piece.translations.find((t: { locale: string }) => t.locale === 'sl');
+                return { title: tr?.title || '', composer: tr?.composer || '' };
+              });
+              const original = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+                const tr = piece.translations.find((t: { locale: string }) => t.locale === 'original');
+                return { title: tr?.title || '', composer: tr?.composer || '' };
+              });
+              const maxLen = Math.max(sl.length, original.length);
+              const pad = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '' }));
+              return { sl: pad(sl), original: pad(original) };
+            })()
+          });
+        }
     } catch (error) {
       console.error('Error fetching all translations:', error);
       // Fallback to current locale only
@@ -229,9 +336,42 @@ export default function ConcertForm({
           subtitle: concert?.subtitle || '',
           venue: concert?.venue || '',
           description: concert?.description || '',
-          performers: concert?.performers || []
+          performers: (concert?.performers || []).map(performer => ({
+            ...performer,
+            selectedFile: null // Initialize selectedFile as null
+          }))
         }
       }));
+
+      // Set originalData for fallback case
+      if (concert) {
+        const concertDate = new Date(concert.date);
+        setOriginalData({
+          basicData: {
+            date: formatDateForDisplay(concert.date),
+            time: formatTimeForDisplay(concert.date),
+            isVisible: concert.isVisible !== false,
+          },
+          translations: {
+            [locale]: {
+              title: concert?.title || '',
+              subtitle: concert?.subtitle || '',
+              venue: concert?.venue || '',
+              description: concert?.description || '',
+              performers: (concert?.performers || []).map(performer => ({
+                ...performer,
+                selectedFile: null // Initialize selectedFile as null
+              }))
+            }
+          },
+          program: {
+            [locale]: concert?.program?.map(piece => ({
+              title: piece.title,
+              composer: piece.composer,
+            })) || []
+          },
+        });
+      }
     }
   };
 
@@ -253,7 +393,7 @@ export default function ConcertForm({
     }));
   };
 
-  const handlePerformersChange = (locale: string, performers: Array<{name: string, img: string, opis: string}>) => {
+  const handlePerformersChange = (locale: string, performers: Array<{name: string, img: string, fileName?: string, selectedFile?: File | null, opis: string}>) => {
     setTranslations(prev => ({
       ...prev,
       [locale]: {
@@ -261,6 +401,135 @@ export default function ConcertForm({
         performers
       }
     }));
+  };
+
+  const handleImageSelected = (performerIndex: number, file: File) => {
+    // Store the selected file (use performer index as key since images are shared across locales)
+    const fileKey = `selected-${performerIndex}`;
+    setSelectedFiles(prev => new Map([...prev, [fileKey, file]]));
+
+    // Update all locales with the selected file (since images are shared across languages)
+    setTranslations(prev => {
+      const updatedTranslations: Record<string, TranslationData> = {};
+
+      Object.entries(prev).forEach(([locale, translation]) => {
+        const updatedPerformers = [...(translation.performers || [])];
+        if (updatedPerformers[performerIndex]) {
+          updatedPerformers[performerIndex] = {
+            ...updatedPerformers[performerIndex],
+            selectedFile: file
+          };
+        }
+        updatedTranslations[locale] = {
+          ...translation,
+          performers: updatedPerformers
+        };
+      });
+
+      return updatedTranslations;
+    });
+  };
+
+  const handleImageRemoved = (performerIndex: number) => {
+    // Find the performer across all locales to get the fileName
+    let fileNameToDelete = '';
+    const performerName = Object.values(translations).find(t =>
+      t.performers && t.performers[performerIndex]
+    )?.performers?.[performerIndex]?.fileName;
+
+    if (performerName) {
+      fileNameToDelete = performerName;
+      // Track this image for deletion when concert is updated
+      setImagesToDelete(prev => new Set([...prev, fileNameToDelete]));
+    }
+
+    // Update all locales to remove the image (since images are shared across languages)
+    setTranslations(prev => {
+      const updatedTranslations: Record<string, TranslationData> = {};
+
+      Object.entries(prev).forEach(([locale, translation]) => {
+        const updatedPerformers = [...(translation.performers || [])];
+        if (updatedPerformers[performerIndex]) {
+          updatedPerformers[performerIndex] = {
+            ...updatedPerformers[performerIndex],
+            img: '',
+            fileName: '',
+            selectedFile: null
+          };
+        }
+        updatedTranslations[locale] = {
+          ...translation,
+          performers: updatedPerformers
+        };
+      });
+
+      return updatedTranslations;
+    });
+
+    // Clear selected files for this performer across all locales
+    setSelectedFiles(prev => {
+      const newMap = new Map(prev);
+      // Remove any selected files for this performer index
+      Array.from(newMap.keys()).forEach(key => {
+        if (key.endsWith(`-${performerIndex}`)) {
+          newMap.delete(key);
+        }
+      });
+      return newMap;
+    });
+  };
+
+  const handleImageCleared = (fileName: string) => {
+    // Track this image for deletion when concert is updated
+    if (fileName) {
+      setImagesToDelete(prev => new Set([...prev, fileName]));
+    }
+  };
+
+  const deleteImagesFromR2 = async (fileNames: Set<string>) => {
+    const deletePromises = Array.from(fileNames).map(async (fileName) => {
+      try {
+        const response = await fetch(`/api/upload?fileName=${encodeURIComponent(fileName)}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          console.error(`Failed to delete ${fileName} from R2`);
+        }
+      } catch (error) {
+        console.error(`Error deleting ${fileName} from R2:`, error);
+      }
+    });
+
+    await Promise.all(deletePromises);
+  };
+
+  const uploadFilesToR2 = async (files: Map<string, File>): Promise<Map<string, {url: string, fileName: string}>> => {
+    const uploadPromises = Array.from(files.entries()).map(async ([key, file]) => {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Upload failed');
+        }
+
+        const data = await response.json();
+        return [key, { url: data.url, fileName: data.fileName }];
+      } catch (error) {
+        console.error(`Error uploading file:`, error);
+        throw error;
+      }
+    });
+
+    const results = await Promise.all(uploadPromises);
+    return new Map<string, {url: string, fileName: string}>(results as [string, {url: string, fileName: string}][]);
   };
 
   const handleProgramChange = (locale: string, index: number, field: keyof ProgramPiece, value: string) => {
@@ -319,94 +588,6 @@ export default function ConcertForm({
     });
   };
 
-  const randomFill = () => {
-    // Random basic data
-    const today = new Date();
-    const randomDate = new Date(today.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000); // Random date within next 30 days
-    const randomTime = `${Math.floor(Math.random() * 12) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')} ${Math.random() > 0.5 ? 'PM' : 'AM'}`;
-    
-    setBasicData({
-      date: randomDate.toISOString().split('T')[0],
-      time: randomTime,
-      isVisible: Math.random() > 0.3, // 70% chance of being visible
-    });
-
-    // Random concert data for each locale
-    const concertTemplates = {
-      sl: [
-        {
-          title: "Simfonija zvezd",
-          venue: "Velika koncertna dvorana",
-          performer: "Dr. Sarah Johnson",
-          description: "Večer klasičnih mojstrovin, ki jih izvajajo svetovno priznani glasbeniki v intimnem okolju."
-        },
-        {
-          title: "Jazz pod mesecem",
-          venue: "Blue Note Lounge",
-          performer: "The Midnight Quartet",
-          description: "Doživite čarovnijo jazza v intimnem okolju z našim rezidenčnim kvartetom."
-        },
-        {
-          title: "Večer komorne glasbe",
-          venue: "Kapela sv. Cecilije",
-          performer: "Ensemble Aurora",
-          description: "Rafiniran večer komorne glasbe z deli Mozarta, Beethovna in sodobnih skladateljev."
-        }
-      ],
-      original: [
-        {
-          title: "Sinfonia delle Stelle",
-          venue: "Gran Sala da Concerto",
-          performer: "Dr. Sarah Johnson",
-          description: "Una serata di capolavori classici eseguiti da musicisti di fama mondiale in un ambiente intimo."
-        },
-        {
-          title: "Jazz Sotto la Luna",
-          venue: "Blue Note Lounge",
-          performer: "The Midnight Quartet",
-          description: "Vivi la magia del jazz in un ambiente intimo con il nostro quartetto residente."
-        },
-        {
-          title: "Serata di Musica da Camera",
-          venue: "Cappella di Santa Cecilia",
-          performer: "Ensemble Aurora",
-          description: "Una serata raffinata di musica da camera con opere di Mozart, Beethoven e compositori contemporanei."
-        }
-      ]
-    };
-
-    const programTemplates = {
-      sl: [
-        { title: "Predigra v C-duru", composer: "J.S. Bach" },
-        { title: "Sonata št. 14 'Mesečina'", composer: "L. van Beethoven" },
-        { title: "Intermezzo", composer: "J. Brahms" },
-        { title: "Nokturno v Es-duru", composer: "F. Chopin" },
-        { title: "Odmor", composer: "" },
-        { title: "Rapsodija v modrem", composer: "G. Gershwin" },
-        { title: "Mesečina", composer: "C. Debussy" }
-      ],
-      original: [
-        { title: "Prélude en Do Majeur", composer: "J.S. Bach" },
-        { title: "Sonata No. 14 'Moonlight'", composer: "L. van Beethoven" },
-        { title: "Intermezzo", composer: "J. Brahms" },
-        { title: "Nocturne en Mi bémol majeur", composer: "F. Chopin" },
-        { title: "Intermission", composer: "" },
-        { title: "Rhapsody in Blue", composer: "G. Gershwin" },
-        { title: "Clair de Lune", composer: "C. Debussy" }
-      ]
-    };
-
-    // Select random templates for 'sl' and use 'original' program for original
-    const randomSlTemplate = concertTemplates.sl[Math.floor(Math.random() * concertTemplates.sl.length)];
-    setTranslations(prev => ({
-      ...prev,
-      sl: { ...randomSlTemplate }
-    }));
-    setProgram({
-      sl: programTemplates.sl.map(piece => ({ ...piece })),
-      original: programTemplates.original.map(piece => ({ ...piece }))
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -415,14 +596,46 @@ export default function ConcertForm({
     setSuccess(null);
 
     try {
-      // Combine date and time
-      const dateTime = new Date(`${basicData.date}T${basicData.time}`);
-      
+      // Upload selected files first
+      const uploadResults = await uploadFilesToR2(selectedFiles);
+
+      // Update performers with uploaded image URLs
+      const updatedTranslations: Record<string, TranslationData> = {};
+
+      Object.entries(translations).forEach(([locale, translation]) => {
+        const updatedPerformers = translation.performers?.map((performer, index) => {
+          const fileKey = `selected-${index}`;
+          const uploadResult = uploadResults.get(fileKey);
+
+          if (uploadResult) {
+            // This performer had a file that was uploaded
+            return {
+              ...performer,
+              img: uploadResult.url,
+              fileName: uploadResult.fileName,
+              selectedFile: null // Clear the selected file
+            };
+          } else {
+            // This performer didn't have a new file upload
+            return performer;
+          }
+        }) || [];
+
+        updatedTranslations[locale] = {
+          ...translation,
+          performers: updatedPerformers
+        };
+      });
+
+      // Combine date and time (convert from Slovenian format to ISO)
+      const isoDate = formatDateForStorage(basicData.date);
+      const dateTime = new Date(`${isoDate}T${basicData.time}`);
+
       const concertData = {
         date: dateTime.toISOString(),
 
         isVisible: basicData.isVisible,
-        translations: Object.entries(translations).map(([locale, translation]) => ({
+        translations: Object.entries(updatedTranslations).map(([locale, translation]) => ({
           locale,
           ...translation
         })),
@@ -452,15 +665,25 @@ export default function ConcertForm({
       }
 
       const result = await response.json();
-      
+
+      // Delete removed images from R2 after successful update
+      if (imagesToDelete.size > 0) {
+        await deleteImagesFromR2(imagesToDelete);
+        // Clear the images to delete set
+        setImagesToDelete(new Set());
+      }
+
+      // Clear selected files after successful upload
+      setSelectedFiles(new Map());
+
       setSuccess(concert ? 'Concert updated successfully!' : 'Concert created successfully!');
-      
+
       if (isEditing) {
         onConcertUpdated(result);
       } else {
         onConcertCreated(result);
       }
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess(null);
@@ -493,36 +716,6 @@ export default function ConcertForm({
       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('basicInfo')}</h3>
-          <button
-            type="button"
-            onClick={() => {
-              const today = new Date();
-              const randomDate = new Date(today.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000);
-              const randomTime = `${Math.floor(Math.random() * 12) + 1}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')} ${Math.random() > 0.5 ? 'PM' : 'AM'}`;
-
-              setBasicData({
-                date: randomDate.toISOString().split('T')[0],
-                time: randomTime,
-                isVisible: Math.random() > 0.3, // 70% chance of being visible
-              });
-
-              // Add some sample performers
-              const samplePerformers = [
-                { name: 'Dr. Sarah Johnson', img: 'https://example.com/sarah.jpg', opis: 'Renowned pianist specializing in contemporary classical music' },
-                { name: 'The Midnight Quartet', img: 'https://example.com/quartet.jpg', opis: 'String quartet known for their innovative interpretations' },
-                { name: 'Ensemble Aurora', img: 'https://example.com/ensemble.jpg', opis: 'Chamber ensemble featuring both traditional and experimental works' }
-              ];
-              const randomPerformers = Math.random() > 0.5 ? samplePerformers.slice(0, Math.floor(Math.random() * 3) + 1) : [];
-
-              // Update performers for all locales
-              handlePerformersChange('en', randomPerformers);
-              handlePerformersChange('sl', randomPerformers);
-              handlePerformersChange('it', randomPerformers);
-            }}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
-          >
-            🎲 {t('fillWithSample')}
-          </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -530,10 +723,13 @@ export default function ConcertForm({
               {t('date')} *
             </label>
             <input
-              type="date"
+              type="text"
               name="date"
               value={basicData.date}
               onChange={handleBasicDataChange}
+              placeholder="DD.MM.YYYY"
+              pattern="^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[012])\.\d{4}$"
+              title="Please enter date in DD.MM.YYYY format"
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
             />
@@ -544,17 +740,64 @@ export default function ConcertForm({
               {t('time')} *
             </label>
             <input
-              type="time"
+              type="text"
               name="time"
               value={basicData.time}
               onChange={handleBasicDataChange}
+              placeholder="HH:MM"
+              pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
+              title="Please enter time in 24-hour format (HH:MM)"
+              maxLength={5}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              onKeyDown={(e) => {
+                const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+                const isNumber = /^[0-9]$/.test(e.key);
+                const isColon = e.key === ':';
+
+                if (!allowedKeys.includes(e.key) && !isNumber && !isColon) {
+                  e.preventDefault();
+                }
+
+                // Auto-add colon
+                const target = e.target as HTMLInputElement;
+                if (isNumber && target.value.length === 2 && !target.value.includes(':')) {
+                  setTimeout(() => {
+                    target.value = target.value + ':';
+                    // Trigger change event
+                    const event = new Event('input', { bubbles: true });
+                    target.dispatchEvent(event);
+                  }, 0);
+                }
+              }}
+              onBlur={(e) => {
+                const value = e.target.value;
+                if (value && !value.includes(':')) {
+                  // If user didn't add colon, format it
+                  if (value.length === 4) {
+                    e.target.value = `${value.slice(0, 2)}:${value.slice(2)}`;
+                  } else if (value.length === 3) {
+                    e.target.value = `0${value.slice(0, 1)}:${value.slice(1)}`;
+                  } else if (value.length === 2) {
+                    e.target.value = `${value}:00`;
+                  } else if (value.length === 1) {
+                    e.target.value = `0${value}:00`;
+                  }
+                }
+
+                // Ensure proper formatting
+                const formattedValue = e.target.value;
+                if (formattedValue) {
+                  const [hours, minutes] = formattedValue.split(':');
+                  const hour24 = parseInt(hours, 10);
+                  const min24 = parseInt(minutes || '0', 10);
+                  if (hour24 >= 0 && hour24 <= 23 && min24 >= 0 && min24 <= 59) {
+                    e.target.value = `${hour24.toString().padStart(2, '0')}:${min24.toString().padStart(2, '0')}`;
+                  }
+                }
+              }}
             />
           </div>
-
-          
-
           <div className="md:col-span-2">
             <div className="flex items-center">
               <input
@@ -581,13 +824,6 @@ export default function ConcertForm({
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('translations')}</h3>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={randomFill}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm"
-            >
-              🎲 Random Fill
-            </button>
             <button
               type="button"
               onClick={() => copyToAllLocales(activeTab)}
@@ -686,7 +922,7 @@ export default function ConcertForm({
                       type="button"
                       onClick={() => {
                         const newPerformers = [...(translations[loc].performers || [])];
-                        newPerformers.push({ name: '', img: '', opis: '' });
+                        newPerformers.push({ name: '', img: '', fileName: '', selectedFile: null, opis: '' });
                         handlePerformersChange(loc, newPerformers);
                       }}
                       className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
@@ -696,75 +932,107 @@ export default function ConcertForm({
                   </div>
 
                   <div className="space-y-4">
-                    {(translations[loc].performers || []).map((performer, index) => (
-                      <div key={index} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg space-y-4">
-                        {/* Name, Image URL, and Remove button in a row */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Name
-                            </label>
-                            <input
-                              type="text"
-                              value={performer.name}
-                              onChange={(e) => {
-                                const newPerformers = [...(translations[loc].performers || [])];
-                                newPerformers[index].name = e.target.value;
-                                handlePerformersChange(loc, newPerformers);
-                              }}
-                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                              placeholder="Performer name"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Image URL
-                            </label>
-                            <input
-                              type="text"
-                              value={performer.img}
-                              onChange={(e) => {
-                                const newPerformers = [...(translations[loc].performers || [])];
-                                newPerformers[index].img = e.target.value;
-                                handlePerformersChange(loc, newPerformers);
-                              }}
-                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                              placeholder="Image URL"
-                            />
-                          </div>
-                          <div className="flex items-end">
+                    {(translations[loc].performers || []).map((performer, index) => {
+                      // Find the image URL from any locale (since images are shared)
+                      const getSharedImageUrl = (performerIndex: number) => {
+                        for (const locale of Object.keys(translations)) {
+                          const otherPerformer = translations[locale].performers?.[performerIndex];
+                          if (otherPerformer?.img) {
+                            return otherPerformer.img;
+                          }
+                        }
+                        return performer.img || '';
+                      };
+
+                      const sharedImageUrl = getSharedImageUrl(index);
+
+                      return (
+                        <div key={index} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg space-y-6">
+                          {/* Header with Name and Remove button */}
+                          <div className="flex justify-between items-start">
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Performer #{index + 1}</h4>
                             <button
                               type="button"
                               onClick={() => {
                                 const newPerformers = (translations[loc].performers || []).filter((_, i) => i !== index);
                                 handlePerformersChange(loc, newPerformers);
                               }}
-                              className="w-full md:w-auto bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm"
+                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm"
                             >
                               Remove Performer
                             </button>
                           </div>
-                        </div>
 
-                        {/* Full-width description textarea */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Description
-                          </label>
-                          <textarea
-                            value={performer.opis}
-                            onChange={(e) => {
-                              const newPerformers = [...(translations[loc].performers || [])];
-                              newPerformers[index].opis = e.target.value;
-                              handlePerformersChange(loc, newPerformers);
-                            }}
-                            rows={8}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-vertical min-h-[120px]"
-                            placeholder="Detailed biography and description (1-2 paragraphs)"
-                          />
+                          {/* Two-column layout: Left (Name + Image), Right (Description) */}
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div className="lg:col-span-1">
+                            {/* Left Column: Name and Image */}
+                            <div className="space-y-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                  Name
+                                </label>
+                                <input
+                                  type="text"
+                                  value={performer.name}
+                                  onChange={(e) => {
+                                    const newPerformers = [...(translations[loc].performers || [])];
+                                    newPerformers[index].name = e.target.value;
+                                    handlePerformersChange(loc, newPerformers);
+                                  }}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                  placeholder="Performer name"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                  Performer Image
+                                </label>
+                                <ImageUpload
+                                  currentImageUrl={sharedImageUrl}
+                                  currentFileName={performer.fileName}
+                                  selectedFile={performer.selectedFile || null}
+                                  onImageSelected={(file) => {
+                                    handleImageSelected(index, file);
+                                  }}
+                                  onImageRemoved={() => {
+                                    handleImageRemoved(index);
+                                  }}
+                                  onImageCleared={() => {
+                                    // Track the removed image for deletion
+                                    if (performer.fileName) {
+                                      handleImageCleared(performer.fileName);
+                                    }
+                                  }}
+                                  label=""
+                                  className="w-full"
+                                />
+                              </div>
+                            </div>
+                            </div>
+
+                            {/* Right Column: Description (spans 2 columns) */}
+                            <div className="lg:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Description
+                              </label>
+                              <textarea
+                                value={performer.opis}
+                                onChange={(e) => {
+                                  const newPerformers = [...(translations[loc].performers || [])];
+                                  newPerformers[index].opis = e.target.value;
+                                  handlePerformersChange(loc, newPerformers);
+                                }}
+                                rows={8}
+                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-vertical min-h-[120px]"
+                                placeholder="Detailed biography and description (1-2 paragraphs)"
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {(translations[loc].performers || []).length === 0 && (
                       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                         No performers added yet. Click &quot;Add Performer&quot; to add one.

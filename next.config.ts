@@ -12,6 +12,22 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Allow images from your R2 bucket
+      {
+        protocol: 'https',
+        hostname: process.env.R2_BUCKET_NAME ||
+                  'your-bucket-name.r2.dev',
+        port: '',
+        pathname: '/**',
+      },
+      // Support for public bucket URLs
+      {
+        protocol: 'https',
+        hostname: process.env.R2_PUBLIC_URL?.replace(/^https?:\/\//, '') ||
+                  'your-public-bucket.r2.dev',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };

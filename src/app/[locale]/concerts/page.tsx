@@ -145,14 +145,6 @@ export default function ConcertsPage() {
                     <span className="text-sm">{concert.venue}</span>
                   </div>
 
-                  <div className="flex items-center text-gray-600 dark:text-gray-300">
-                    <span className="text-lg mr-2">🎤</span>
-                    <span className="text-sm">
-                      {concert.performers && concert.performers.length > 0
-                        ? concert.performers.map(p => p.name).join(', ')
-                        : 'Concert'}
-                    </span>
-                  </div>
                 </div>
 
                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">

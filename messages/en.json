@@ -156,7 +156,10 @@
       "concertCreated": "Concert created successfully!",
       "concertUpdated": "Concert updated successfully!",
       "failedToFetch": "Failed to fetch concerts",
-      "errorOccurred": "An error occurred"
+      "errorOccurred": "An error occurred",
+      "allConcerts": "All Concerts",
+      "noConcerts": "No Concerts Yet",
+      "noConcertsMessage": "Get started by adding your first concert!"
     },
     "list": {
       "loading": "Loading concerts...",

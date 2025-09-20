@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-// import { useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
 import { LocalizedConcert } from '@/types/concert';
 import ConcertForm from '@/components/admin/ConcertForm';
 
 export default function AdminConcertsPage() {
-  // const t = useTranslations(); // Unused
+  const t = useTranslations('admin.dashboard');
+  const params = useParams();
+  const locale = params.locale as string;
   const [concerts, setConcerts] = useState<LocalizedConcert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +80,7 @@ export default function AdminConcertsPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">⚙️</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Loading Admin Panel...</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('loading')}</h2>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         </div>
       </div>
@@ -89,13 +92,13 @@ export default function AdminConcertsPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Error Loading Admin Panel</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('error')}</h2>
           <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
           >
-            Try Again
+            {t('refresh')}
           </button>
         </div>
       </div>
@@ -110,10 +113,10 @@ export default function AdminConcertsPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-3">
               <span className="text-3xl">⚙️</span>
-              Concert Administration
+              {t('title')}
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Manage concerts and their programs
+              {t('subtitle')}
             </p>
           </div>
           
@@ -121,7 +124,7 @@ export default function AdminConcertsPage() {
             onClick={() => setShowForm(true)}
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
           >
-            + Add New Concert
+            + {t('addNewConcert')}
           </button>
         </div>
 
@@ -133,7 +136,7 @@ export default function AdminConcertsPage() {
               onConcertCreated={handleCreateConcert}
               onConcertUpdated={handleUpdateConcert}
               onCancel={handleCancel}
-              locale="en"
+              locale={locale}
             />
           </div>
         )}
@@ -142,20 +145,20 @@ export default function AdminConcertsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              All Concerts ({concerts.length})
+              {t('allConcerts')} ({concerts.length})
             </h3>
           </div>
           
           {concerts.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <div className="text-6xl mb-4">🎹</div>
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">No concerts found</h3>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">Get started by creating your first concert.</p>
+              <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">{t('noConcerts')}</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">{t('noConcertsMessage')}</p>
               <button
                 onClick={() => setShowForm(true)}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
               >
-                Create Concert
+                {t('addNewConcert')}
               </button>
             </div>
           ) : (

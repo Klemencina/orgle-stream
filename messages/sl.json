@@ -172,7 +172,10 @@
       "concertCreated": "Koncert je bil uspešno ustvarjen!",
       "concertUpdated": "Koncert je bil uspešno posodobljen!",
       "failedToFetch": "Napaka pri pridobivanju koncertov",
-      "errorOccurred": "Prišlo je do napake"
+      "errorOccurred": "Prišlo je do napake",
+      "allConcerts": "Vsi koncerti",
+      "noConcerts": "Še ni koncertov",
+      "noConcertsMessage": "Začnite z dodajanjem prvega koncerta!"
     },
     "list": {
       "loading": "Nalagam koncerte...",

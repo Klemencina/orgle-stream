@@ -156,7 +156,10 @@
       "concertCreated": "Concerto creato con successo!",
       "concertUpdated": "Concerto aggiornato con successo!",
       "failedToFetch": "Impossibile recuperare i concerti",
-      "errorOccurred": "Si è verificato un errore"
+      "errorOccurred": "Si è verificato un errore",
+      "allConcerts": "Tutti i Concerti",
+      "noConcerts": "Nessun Concerto Ancora",
+      "noConcertsMessage": "Inizia aggiungendo il tuo primo concerto!"
     },
     "list": {
       "loading": "Caricamento concerti...",
