@@ -18,7 +18,7 @@ const isProtectedRoute = createRouteMatcher([
 const isAdminRoute = createRouteMatcher([
   '/(.*)/admin(.*)',
   '/api/admin(.*)',
-  '/api/concerts',
+  '/api/concerts(.*)', // This will match all /api/concerts routes
   '/api/upload'
 ]);
 
@@ -32,6 +32,17 @@ export default clerkMiddleware(async (auth, req) => {
 
     // Check admin role for admin routes (including admin API routes)
     if (isAdminRoute(req)) {
+      const isConcertsGetRequest = req.nextUrl.pathname.startsWith('/api/concerts') && req.method === 'GET';
+      const isUploadRequest = req.nextUrl.pathname.startsWith('/api/upload');
+      const isConcertsWriteRequest = req.nextUrl.pathname.startsWith('/api/concerts') &&
+        (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE');
+
+      // Allow GET requests to /api/concerts for all users
+      if (isConcertsGetRequest) {
+        return NextResponse.next();
+      }
+
+      // Require admin access for write operations and uploads
       const { userId } = await auth();
 
       if (!userId) {

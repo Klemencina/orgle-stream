@@ -54,11 +54,14 @@ export async function GET(
     const wantStream = searchParams.get('stream') === 'true'
     const checkOnly = searchParams.get('check') === 'true'
     const allTranslations = searchParams.get('allTranslations') === 'true'
+    const admin = searchParams.get('admin') === 'true'
     const { id } = await params
 
     const concert = await prisma.concert.findUnique({
       where: {
-        id: id
+        id: id,
+        // Only show visible concerts unless admin is requesting
+        ...(admin ? {} : { isVisible: true })
       },
       include: {
         program: {
