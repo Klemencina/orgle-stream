@@ -16,25 +16,29 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 const isAdminRoute = createRouteMatcher([
-  '/(.*)/admin(.*)'
+  '/(.*)/admin(.*)',
+  '/api/admin(.*)',
+  '/api/concerts',
+  '/api/upload'
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Skip internationalization for API routes
+  // Handle API routes
   if (req.nextUrl.pathname.startsWith('/api/')) {
     // Apply Clerk protection for protected routes
     if (isProtectedRoute(req)) {
       await auth.protect();
     }
 
-    // Check admin role for admin routes
+    // Check admin role for admin routes (including admin API routes)
     if (isAdminRoute(req)) {
       const { userId } = await auth();
-      const locale = req.nextUrl.pathname.split('/')[1] || 'sl';
 
       if (!userId) {
-        const url = new URL(`/${locale}/dashboard`, req.url);
-        return NextResponse.redirect(url);
+        return NextResponse.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        );
       }
 
       try {
@@ -42,12 +46,16 @@ export default clerkMiddleware(async (auth, req) => {
         const user = await client.users.getUser(userId);
         const userRole = (user.publicMetadata as { role?: string } | undefined)?.role;
         if (userRole !== 'admin') {
-          const url = new URL(`/${locale}/dashboard`, req.url);
-          return NextResponse.redirect(url);
+          return NextResponse.json(
+            { error: 'Admin access required' },
+            { status: 403 }
+          );
         }
       } catch {
-        const url = new URL(`/${locale}/dashboard`, req.url);
-        return NextResponse.redirect(url);
+        return NextResponse.json(
+          { error: 'Failed to verify admin access' },
+          { status: 403 }
+        );
       }
     }
 
