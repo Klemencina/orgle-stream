@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         },
         translations: { where: { locale } }
       },
-      orderBy: { date: 'desc' }
+      orderBy: { date: 'asc' }
     })
     const concerts = await prisma.concert.findMany(findManyArgs)
 
