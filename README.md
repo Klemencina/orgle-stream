@@ -1,6 +1,6 @@
 # Orgle Stream 🎼
 
-A modern concert streaming platform built with Next.js that enables live and on-demand streaming of classical music concerts with multi-language support and comprehensive admin management.
+A modern concert streaming platform built with Next.js that enables live and on-demand streaming of classical music concerts with multi-language support and comprehensive admin management
 
 ## ✨ Features
 
