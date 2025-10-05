@@ -48,6 +48,12 @@ export default function StreamPlayer({ concertId }: StreamPlayerProps) {
 				const video = videoRef.current;
 				if (!video) return;
 
+				// Ensure audio is enabled by default
+				video.muted = false;
+				if (video.volume === 0) {
+					video.volume = 0.5;
+				}
+
 				// Clear any existing source to prevent conflicts
 				video.src = '';
 				video.load();
@@ -160,7 +166,6 @@ export default function StreamPlayer({ concertId }: StreamPlayerProps) {
 					controls
 					playsInline
 					autoPlay
-					muted
 					className="w-full h-full"
 				/>
 				{loading && (
