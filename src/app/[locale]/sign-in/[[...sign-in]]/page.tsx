@@ -1,10 +1,18 @@
+"use client";
+
 import { SignIn } from "@clerk/nextjs";
+import { useParams } from "next/navigation";
 
 export default function SignInPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || "en";
+  const afterAuthUrl = `/${locale}/concerts`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <SignIn
+          afterSignInUrl={afterAuthUrl}
+          afterSignUpUrl={afterAuthUrl}
           appearance={{
             baseTheme: undefined,
             variables: {
