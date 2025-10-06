@@ -250,7 +250,7 @@ export default function ConcertForm({
 
   const fetchAllTranslations = async (concertId: string) => {
     try {
-      const response = await fetch(`/api/concerts/${concertId}?allTranslations=true`);
+      const response = await fetch(`/api/concerts/${concertId}?allTranslations=true&admin=true`);
       if (!response.ok) {
         throw new Error(t('failedToFetch'));
       }

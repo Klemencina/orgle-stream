@@ -18,7 +18,7 @@ A modern concert streaming platform built with Next.js that enables live and on-
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 18+ and pnpm
 - PostgreSQL database
 - Amazon IVS channel (for streaming)
 - Clerk account (for authentication)
@@ -34,7 +34,7 @@ A modern concert streaming platform built with Next.js that enables live and on-
 
 2. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Set up environment variables**
@@ -65,13 +65,13 @@ A modern concert streaming platform built with Next.js that enables live and on-
 
 4. **Set up the database**
    ```bash
-   npx prisma generate
-   npx prisma db push
+   pnpm prisma generate
+   pnpm prisma db push
    ```
 
 5. **Start the development server**
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
 6. **Open [http://localhost:3000](http://localhost:3000)**
@@ -151,19 +151,19 @@ R2_PUBLIC_URL=https://your-production-bucket.r2.dev
 ### Available Scripts
 
 ```bash
-npm run dev        # Start development server
-npm run build      # Build for production
-npm run start      # Start production server
-npm run lint       # Run ESLint
-npm run vercel-build # Build for Vercel deployment
+pnpm dev           # Start development server
+pnpm build         # Build for production
+pnpm start         # Start production server
+pnpm lint          # Run ESLint
+pnpm vercel-build  # Build for Vercel deployment
 ```
 
 ### Database Management
 
 ```bash
-npx prisma studio  # Open database browser
-npx prisma db push # Push schema changes
-npx prisma generate # Regenerate Prisma client
+pnpm prisma studio   # Open database browser
+pnpm prisma db push  # Push schema changes
+pnpm prisma generate # Regenerate Prisma client
 ```
 
 ## 📚 Additional Resources
