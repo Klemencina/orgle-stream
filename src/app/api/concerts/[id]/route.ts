@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
 import { LocalizedConcert, Performer } from '@/types/concert'
+import { isAdmin } from '@/lib/auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -55,6 +56,12 @@ export async function GET(
     const checkOnly = searchParams.get('check') === 'true'
     const allTranslations = searchParams.get('allTranslations') === 'true'
     const admin = searchParams.get('admin') === 'true'
+    if (admin) {
+      const hasAdmin = await isAdmin()
+      if (!hasAdmin) {
+        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+      }
+    }
     const { id } = await params
 
     const concert = await prisma.concert.findUnique({

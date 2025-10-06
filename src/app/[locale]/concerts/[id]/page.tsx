@@ -56,7 +56,9 @@ export default function ConcertPage() {
     async function fetchConcert() {
       try {
         const currentLocale = locale || 'en';
-        const response = await fetch(`/api/concerts/${concertId}?locale=${currentLocale}`, {
+        const isAdmin = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
+        const adminQuery = isAdmin ? '&admin=true' : '';
+        const response = await fetch(`/api/concerts/${concertId}?locale=${currentLocale}${adminQuery}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -73,7 +75,7 @@ export default function ConcertPage() {
           setConcert(data);
         }
         // Also fetch full translations for program display (Slovenian + Original)
-        const fullRes = await fetch(`/api/concerts/${concertId}?allTranslations=true`, {
+        const fullRes = await fetch(`/api/concerts/${concertId}?allTranslations=true${isAdmin ? '&admin=true' : ''}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

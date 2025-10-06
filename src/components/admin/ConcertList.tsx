@@ -223,6 +223,14 @@ export default function ConcertList({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex space-x-2">
+                    <a
+                      href={`/${locale}/concerts/${concert.id}?admin=true`}
+                      className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Admin View
+                    </a>
                     <button
                       onClick={() => onEditConcert(concert)}
                       className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"

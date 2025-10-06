@@ -1,15 +1,26 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 
 interface SessionMetadata {
   role?: 'admin' | 'user' | string;
 }
 
 export async function isAdmin() {
-  const { sessionClaims } = await auth();
-  const userRole =
+  const { sessionClaims, userId } = await auth();
+  const claimRole =
     (sessionClaims?.publicMetadata as SessionMetadata | undefined)?.role ??
     (sessionClaims?.metadata as SessionMetadata | undefined)?.role;
-  return userRole === 'admin';
+  if (claimRole === 'admin') return true;
+
+  if (!userId) return false;
+
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const userRole = (user.publicMetadata as SessionMetadata | undefined)?.role;
+    return userRole === 'admin';
+  } catch {
+    return false;
+  }
 }
 
 export async function getCurrentUser() {
