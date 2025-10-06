@@ -51,6 +51,22 @@ export default function ConcertPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [programView, setProgramView] = useState<'sl' | 'original'>('sl');
+  const [imageOrientationByPerformer, setImageOrientationByPerformer] = useState<Record<number, 'portrait' | 'landscape'>>({});
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightboxAlt, setLightboxAlt] = useState<string>('');
+
+  const openLightbox = (src: string, alt: string) => {
+    setLightboxSrc(src);
+    setLightboxAlt(alt);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxSrc(null);
+    setLightboxAlt('');
+  };
 
   useEffect(() => {
     async function fetchConcert() {
@@ -331,7 +347,12 @@ export default function ConcertPage() {
                             alt={performer.name}
                             width={200}
                             height={200}
-                            className="w-32 h-32 md:w-48 md:h-48 object-cover rounded-lg shadow-md"
+                            className={`rounded-lg shadow-md cursor-zoom-in ${imageOrientationByPerformer[index] === 'landscape' ? 'w-48 md:w-72 h-auto object-contain bg-gray-100' : 'w-32 h-32 md:w-48 md:h-48 object-cover'}`}
+                            onClick={() => openLightbox(performer.img!, performer.name)}
+                            onLoadingComplete={(img) => {
+                              const orientation = img.naturalWidth >= img.naturalHeight ? 'landscape' : 'portrait';
+                              setImageOrientationByPerformer((prev) => ({ ...prev, [index]: orientation }));
+                            }}
                             onError={(e) => {
                               // Hide the image on error
                               e.currentTarget.style.display = 'none';
@@ -406,6 +427,32 @@ export default function ConcertPage() {
           </div>
         </div>
       </div>
+      {lightboxOpen && lightboxSrc && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-80 flex items-center justify-center p-4"
+          onClick={closeLightbox}
+          role="button"
+          aria-label="Close image"
+        >
+          <div className="relative max-w-[90vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="absolute -top-10 right-0 text-white bg-black bg-opacity-50 hover:bg-opacity-70 rounded px-3 py-1"
+              onClick={closeLightbox}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <Image
+              src={lightboxSrc}
+              alt={lightboxAlt}
+              width={1200}
+              height={800}
+              className="max-w-[90vw] max-h-[85vh] w-auto h-auto object-contain rounded"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
