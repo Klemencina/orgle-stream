@@ -31,7 +31,7 @@ function AdminContent() {
   const [editingConcert, setEditingConcert] = useState<LocalizedConcert | null>(null);
   
   // Filter states
-  const [showUpcomingOnly, setShowUpcomingOnly] = useState(false);
+  const [showUpcomingOnly, setShowUpcomingOnly] = useState(true);
   const [hideHiddenConcerts, setHideHiddenConcerts] = useState(false);
 
   useEffect(() => {

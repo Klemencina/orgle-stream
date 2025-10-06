@@ -222,8 +222,8 @@ export default function AdminConcertsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <Link href={`/${locale}/concerts/${concert.id}?admin=true`}>
-                            <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                              Admin View
+                            <button className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-600">
+                              View
                             </button>
                           </Link>
                           <button

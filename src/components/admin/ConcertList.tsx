@@ -225,11 +225,12 @@ export default function ConcertList({
                   <div className="flex space-x-2">
                     <a
                       href={`/${locale}/concerts/${concert.id}?admin=true`}
-                      className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-600"
                       target="_blank"
                       rel="noopener noreferrer"
+                      title="View"
                     >
-                      Admin View
+                      View
                     </a>
                     <button
                       onClick={() => onEditConcert(concert)}
