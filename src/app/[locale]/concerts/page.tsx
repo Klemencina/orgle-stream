@@ -13,12 +13,15 @@ export default function ConcertsPage() {
   const [concerts, setConcerts] = useState<LocalizedConcert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdminView, setIsAdminView] = useState(false);
 
   useEffect(() => {
     async function fetchConcerts() {
       try {
         const currentLocale = locale || 'en';
-        const response = await fetch(`/api/concerts?locale=${currentLocale}`, {
+        const adminParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
+        setIsAdminView(Boolean(adminParam));
+        const response = await fetch(`/api/concerts?locale=${currentLocale}${adminParam ? '&admin=true' : ''}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -168,7 +171,7 @@ export default function ConcertsPage() {
                 </div>
 
                 {/* View Concert Button */}
-                <Link href={`/${locale}/concerts/${concert.id}`}>
+                <Link href={`/${locale}/concerts/${concert.id}${isAdminView ? '?admin=true' : ''}`}>
                   <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
                     {t('concerts.viewDetails')}
                   </button>
