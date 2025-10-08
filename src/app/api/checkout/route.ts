@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       ],
       success_url: successUrl,
       cancel_url: cancelUrl,
+      allow_promotion_codes: true,
       metadata: {
         concertId,
         userId,
