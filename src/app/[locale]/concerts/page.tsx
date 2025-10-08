@@ -31,7 +31,17 @@ export default function ConcertsPage() {
           throw new Error('Failed to fetch concerts');
         }
         const data = await response.json();
-        setConcerts(data);
+        
+        // Filter concerts to show future concerts and concerts that started within the last 3 hours
+        const now = new Date();
+        const filteredConcerts = data.filter((concert: LocalizedConcert) => {
+          const concertDate = new Date(concert.date);
+          const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+          // Show concerts that are either in the future OR started within the last 3 hours
+          return concertDate > threeHoursAgo;
+        });
+        
+        setConcerts(filteredConcerts);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {

@@ -367,8 +367,8 @@ export async function PUT(
         date: concertDate,
 
         isVisible: isVisible !== false, // Default to true if not specified
-        stripeProductId: (stripeProductId || undefined),
-        stripePriceId: (stripePriceId || undefined),
+        stripeProductId: stripeProductId || null,
+        stripePriceId: stripePriceId || null,
         translations: {
           create: filteredTranslations.map((translation) => ({
             locale: translation.locale,

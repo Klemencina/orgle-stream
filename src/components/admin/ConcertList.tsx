@@ -190,7 +190,26 @@ export default function ConcertList({
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
                         {concert.performers && concert.performers.length > 0
-                          ? concert.performers.map(p => p.name).join(', ')
+                          ? (() => {
+                              const maxDisplay = 3;
+                              const performerNames = concert.performers.map(p => p.name);
+                              const displayed = performerNames.slice(0, maxDisplay);
+                              const remaining = performerNames.length - maxDisplay;
+                              
+                              return (
+                                <span 
+                                  title={performerNames.join(', ')}
+                                  className="cursor-help"
+                                >
+                                  {displayed.join(', ')}
+                                  {remaining > 0 && (
+                                    <span className="text-gray-400">
+                                      {' '}and {remaining} more
+                                    </span>
+                                  )}
+                                </span>
+                              );
+                            })()
                           : 'No performers'}
                       </div>
                     </div>

@@ -65,6 +65,16 @@ const localeNames = {
   it: 'Italiano'
 };
 
+const defaultVenues = {
+  en: 'Cathedral Church of the Assumption of the Virgin Mary, Koper',
+  sl: 'Stolna cerkev Marijinega vnebovzetja, Koper',
+  it: 'Chiesa Cattedrale dell\'Assunzione della Vergine Maria, Capodistria'
+};
+
+const getDefaultVenue = (locale: string): string => {
+  return defaultVenues[locale as keyof typeof defaultVenues] || '';
+};
+
 export default function ConcertForm({ 
   concert, 
   onConcertCreated, 
@@ -199,7 +209,7 @@ export default function ConcertForm({
           [locale]: {
             title: concert.title,
             subtitle: concert.subtitle || '',
-            venue: concert.venue,
+            venue: concert.venue || getDefaultVenue(locale),
             description: concert.description,
             performers: (concert.performers || []).map(performer => ({
               ...performer,
@@ -230,7 +240,7 @@ export default function ConcertForm({
             [locale]: {
               title: concert.title,
               subtitle: concert.subtitle || '',
-              venue: concert.venue,
+              venue: concert.venue || getDefaultVenue(locale),
               description: concert.description,
               performers: (concert.performers || []).map(performer => ({
                 ...performer,
@@ -276,13 +286,13 @@ export default function ConcertForm({
         newTranslations[loc] = translation ? {
           title: translation.title,
           subtitle: translation.subtitle || '',
-          venue: translation.venue,
+          venue: translation.venue || getDefaultVenue(loc),
           description: translation.description,
           performers: (translation.performers || []).map((performer: Performer) => ({
             ...performer,
             selectedFile: null // Initialize selectedFile as null
           }))
-        } : { title: '', subtitle: '', venue: '', description: '', performers: [] };
+        } : { title: '', subtitle: '', venue: getDefaultVenue(loc), description: '', performers: [] };
       });
       setTranslations(newTranslations);
 
@@ -347,7 +357,7 @@ export default function ConcertForm({
         [locale]: {
           title: concert?.title || '',
           subtitle: concert?.subtitle || '',
-          venue: concert?.venue || '',
+          venue: concert?.venue || getDefaultVenue(locale),
           description: concert?.description || '',
           performers: (concert?.performers || []).map(performer => ({
             ...performer,
@@ -578,23 +588,6 @@ export default function ConcertForm({
     });
   };
 
-  const copyToAllLocales = (sourceLocale: string) => {
-    const sourceTranslation = translations[sourceLocale];
-    const sourceProgram = program[sourceLocale];
-    
-    locales.forEach(loc => {
-      if (loc !== sourceLocale) {
-        setTranslations(prev => ({
-          ...prev,
-          [loc]: { ...sourceTranslation }
-        }));
-        setProgram(prev => ({
-          ...prev,
-          [loc]: sourceProgram.map(piece => ({ ...piece }))
-        }));
-      }
-    });
-  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -643,8 +636,8 @@ export default function ConcertForm({
         date: dateTime.toISOString(),
 
         isVisible: basicData.isVisible,
-        stripeProductId: basicData.stripeProductId || null,
-        stripePriceId: basicData.stripePriceId || null,
+        stripeProductId: basicData.stripeProductId.trim() || null,
+        stripePriceId: basicData.stripePriceId.trim() || null,
         translations: Object.entries(updatedTranslations).map(([locale, translation]) => ({
           locale,
           ...translation
@@ -870,15 +863,6 @@ export default function ConcertForm({
       <div>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('translations')}</h3>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => copyToAllLocales(activeTab)}
-              className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
-            >
-              Copy to All Languages
-            </button>
-          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -962,15 +946,28 @@ export default function ConcertForm({
                 {/* Performers Section */}
                 <div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {t('performerInfo')}
-                    </label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t('performerInfo')}
+                      </label>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Drag performers by the grip icon to reorder them
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => {
                         const newPerformers = [...(translations[loc].performers || [])];
                         newPerformers.push({ name: '', img: '', fileName: '', selectedFile: null, opis: '' });
-                        handlePerformersChange(loc, newPerformers);
+                        
+                        // Add performer to all locales - name and image are shared, but description is locale-specific
+                        const allLocales = Object.keys(translations);
+                        allLocales.forEach(locale => {
+                          const currentPerformers = [...(translations[locale].performers || [])];
+                          const newPerformer = { name: '', img: '', fileName: '', selectedFile: null, opis: '' };
+                          currentPerformers.push(newPerformer);
+                          handlePerformersChange(locale, currentPerformers);
+                        });
                       }}
                       className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
                     >
@@ -978,7 +975,7 @@ export default function ConcertForm({
                     </button>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {(translations[loc].performers || []).map((performer, index) => {
                       // Find the image URL from any locale (since images are shared)
                       const getSharedImageUrl = (performerIndex: number) => {
@@ -994,15 +991,60 @@ export default function ConcertForm({
                       const sharedImageUrl = getSharedImageUrl(index);
 
                       return (
-                        <div key={index} className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg space-y-6">
-                          {/* Header with Name and Remove button */}
+                        <div 
+                          key={index} 
+                          className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg space-y-4"
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData('text/plain', index.toString());
+                            e.currentTarget.style.opacity = '0.5';
+                          }}
+                          onDragEnd={(e) => {
+                            e.currentTarget.style.opacity = '1';
+                          }}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.style.borderColor = '#f97316';
+                          }}
+                          onDragLeave={(e) => {
+                            e.currentTarget.style.borderColor = '';
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.style.borderColor = '';
+                            const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                            
+                            // Update performers for all locales, preserving locale-specific descriptions
+                            const allLocales = Object.keys(translations);
+                            allLocales.forEach(locale => {
+                              const currentPerformers = [...(translations[locale].performers || [])];
+                              const draggedPerformer = currentPerformers[draggedIndex];
+                              currentPerformers.splice(draggedIndex, 1);
+                              currentPerformers.splice(index, 0, draggedPerformer);
+                              handlePerformersChange(locale, currentPerformers);
+                            });
+                          }}
+                        >
+                          {/* Header with Drag Handle, Name and Remove button */}
                           <div className="flex justify-between items-start">
-                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Performer #{index + 1}</h4>
+                            <div className="flex items-center gap-2">
+                              <div className="cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Drag to reorder">
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                                </svg>
+                              </div>
+                              <h4 className="text-base font-semibold text-gray-900 dark:text-white">Performer #{index + 1}</h4>
+                            </div>
                             <button
                               type="button"
                               onClick={() => {
                                 const newPerformers = (translations[loc].performers || []).filter((_, i) => i !== index);
-                                handlePerformersChange(loc, newPerformers);
+                                
+                                // Remove performer from all locales since they are shared
+                                const allLocales = Object.keys(translations);
+                                allLocales.forEach(locale => {
+                                  handlePerformersChange(locale, newPerformers);
+                                });
                               }}
                               className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm"
                             >
@@ -1010,11 +1052,10 @@ export default function ConcertForm({
                             </button>
                           </div>
 
-                          {/* Two-column layout: Left (Name + Image), Right (Description) */}
-                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className="lg:col-span-1">
-                            {/* Left Column: Name and Image */}
-                            <div className="space-y-4">
+                          {/* Compact vertical layout */}
+                          <div className="space-y-4">
+                            {/* Name and Image in a compact row */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                   Name
@@ -1023,9 +1064,15 @@ export default function ConcertForm({
                                   type="text"
                                   value={performer.name}
                                   onChange={(e) => {
-                                    const newPerformers = [...(translations[loc].performers || [])];
-                                    newPerformers[index].name = e.target.value;
-                                    handlePerformersChange(loc, newPerformers);
+                                    // Update name across all locales since it's shared
+                                    const allLocales = Object.keys(translations);
+                                    allLocales.forEach(locale => {
+                                      const newPerformers = [...(translations[locale].performers || [])];
+                                      if (newPerformers[index]) {
+                                        newPerformers[index].name = e.target.value;
+                                        handlePerformersChange(locale, newPerformers);
+                                      }
+                                    });
                                   }}
                                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                   placeholder="Performer name"
@@ -1050,22 +1097,22 @@ export default function ConcertForm({
                                 />
                               </div>
                             </div>
-                            </div>
 
-                            {/* Right Column: Description (spans 2 columns) */}
-                            <div className="lg:col-span-2">
+                            {/* Description full width below */}
+                            <div>
                               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Description
                               </label>
                               <textarea
                                 value={performer.opis}
                                 onChange={(e) => {
+                                  // Update description only for current locale since it's language-specific
                                   const newPerformers = [...(translations[loc].performers || [])];
                                   newPerformers[index].opis = e.target.value;
                                   handlePerformersChange(loc, newPerformers);
                                 }}
-                                rows={8}
-                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-vertical min-h-[120px]"
+                                rows={4}
+                                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-vertical min-h-[80px]"
                                 placeholder="Detailed biography and description (1-2 paragraphs)"
                               />
                             </div>

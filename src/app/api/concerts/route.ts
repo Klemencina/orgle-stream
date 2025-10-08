@@ -239,8 +239,8 @@ export async function POST(request: NextRequest) {
       data: {
         date: concertDate,
         isVisible: isVisible !== false,
-        stripeProductId: (stripeProductId || undefined),
-        stripePriceId: (stripePriceId || undefined),
+        stripeProductId: stripeProductId || null,
+        stripePriceId: stripePriceId || null,
         translations: {
           create: filteredTranslations.map((translation) => ({
             locale: translation.locale,
