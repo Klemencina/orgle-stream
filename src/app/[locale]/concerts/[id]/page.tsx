@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { LocalizedConcert, ProgramPiece } from '@/types/concert';
+import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 
 // Define the dynamic component at module scope to avoid remounting on every render
@@ -42,6 +43,8 @@ export default function ConcertPage() {
   const concertId = params.id as string;
   const locale = params.locale as string;
   const t = useTranslations();
+  const { user, isLoaded } = useUser();
+  const isAdminClient = isLoaded && (user?.publicMetadata as any)?.role === 'admin';
 
   const [timeLeft, setTimeLeft] = useState<CountdownTime>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLive, setIsLive] = useState(false);
@@ -55,6 +58,15 @@ export default function ConcertPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = useState<string>('');
+  const [purchased, setPurchased] = useState<boolean | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportEmail, setReportEmail] = useState('');
+  const [reportType, setReportType] = useState<'access' | 'quality' | 'payment' | 'other'>('access');
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmittedId, setReportSubmittedId] = useState<string | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportSubmittedEmail, setReportSubmittedEmail] = useState<string | null>(null);
 
   const openLightbox = (src: string, alt: string) => {
     setLightboxSrc(src);
@@ -115,6 +127,61 @@ export default function ConcertPage() {
       fetchConcert();
     }
   }, [concertId, locale]);
+
+  useEffect(() => {
+    async function fetchPurchase() {
+      if (!concertId) return;
+      try {
+        const res = await fetch(`/api/purchase?concertId=${concertId}`, { cache: 'no-store' });
+        if (!res.ok) {
+          setPurchased(false);
+          return;
+        }
+        const data = await res.json();
+        setPurchased(Boolean(data?.purchased));
+      } catch {
+        setPurchased(false);
+      }
+    }
+    fetchPurchase();
+  }, [concertId]);
+
+  // If returning from checkout, poll a few times to wait for webhook and refresh purchase state
+  useEffect(() => {
+    if (!concertId) return;
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const cameFromCheckout = params.get('checkout') === 'success';
+    const sessionId = params.get('session_id');
+    if (!cameFromCheckout) return;
+
+    let aborted = false;
+    (async () => {
+      const maxAttempts = 6;
+      for (let attempt = 1; attempt <= maxAttempts && !aborted; attempt++) {
+        try {
+          const url = sessionId ? `/api/purchase?concertId=${concertId}&sessionId=${encodeURIComponent(sessionId)}` : `/api/purchase?concertId=${concertId}`
+          const res = await fetch(url, { cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            const isPurchased = Boolean(data?.purchased);
+            setPurchased(isPurchased);
+            if (isPurchased) break;
+          }
+        } catch {}
+        await new Promise(r => setTimeout(r, 1000 * attempt));
+      }
+      // Clean checkout param from URL
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('checkout');
+        url.searchParams.delete('session_id');
+        window.history.replaceState({}, '', url.toString());
+      } catch {}
+    })();
+
+    return () => { aborted = true };
+  }, [concertId]);
 
   useEffect(() => {
     if (!concert) return;
@@ -312,20 +379,208 @@ export default function ConcertPage() {
               </div>
             )}
 
-            {/* Stream Player - show when concert is live or stream is available */}
+            {/* Purchase/Login CTA - hidden for admins */}
+            {purchased === false && !isAdminClient && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                  {t('concert.purchaseToWatch')}
+                </h3>
+                {typeof (concert as any).priceAmountCents === 'number' && (
+                  <p className="text-center text-gray-700 dark:text-gray-200 mb-4">
+                    {new Intl.NumberFormat(locale, { style: 'currency', currency: ((concert as any).priceCurrency || 'eur').toUpperCase() }).format((((concert as any).priceAmountCents || 0) / 100))}
+                  </p>
+                )}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <SignedIn>
+                    <button
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
+                    onClick={async () => {
+                        try {
+                        const origin = typeof window !== 'undefined' ? window.location.origin : ''
+                        const successUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+                        const cancelUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=cancel`
+                          const res = await fetch('/api/checkout', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ concertId: concert.id, successUrl, cancelUrl })
+                          })
+                          const data = await res.json()
+                          if (data?.url) {
+                            window.location.href = data.url
+                          }
+                        } catch {}
+                      }}
+                      type="button"
+                    >
+                      {t('concert.buyTicket')}
+                    </button>
+                  </SignedIn>
+                  <SignedOut>
+                    <a
+                      className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 text-center"
+                      href={`/${locale}/sign-in?redirect=/${locale}/concerts/${concert.id}`}
+                    >
+                      {t('concert.loginToPurchase')}
+                    </a>
+                  </SignedOut>
+                </div>
+              </div>
+            )}
+
+            {/* Live status visible to all; stream player only for purchasers */}
             {(isLive || (everLive && windowOpen)) && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                   {t('concert.liveNow')}
                 </h3>
-                <div className="mb-4">
-                  <StreamPlayer key={`stream-${concert.id}`} concertId={concert.id} />
-                </div>
-                <div className="text-center text-sm text-gray-600 dark:text-gray-300">
-                  {t('concert.watchLive')}
-                </div>
+                {(purchased === true || isAdminClient) && (
+                  <>
+                    <div className="mb-4">
+                      <StreamPlayer key={`stream-${concert.id}`} concertId={concert.id} />
+                    </div>
+                  </>
+                )}
               </div>
             )}
+
+            {/* Purchased message when not live yet */}
+            {purchased === true && !(isLive || (everLive && windowOpen)) && !hasEnded && (
+              <div className="bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                <p className="text-green-800 dark:text-green-200 text-center font-medium">
+                  {t('concert.ticketPurchased')}
+                </p>
+              </div>
+            )}
+
+          {/* Report a problem - available to all users */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('concert.report.title')}</h3>
+              {!reportOpen && (
+                <button
+                  type="button"
+                  className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded"
+                  onClick={() => setReportOpen(true)}
+                >
+                  {t('concert.report.openButton')}
+                </button>
+              )}
+            </div>
+            {reportOpen && (
+              <form
+                className="mt-4 space-y-4"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (reportSubmitting) return;
+                  setReportError(null);
+                  setReportSubmitting(true);
+                  setReportSubmittedId(null);
+                  try {
+                    const res = await fetch('/api/support/report', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: reportEmail,
+                        type: reportType,
+                        message: reportMessage,
+                        concertId: concert.id,
+                        locale,
+                        isLive,
+                        everLive,
+                        windowOpen,
+                        purchased,
+                      }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                      throw new Error(data?.error || 'submit_failed');
+                    }
+                    setReportSubmittedId(data?.caseId || null);
+                    setReportSubmittedEmail(reportEmail);
+                    setReportEmail('');
+                    setReportMessage('');
+                    setReportType('access');
+                  } catch (err: any) {
+                    setReportError(err?.message || 'submit_failed');
+                  } finally {
+                    setReportSubmitting(false);
+                  }
+                }}
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('concert.report.emailLabel')}
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={reportEmail}
+                    onChange={(e) => setReportEmail(e.target.value)}
+                    placeholder={t('concert.report.emailPlaceholder')}
+                    className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('concert.report.typeLabel')}
+                  </label>
+                  <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value as any)}
+                    className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                  >
+                    <option value="access">{t('concert.report.type.access')}</option>
+                    <option value="quality">{t('concert.report.type.quality')}</option>
+                    <option value="payment">{t('concert.report.type.payment')}</option>
+                    <option value="other">{t('concert.report.type.other')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('concert.report.messageLabel')}
+                  </label>
+                  <textarea
+                    value={reportMessage}
+                    onChange={(e) => setReportMessage(e.target.value)}
+                    placeholder={t('concert.report.messagePlaceholder')}
+                    rows={4}
+                    className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                  />
+                </div>
+                {reportError && (
+                  <div className="text-red-600 text-sm">{t('concert.report.submitError')}</div>
+                )}
+                {reportSubmittedId && (
+                  <div className="space-y-1">
+                    <div className="text-green-700 dark:text-green-300 text-sm">
+                      {t('concert.report.submitSuccess')} #{reportSubmittedId}
+                    </div>
+                    {reportSubmittedEmail && (
+                      <div className="text-gray-700 dark:text-gray-300 text-xs">
+                        {t('concert.report.replyNotice', { email: reportSubmittedEmail })}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={reportSubmitting}
+                    className="bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold py-2 px-4 rounded"
+                  >
+                    {reportSubmitting ? t('concert.report.submitting') : t('concert.report.submit')}
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-4 py-2 rounded"
+                    onClick={() => { setReportOpen(false); setReportError(null); }}
+                  >
+                    {t('concert.report.close')}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
 
             {/* Venue Details */}
 
@@ -425,6 +680,7 @@ export default function ConcertPage() {
             </div>
 
           </div>
+
         </div>
       </div>
       {lightboxOpen && lightboxSrc && (

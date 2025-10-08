@@ -83,7 +83,32 @@
     "minutes": "Minutes",
     "seconds": "Seconds",
     "recentActivity": "Recent Orgle Koper Activity",
-    "smallConcertDescription": "play on small organ concert"
+    "smallConcertDescription": "play on small organ concert",
+    "purchaseToWatch": "Purchase a ticket to watch",
+    "buyTicket": "Buy Ticket",
+    "loginToPurchase": "Log in to purchase or watch",
+    "ticketPurchased": "Your ticket has been purchased. You'll be able to watch when the stream starts.",
+    "report": {
+      "title": "Having trouble?",
+      "openButton": "Report a problem",
+      "emailLabel": "Your email",
+      "emailPlaceholder": "you@example.com",
+      "typeLabel": "What’s the issue?",
+      "type": {
+        "access": "I paid but can’t watch",
+        "quality": "Stream quality problem",
+        "payment": "Payment/receipt issue",
+        "other": "Something else"
+      },
+      "messageLabel": "Details (optional)",
+      "messagePlaceholder": "Describe what happened…",
+      "submit": "Send report",
+      "submitting": "Sending…",
+      "submitSuccess": "Thanks! We’ll email you shortly. Case",
+      "replyNotice": "You will receive a reply at {{email}} from admin@orglekoper.si.",
+      "submitError": "Couldn’t send report. Please try again.",
+      "close": "Close"
+    }
   },
   "dashboard": {
     "title": "Your Orgle Koper Dashboard",

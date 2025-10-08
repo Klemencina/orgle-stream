@@ -56,6 +56,11 @@ A modern concert streaming platform built with Next.js that enables live and on-
    # Streaming (Amazon IVS)
    IVS_PLAYBACK_URL=https://your-channel.m3u8
 
+   # Payments (Stripe)
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+
    # Cloud Storage (Cloudflare R2)
    R2_ACCOUNT_ID=your_r2_account_id
    R2_ACCESS_KEY_ID=your_r2_access_key_id

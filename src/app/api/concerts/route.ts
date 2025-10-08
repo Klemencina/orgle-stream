@@ -43,6 +43,8 @@ interface CreateConcertBody {
   isVisible?: boolean
   translations: TranslationInput[]
   program: ProgramLocaleInput[]
+  stripeProductId?: string | null
+  stripePriceId?: string | null
 }
 
 export async function GET(request: NextRequest) {
@@ -110,6 +112,8 @@ export async function GET(request: NextRequest) {
         venue: translation.venue,
         description: translation.description,
         isVisible: concert.isVisible,
+        stripeProductId: (concert as any).stripeProductId || null,
+        stripePriceId: (concert as any).stripePriceId || null,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
         performers: isValidPerformers(translation.performers) ? translation.performers : undefined,
@@ -170,7 +174,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { date, isVisible, translations, program } = body as CreateConcertBody
+    const { date, isVisible, translations, program, stripeProductId, stripePriceId } = body as CreateConcertBody
     const { searchParams } = new URL(request.url)
     const locale = searchParams.get('locale') || 'en'
 
@@ -234,6 +238,8 @@ export async function POST(request: NextRequest) {
       data: {
         date: concertDate,
         isVisible: isVisible !== false,
+        stripeProductId: (stripeProductId || undefined),
+        stripePriceId: (stripePriceId || undefined),
         translations: {
           create: filteredTranslations.map((translation) => ({
             locale: translation.locale,

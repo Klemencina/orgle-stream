@@ -60,4 +60,7 @@ export interface LocalizedConcert {
   updatedAt: string
   program: LocalizedProgramPiece[]
   performers?: Array<{name: string, img: string, opis: string}>
+  // Optional pricing for display
+  priceAmountCents?: number
+  priceCurrency?: string
 }

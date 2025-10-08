@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { getStripe } from '@/lib/stripe'
 import { Prisma } from '@prisma/client'
 import { LocalizedConcert, Performer } from '@/types/concert'
+import { auth } from '@clerk/nextjs/server'
 import { isAdmin } from '@/lib/auth'
 
 export const runtime = 'nodejs'
@@ -43,6 +45,8 @@ interface UpdateConcertBody {
   isVisible?: boolean
   translations: TranslationInput[]
   program: ProgramLocaleInput[]
+  stripeProductId?: string | null
+  stripePriceId?: string | null
 }
 
 export async function GET(
@@ -105,7 +109,8 @@ export async function GET(
       const allTranslationsData = {
         id: concert.id,
         date: concert.date.toISOString(),
-        
+        stripeProductId: (concert as any).stripeProductId || null,
+        stripePriceId: (concert as any).stripePriceId || null,
         isVisible: concert.isVisible,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
@@ -130,7 +135,7 @@ export async function GET(
         return NextResponse.json(allTranslationsData)
     }
 
-    // If the client is requesting the gated stream URL, enforce time window and return an opaque value
+    // If the client is requesting the gated stream URL, enforce time window and purchase
     if (wantStream || checkOnly) {
       const now = Date.now()
       const startTime = concert.date.getTime()
@@ -145,6 +150,21 @@ export async function GET(
       }
 
       // Within viewing window
+      // For stream delivery, require authenticated user with paid ticket
+      if (wantStream) {
+        const { userId } = await auth()
+        if (!userId) {
+          return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+        }
+        const ticket = await (prisma as any).ticket.findUnique({
+          where: { userId_concertId: { userId, concertId: concert.id } },
+          select: { status: true },
+        })
+        const hasAccess = Boolean(ticket && ticket.status === 'paid')
+        if (!hasAccess) {
+          return NextResponse.json({ error: 'Purchase required' }, { status: 403 })
+        }
+      }
       const playbackUrl = process.env.IVS_PLAYBACK_URL || null
 
       if (checkOnly) {
@@ -196,7 +216,23 @@ export async function GET(
     }
 
     // Transform to localized format
-    const localizedConcert: LocalizedConcert = {
+    // Optionally enrich with Stripe price info for displaying cost on the client
+    let priceAmountCents: number | undefined
+    let priceCurrency: string | undefined
+    if ((concert as any).stripePriceId) {
+      try {
+        const stripe = getStripe()
+        const price = await stripe.prices.retrieve((concert as any).stripePriceId as string)
+        if (typeof price.unit_amount === 'number') {
+          priceAmountCents = price.unit_amount
+          priceCurrency = (price.currency || 'eur').toLowerCase()
+        }
+      } catch {
+        // ignore Stripe errors for price display; pricing is optional
+      }
+    }
+
+    const localizedConcert: LocalizedConcert & { stripeProductId?: string | null; stripePriceId?: string | null; priceAmountCents?: number; priceCurrency?: string } = {
       id: concert.id,
       title: translation.title,
       subtitle: translation.subtitle || undefined,
@@ -204,6 +240,10 @@ export async function GET(
       venue: translation.venue,
       description: translation.description,
       isVisible: concert.isVisible,
+      stripeProductId: (concert as any).stripeProductId || null,
+      stripePriceId: (concert as any).stripePriceId || null,
+      priceAmountCents,
+      priceCurrency,
       createdAt: concert.createdAt.toISOString(),
       updatedAt: concert.updatedAt.toISOString(),
       performers: isValidPerformers(translation.performers) ? translation.performers : undefined,
@@ -243,7 +283,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { date, isVisible, translations, program } = body as UpdateConcertBody
+    const { date, isVisible, translations, program, stripeProductId, stripePriceId } = body as UpdateConcertBody
     const { searchParams } = new URL(request.url)
     const locale = searchParams.get('locale') || 'en'
     const { id } = await params
@@ -326,6 +366,8 @@ export async function PUT(
         date: concertDate,
 
         isVisible: isVisible !== false, // Default to true if not specified
+        stripeProductId: (stripeProductId || undefined),
+        stripePriceId: (stripePriceId || undefined),
         translations: {
           create: filteredTranslations.map((translation) => ({
             locale: translation.locale,

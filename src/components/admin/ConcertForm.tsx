@@ -79,6 +79,8 @@ export default function ConcertForm({
     date: '',
     time: '',
     isVisible: true,
+    stripeProductId: '',
+    stripePriceId: '',
   });
 
   // Translatable fields for each locale
@@ -186,6 +188,8 @@ export default function ConcertForm({
         date: formatDateForDisplay(concert.date),
         time: formatTimeForDisplay(concert.date),
         isVisible: concert.isVisible !== false, // Default to true if not set
+        stripeProductId: (concert as any).stripeProductId || '',
+        stripePriceId: (concert as any).stripePriceId || '',
       });
 
       // For new concerts, just populate current locale
@@ -218,6 +222,8 @@ export default function ConcertForm({
             date: formatDateForDisplay(concert.date),
             time: formatTimeForDisplay(concert.date),
             isVisible: concert.isVisible !== false,
+            stripeProductId: (concert as any).stripeProductId || '',
+            stripePriceId: (concert as any).stripePriceId || '',
           },
           translations: {
             ...translations,
@@ -256,6 +262,13 @@ export default function ConcertForm({
       }
       const data = await response.json();
       
+      // Populate Stripe fields if present
+      setBasicData(prev => ({
+        ...prev,
+        stripeProductId: data.stripeProductId || '',
+        stripePriceId: data.stripePriceId || '',
+      }));
+
       // Populate all translations for i18n locales
       const newTranslations: Record<string, TranslationData> = {};
       locales.forEach(loc => {
@@ -348,6 +361,8 @@ export default function ConcertForm({
             date: formatDateForDisplay(concert.date),
             time: formatTimeForDisplay(concert.date),
             isVisible: concert.isVisible !== false,
+            stripeProductId: (concert as any).stripeProductId || '',
+            stripePriceId: (concert as any).stripePriceId || '',
           },
           translations: {
             [locale]: {
@@ -626,6 +641,8 @@ export default function ConcertForm({
         date: dateTime.toISOString(),
 
         isVisible: basicData.isVisible,
+        stripeProductId: basicData.stripeProductId || null,
+        stripePriceId: basicData.stripePriceId || null,
         translations: Object.entries(updatedTranslations).map(([locale, translation]) => ({
           locale,
           ...translation
@@ -806,6 +823,43 @@ export default function ConcertForm({
                 </span>
               </label>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stripe Settings */}
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Stripe</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Link a Stripe Product/Price to make this concert purchasable.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Stripe Product ID
+            </label>
+            <input
+              type="text"
+              name="stripeProductId"
+              value={basicData.stripeProductId}
+              onChange={handleBasicDataChange}
+              placeholder="prod_..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Stripe Price ID
+            </label>
+            <input
+              type="text"
+              name="stripePriceId"
+              value={basicData.stripePriceId}
+              onChange={handleBasicDataChange}
+              placeholder="price_..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+              required={false}
+            />
           </div>
         </div>
       </div>

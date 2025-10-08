@@ -99,7 +99,37 @@
       "many": "Sekund"
     },
     "recentActivity": "Nedavna dejavnost Orgle Koper",
-    "smallConcertDescription": "odspidaj na majho orgeljski koncert"
+    "smallConcertDescription": "odspidaj na majho orgeljski koncert",
+    "purchaseToWatch": "Za ogled prenosa kupite vstopnico",
+    "buyTicket": "Kupi vstopnico",
+    "loginToPurchase": "Prijavite se za nakup ali ogled",
+    "ticketPurchased": "Vstopnica je kupljena. Ogled bo mogoč, ko se prenos začne.",
+    "report": {
+      "title": "Težave pri ogledu?",
+      "openButton": "Prijavi težavo",
+      "emailLabel": "Vaš e‑poštni naslov",
+      "emailPlaceholder": "vi@primer.si",
+      "typeLabel": "Kakšna je težava?",
+      "type": {
+        "access": "Plačal/a sem, pa ne morem gledati",
+        "quality": "Težave s kakovostjo prenosa",
+        "payment": "Težava s plačilom/računom",
+        "other": "Drugo"
+      },
+      "messageLabel": "Podrobnosti (neobvezno)",
+      "messagePlaceholder": "Opišite, kaj se je zgodilo…",
+      "submit": "Pošlji prijavo",
+      "submitting": "Pošiljanje…",
+      "submitSuccess": "Hvala! Kmalu vam odgovorimo. Zadeva",
+      "replyNotice": "Odgovor boste prejeli na {{email}} z naslova admin@orglekoper.si.",
+      "submitError": "Prijave ni bilo mogoče poslati. Poskusite znova.",
+      "close": "Zapri"
+    }
+  },
+  "purchase": {
+    "purchaseToWatch": "Za ogled prenosa kupite vstopnico",
+    "buyTicket": "Kupi vstopnico",
+    "loginToPurchase": "Prijavite se za nakup"
   },
   "dashboard": {
     "title": "Vaša nadzorna plošča Orgle Koper",

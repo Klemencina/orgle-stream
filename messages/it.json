@@ -83,7 +83,32 @@
     "minutes": "Minuti",
     "seconds": "Secondi",
     "recentActivity": "Attività Recente di Organo",
-    "smallConcertDescription": "suona su piccolo concerto d'organo"
+    "smallConcertDescription": "suona su piccolo concerto d'organo",
+    "purchaseToWatch": "Acquista un biglietto per guardare",
+    "buyTicket": "Acquista biglietto",
+    "loginToPurchase": "Accedi per acquistare o guardare",
+    "ticketPurchased": "Il tuo biglietto è stato acquistato. Potrai guardare quando inizierà la diretta.",
+    "report": {
+      "title": "Hai problemi?",
+      "openButton": "Segnala un problema",
+      "emailLabel": "La tua email",
+      "emailPlaceholder": "tu@example.com",
+      "typeLabel": "Qual è il problema?",
+      "type": {
+        "access": "Ho pagato ma non posso guardare",
+        "quality": "Problema con la qualità dello streaming",
+        "payment": "Problema di pagamento/ricevuta",
+        "other": "Altro"
+      },
+      "messageLabel": "Dettagli (opzionale)",
+      "messagePlaceholder": "Descrivi cosa è successo…",
+      "submit": "Invia segnalazione",
+      "submitting": "Invio…",
+      "submitSuccess": "Grazie! Ti risponderemo via email. Caso",
+      "replyNotice": "Riceverai una risposta a {{email}} da admin@orglekoper.si.",
+      "submitError": "Impossibile inviare la segnalazione. Riprova.",
+      "close": "Chiudi"
+    }
   },
   "dashboard": {
     "title": "La Tua Dashboard di Musica per Organo",
