@@ -164,6 +164,31 @@
     "buyTicket": "Kupi vstopnico",
     "loginToPurchase": "Prijavite se za nakup"
   },
+  "checkout": {
+    "cancel": {
+      "title": "Nakup preklican",
+      "description": "Vaš nakup je bil preklican. Vstopnica ni bila kupljena.",
+      "tryAgain": "Poskusi znova",
+      "browseConcerts": "Prebrskaj koncerte",
+      "backToConcerts": "Nazaj na koncerte",
+      "helpText": "Potrebujete pomoč? Kontaktirajte nas na"
+    },
+    "success": {
+      "title": "Nakup uspešen!",
+      "description": "Hvala za nakup! Vaša vstopnica je bila uspešno kupljena.",
+      "date": "Datum",
+      "location": "Lokacija",
+      "viewConcert": "Ogled koncerta",
+      "browseConcerts": "Prebrskaj koncerte",
+      "viewTickets": "Ogled vstopnic",
+      "ticketInfo": {
+        "title": "Informacije o vstopnici",
+        "description": "Vaša vstopnica je shranjena v vašem računu. Dostop do prenosa bo mogoč, ko se koncert začne."
+      },
+      "helpText": "Vprašanja? Kontaktirajte nas na",
+      "loading": "Nalagam podatke..."
+    }
+  },
   "dashboard": {
     "title": "Vaša nadzorna plošča Orgle Koper",
     "welcome": "Dobrodošli na nadzorni plošči",

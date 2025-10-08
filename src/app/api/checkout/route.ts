@@ -13,7 +13,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { concertId } = body as { concertId?: string }
+    const { concertId, successUrl, cancelUrl } = body as { 
+      concertId?: string
+      successUrl?: string
+      cancelUrl?: string
+    }
     if (!concertId) {
       return NextResponse.json({ error: 'concertId is required' }, { status: 400 })
     }
@@ -37,18 +41,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Concert is not purchasable yet' }, { status: 400 })
     }
 
-    // Build trusted redirect URLs from server-side config only
+    // Use provided URLs or fallback to default ones
     const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
-    const successUrl = `${appUrl}/success?concertId=${concertId}`
-    const cancelUrl = `${appUrl}/cancel?concertId=${concertId}`
+    const defaultSuccessUrl = `${appUrl}/success?concertId=${concertId}`
+    const defaultCancelUrl = `${appUrl}/cancel?concertId=${concertId}`
+    
+    // Validate URLs are from the same origin for security
+    const isValidUrl = (url: string) => {
+      try {
+        const urlObj = new URL(url)
+        const appUrlObj = new URL(appUrl)
+        return urlObj.origin === appUrlObj.origin
+      } catch {
+        return false
+      }
+    }
+    
+    const finalSuccessUrl = successUrl && isValidUrl(successUrl) ? successUrl : defaultSuccessUrl
+    const finalCancelUrl = cancelUrl && isValidUrl(cancelUrl) ? cancelUrl : defaultCancelUrl
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
         { price: priceId, quantity: 1 },
       ],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      success_url: finalSuccessUrl,
+      cancel_url: finalCancelUrl,
       allow_promotion_codes: true,
       metadata: {
         concertId,

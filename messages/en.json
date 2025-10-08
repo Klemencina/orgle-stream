@@ -143,6 +143,31 @@
       "close": "Close"
     }
   },
+  "checkout": {
+    "cancel": {
+      "title": "Purchase Cancelled",
+      "description": "Your purchase has been cancelled. No ticket was purchased.",
+      "tryAgain": "Try Again",
+      "browseConcerts": "Browse Concerts",
+      "backToConcerts": "Back to Concerts",
+      "helpText": "Need help? Contact us at"
+    },
+    "success": {
+      "title": "Purchase Successful!",
+      "description": "Thank you for your purchase! Your ticket has been successfully purchased.",
+      "date": "Date",
+      "location": "Location",
+      "viewConcert": "View Concert",
+      "browseConcerts": "Browse Concerts",
+      "viewTickets": "View Tickets",
+      "ticketInfo": {
+        "title": "Ticket Information",
+        "description": "Your ticket is saved in your account. Access to the stream will be available when the concert starts."
+      },
+      "helpText": "Questions? Contact us at",
+      "loading": "Loading data..."
+    }
+  },
   "dashboard": {
     "title": "Your Orgle Koper Dashboard",
     "welcome": "Welcome to your Dashboard",

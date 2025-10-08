@@ -143,6 +143,31 @@
       "close": "Chiudi"
     }
   },
+  "checkout": {
+    "cancel": {
+      "title": "Acquisto Annullato",
+      "description": "Il tuo acquisto è stato annullato. Nessun biglietto è stato acquistato.",
+      "tryAgain": "Riprova",
+      "browseConcerts": "Sfoglia Concerti",
+      "backToConcerts": "Torna ai Concerti",
+      "helpText": "Hai bisogno di aiuto? Contattaci a"
+    },
+    "success": {
+      "title": "Acquisto Riuscito!",
+      "description": "Grazie per il tuo acquisto! Il tuo biglietto è stato acquistato con successo.",
+      "date": "Data",
+      "location": "Luogo",
+      "viewConcert": "Visualizza Concerto",
+      "browseConcerts": "Sfoglia Concerti",
+      "viewTickets": "Visualizza Biglietti",
+      "ticketInfo": {
+        "title": "Informazioni Biglietto",
+        "description": "Il tuo biglietto è salvato nel tuo account. L'accesso allo stream sarà disponibile quando inizierà il concerto."
+      },
+      "helpText": "Domande? Contattaci a",
+      "loading": "Caricamento dati..."
+    }
+  },
   "dashboard": {
     "title": "La Tua Dashboard di Musica per Organo",
     "welcome": "Benvenuto nella tua Dashboard",
