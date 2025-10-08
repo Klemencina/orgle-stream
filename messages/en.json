@@ -119,6 +119,7 @@
     "purchaseToWatch": "Purchase a ticket to watch",
     "buyTicket": "Buy Ticket",
     "loginToPurchase": "Log in to purchase or watch",
+    "ticketNotAvailable": "Ticket not yet available",
     "ticketPurchased": "Your ticket has been purchased. You'll be able to watch when the stream starts.",
     "report": {
       "title": "Having trouble?",

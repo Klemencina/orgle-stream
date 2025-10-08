@@ -390,33 +390,43 @@ export default function ConcertPage() {
                     {new Intl.NumberFormat(locale, { style: 'currency', currency: ((concert as Partial<LocalizedConcert> & { priceCurrency?: string }).priceCurrency || 'eur').toUpperCase() }).format((((concert as Partial<LocalizedConcert> & { priceAmountCents?: number }).priceAmountCents || 0) / 100))}
                   </p>
                 )}
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <div className="flex flex-col gap-3 justify-center">
                   <SignedIn>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-left">
-                      {t('policy.refundNotice')} <a href={`/${locale}/refund-policy`} className="underline hover:text-orange-500 dark:hover:text-orange-400">{t('policy.refundPolicy')}</a>.
-                    </p>
-                    <button
-                      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
-                    onClick={async () => {
-                        try {
-                        const origin = typeof window !== 'undefined' ? window.location.origin : ''
-                        const successUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-                        const cancelUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=cancel`
-                          const res = await fetch('/api/checkout', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ concertId: concert.id, successUrl, cancelUrl })
-                          })
-                          const data = await res.json()
-                          if (data?.url) {
-                            window.location.href = data.url
-                          }
-                        } catch {}
-                      }}
-                      type="button"
-                    >
-                      {t('concert.buyTicket')}
-                    </button>
+                    {concert.stripePriceId ? (
+                      <>
+                        <button
+                          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl mx-auto"
+                        onClick={async () => {
+                            try {
+                            const origin = typeof window !== 'undefined' ? window.location.origin : ''
+                            const successUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+                            const cancelUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=cancel`
+                              const res = await fetch('/api/checkout', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ concertId: concert.id, successUrl, cancelUrl })
+                              })
+                              const data = await res.json()
+                              if (data?.url) {
+                                window.location.href = data.url
+                              }
+                            } catch {}
+                          }}
+                          type="button"
+                        >
+                          {t('concert.buyTicket')}
+                        </button>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                          {t('policy.refundNotice')} <a href={`/${locale}/refund-policy`} className="underline hover:text-orange-500 dark:hover:text-orange-400">{t('policy.refundPolicy')}</a>.
+                        </p>
+                      </>
+                    ) : (
+                      <div className="text-center">
+                        <p className="text-gray-600 dark:text-gray-400 font-medium">
+                          {t('concert.ticketNotAvailable')}
+                        </p>
+                      </div>
+                    )}
                   </SignedIn>
                   <SignedOut>
                     <a

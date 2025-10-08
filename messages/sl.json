@@ -135,6 +135,7 @@
     "purchaseToWatch": "Za ogled prenosa kupite vstopnico",
     "buyTicket": "Kupi vstopnico",
     "loginToPurchase": "Prijavite se za nakup ali ogled",
+    "ticketNotAvailable": "Vstopnica še ni na voljo",
     "ticketPurchased": "Vstopnica je kupljena. Ogled bo mogoč, ko se prenos začne.",
     "report": {
       "title": "Težave pri ogledu?",
