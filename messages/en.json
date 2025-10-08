@@ -7,6 +7,38 @@
     "backToConcerts": "Back to Concerts",
     "browseConcerts": "Browse Concerts"
   },
+  "policy": {
+    "refundPolicy": "Refund Policy",
+    "refundNotice": "Refunds are offered only if the stream is cancelled or there is a major technical problem on our side.",
+    "learnMore": "Learn more",
+    "intro": "We offer refunds only in the following cases:",
+    "listCancelled": "The stream is cancelled.",
+    "listTechnical": "There is a major technical problem on our side that prevents viewing.",
+      "manualProcess": "Refunds are processed manually. If you believe you are eligible, please contact us via the support form on the concert page or email {email} with your purchase details and the concert name.",
+    "minorIssues": "For minor issues such as brief buffering or temporary quality fluctuations typical for live streams, refunds are not provided. We will, however, do our best to help you troubleshoot.",
+    "backToConcerts": "← Back to concerts"
+  },
+  "legal": {
+    "privacyPolicy": "Privacy Policy",
+    "dataDeletion": "Data Deletion",
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "We respect your privacy. This policy explains what data we collect, how we use it, and your rights.",
+      "dataWeCollect": "We store your user ID from our auth provider when you sign in. If you submit a support report, we store the email you provide with the report.",
+      "useOfData": "We use your user ID to authorize access to streams and your email to reply to support reports.",
+      "thirdParties": "We use Clerk for authentication and Stripe for payments to operate the platform.",
+      "retention": "Support reports (including email) are deleted 30 days after they are received and marked resolved. Ticket records are retained for bookkeeping and compliance.",
+      "contact": "Questions? Contact us at {email}.",
+      "backToConcerts": "← Back to concerts"
+    },
+    "deletion": {
+      "title": "User Data Deletion",
+      "intro": "You can request deletion of your account and personal data.",
+      "howTo": "You can delete your account directly in the Clerk account view (user settings). Alternatively, email {email} from the address associated with your account, and we will process your request within 30 days.",
+      "scope": "Account deletion removes your personal profile data. We retain ticket records as required for bookkeeping and legal compliance.",
+      "backToConcerts": "← Back to concerts"
+    }
+  },
   "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -105,7 +137,7 @@
       "submit": "Send report",
       "submitting": "Sending…",
       "submitSuccess": "Thanks! We’ll email you shortly. Case",
-      "replyNotice": "You will receive a reply at {{email}} from admin@orglekoper.si.",
+      "replyNotice": "You will receive a reply at {email} from admin@orglekoper.si.",
       "submitError": "Couldn’t send report. Please try again.",
       "close": "Close"
     }

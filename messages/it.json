@@ -7,6 +7,38 @@
     "backToConcerts": "Torna ai Concerti",
     "browseConcerts": "Sfoglia Concerti"
   },
+  "policy": {
+    "refundPolicy": "Politica di Rimborso",
+    "refundNotice": "I rimborsi sono offerti solo se lo stream è annullato o se si verifica un grave problema tecnico da parte nostra.",
+    "learnMore": "Scopri di più",
+    "intro": "Offriamo rimborsi solo nei seguenti casi:",
+    "listCancelled": "Lo stream è annullato.",
+    "listTechnical": "Si verifica un grave problema tecnico da parte nostra che impedisce la visione.",
+      "manualProcess": "I rimborsi vengono gestiti manualmente. Se ritieni di avere diritto a un rimborso, contattaci tramite il modulo di supporto nella pagina del concerto o invia un'email a {email} con i dettagli dell'acquisto e il nome del concerto.",
+    "minorIssues": "Per problemi minori, come brevi interruzioni o temporanee fluttuazioni di qualità tipiche dei live, i rimborsi non sono previsti. Faremo comunque del nostro meglio per aiutarti a risolvere i problemi.",
+    "backToConcerts": "← Torna ai concerti"
+  },
+  "legal": {
+    "privacyPolicy": "Informativa sulla Privacy",
+    "dataDeletion": "Eliminazione Dati",
+    "privacy": {
+      "title": "Informativa sulla Privacy",
+      "intro": "Rispettiamo la tua privacy. Questa informativa spiega quali dati raccogliamo, come li utilizziamo e i tuoi diritti.",
+      "dataWeCollect": "Quando accedi, memorizziamo il tuo ID utente dal fornitore di autenticazione. Se invii una segnalazione di supporto, memorizziamo l'email che fornisci nella segnalazione.",
+      "useOfData": "Usiamo il tuo ID utente per autorizzare l'accesso agli streaming e la tua email per rispondere alle segnalazioni di supporto.",
+      "thirdParties": "Utilizziamo Clerk per l'autenticazione e Stripe per i pagamenti.",
+      "retention": "Le segnalazioni di supporto (incluse le email) vengono eliminate 30 giorni dopo che sono state ricevute e contrassegnate come risolte. I registri dei biglietti vengono conservati per la contabilità e la conformità.",
+      "contact": "Domande? Contattaci a {email}.",
+      "backToConcerts": "← Torna ai concerti"
+    },
+    "deletion": {
+      "title": "Eliminazione dei Dati Utente",
+      "intro": "Puoi richiedere l'eliminazione del tuo account e dei dati personali.",
+      "howTo": "Puoi eliminare il tuo account direttamente nella vista account di Clerk (impostazioni utente). In alternativa, invia un'email a {email} dall'indirizzo associato al tuo account; elaboreremo la richiesta entro 30 giorni.",
+      "scope": "L'eliminazione dell'account rimuove i dati personali del profilo. Conserviamo i registri dei biglietti come richiesto per la contabilità e la conformità legale.",
+      "backToConcerts": "← Torna ai concerti"
+    }
+  },
   "auth": {
     "signIn": "Accedi",
     "signUp": "Registrati",
@@ -105,7 +137,7 @@
       "submit": "Invia segnalazione",
       "submitting": "Invio…",
       "submitSuccess": "Grazie! Ti risponderemo via email. Caso",
-      "replyNotice": "Riceverai una risposta a {{email}} da admin@orglekoper.si.",
+      "replyNotice": "Riceverai una risposta a {email} da admin@orglekoper.si.",
       "submitError": "Impossibile inviare la segnalazione. Riprova.",
       "close": "Chiudi"
     }

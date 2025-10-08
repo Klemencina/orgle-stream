@@ -392,6 +392,9 @@ export default function ConcertPage() {
                 )}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <SignedIn>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center sm:text-left">
+                      {t('policy.refundNotice')} <a href={`/${locale}/refund-policy`} className="underline hover:text-orange-500 dark:hover:text-orange-400">{t('policy.refundPolicy')}</a>.
+                    </p>
                     <button
                       className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
                     onClick={async () => {

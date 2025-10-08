@@ -7,6 +7,38 @@
     "backToConcerts": "Nazaj na koncerte",
     "browseConcerts": "Prebrskaj koncerte"
   },
+  "policy": {
+    "refundPolicy": "Politika vračil",
+    "refundNotice": "Vračila so mogoča le, če je prenos odpovedan ali če pride do večje tehnične težave na naši strani.",
+    "learnMore": "Več informacij",
+    "intro": "Vračila nudimo samo v naslednjih primerih:",
+    "listCancelled": "Prenos je odpovedan.",
+    "listTechnical": "Na naši strani pride do večje tehnične težave, ki onemogoča ogled.",
+      "manualProcess": "Vračila obdelujemo ročno. Če menite, da ste upravičeni, nas kontaktirajte preko obrazca za podporo na strani koncerta ali pišite na {email} in priložite podatke o nakupu ter ime koncerta.",
+    "minorIssues": "Za manjše težave, kot so kratkotrajno nalaganje (buffering) ali začasna nihanja kakovosti, ki so značilna za prenose v živo, vračila niso predvidena. Vseeno vam bomo pomagali pri odpravljanju težav.",
+    "backToConcerts": "← Nazaj na koncerte"
+  },
+  "legal": {
+    "privacyPolicy": "Politika zasebnosti",
+    "dataDeletion": "Brisanje podatkov",
+    "privacy": {
+      "title": "Politika zasebnosti",
+      "intro": "Spoštujemo vašo zasebnost. Ta politika pojasnjuje, katere podatke zbiramo, kako jih uporabljamo in vaše pravice.",
+      "dataWeCollect": "Ob prijavi shranimo vaš uporabniški ID od ponudnika prijave. Če oddate prijavo težave, shranimo e‑poštni naslov, ki ga navedete v obrazcu.",
+      "useOfData": "Uporabniški ID uporabljamo za avtorizacijo dostopa do prenosov, e‑poštni naslov pa za odgovor na prijave težav.",
+      "thirdParties": "Za prijavo uporabljamo Clerk, za plačila pa Stripe.",
+      "retention": "Prijave težav (z e‑pošto) izbrišemo 30 dni po tem, ko so prejete in označene kot rešene. Evidence vstopnic hranimo za računovodske in zakonske potrebe.",
+      "contact": "Vprašanja? Pišite nam na {email}.",
+      "backToConcerts": "← Nazaj na koncerte"
+    },
+    "deletion": {
+      "title": "Brisanje uporabniških podatkov",
+      "intro": "Lahko zahtevate izbris svojega računa in osebnih podatkov.",
+      "howTo": "Svoj račun lahko izbrišete neposredno v pogledu računa Clerk (nastavitve uporabnika). Lahko pa nam pišete na {email} z naslova, povezanega z vašim računom; zahtevo bomo obdelali v 30 dneh.",
+      "scope": "Z izbrisom računa odstranimo vaše osebne profilne podatke. Evidence vstopnic hranimo, kot to zahtevajo računovodske in pravne obveznosti.",
+      "backToConcerts": "← Nazaj na koncerte"
+    }
+  },
   "auth": {
     "signIn": "Prijava",
     "signUp": "Registracija",
@@ -121,7 +153,7 @@
       "submit": "Pošlji prijavo",
       "submitting": "Pošiljanje…",
       "submitSuccess": "Hvala! Kmalu vam odgovorimo. Zadeva",
-      "replyNotice": "Odgovor boste prejeli na {{email}} z naslova admin@orglekoper.si.",
+      "replyNotice": "Odgovor boste prejeli na {email} z naslova admin@orglekoper.si.",
       "submitError": "Prijave ni bilo mogoče poslati. Poskusite znova.",
       "close": "Zapri"
     }

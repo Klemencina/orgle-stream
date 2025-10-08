@@ -26,6 +26,17 @@ export async function GET(request: NextRequest) {
         const stripe = getStripe()
         const session = await stripe.checkout.sessions.retrieve(sessionId)
         const paid = session.payment_status === 'paid' || session.status === 'complete'
+
+        // Harden verification: ensure the session belongs to this user and concert
+        const sessionUserId = (session.metadata as any)?.userId as string | undefined
+        const sessionConcertId = (session.metadata as any)?.concertId as string | undefined
+        const isOwner = Boolean(sessionUserId && sessionUserId === userId)
+        const isSameConcert = Boolean(sessionConcertId && sessionConcertId === concertId)
+
+        if (!isOwner || !isSameConcert) {
+          // Do not mark as paid if the session doesn't match the authenticated user and concert
+          return NextResponse.json({ purchased: false, mismatch: true })
+        }
         if (paid) {
           const amountTotal = typeof session.amount_total === 'number' ? session.amount_total : 0
           const currency = (session.currency as string | undefined) || 'eur'

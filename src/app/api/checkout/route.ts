@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}))
-    const { concertId, successUrl, cancelUrl } = body as { concertId?: string; successUrl?: string; cancelUrl?: string }
+    const { concertId } = body as { concertId?: string }
     if (!concertId) {
       return NextResponse.json({ error: 'concertId is required' }, { status: 400 })
     }
@@ -37,13 +37,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Concert is not purchasable yet' }, { status: 400 })
     }
 
+    // Build trusted redirect URLs from server-side config only
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '')
+    const successUrl = `${appUrl}/success?concertId=${concertId}`
+    const cancelUrl = `${appUrl}/cancel?concertId=${concertId}`
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [
         { price: priceId, quantity: 1 },
       ],
-      success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/success?concertId=${concertId}`,
-      cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/cancel?concertId=${concertId}`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         concertId,
         userId,
