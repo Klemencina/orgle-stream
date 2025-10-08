@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import type { LocalizedConcert } from '@/types/concert';
 
 export default function SuccessPage() {
   const params = useParams();
@@ -12,7 +13,7 @@ export default function SuccessPage() {
   const concertId = searchParams?.get('concertId');
   const t = useTranslations('checkout');
   
-  const [concert, setConcert] = useState<any>(null);
+  const [concert, setConcert] = useState<LocalizedConcert | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -75,9 +76,9 @@ export default function SuccessPage() {
                     minute: '2-digit'
                   })}
                 </p>
-                {concert.location && (
+                {concert.venue && (
                   <p>
-                    <strong>{t('success.location')}:</strong> {concert.location}
+                    <strong>{t('success.location')}:</strong> {concert.venue}
                   </p>
                 )}
               </div>

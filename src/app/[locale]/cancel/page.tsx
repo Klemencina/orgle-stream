@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import type { LocalizedConcert } from '@/types/concert';
 
 export default function CancelPage() {
   const params = useParams();
@@ -12,7 +13,7 @@ export default function CancelPage() {
   const concertId = searchParams?.get('concertId');
   const t = useTranslations('checkout');
   
-  const [concert, setConcert] = useState<any>(null);
+  const [concert, setConcert] = useState<LocalizedConcert | null>(null);
 
   useEffect(() => {
     if (concertId) {
