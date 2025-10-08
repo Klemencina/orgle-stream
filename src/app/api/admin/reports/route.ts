@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || undefined
 
-    const reports = await (prisma as any).supportReport.findMany({
+    const reports = await prisma.supportReport.findMany({
       where: status ? { status } : {},
       orderBy: { createdAt: 'desc' },
     })
@@ -29,17 +29,17 @@ export async function PUT(request: NextRequest) {
     const ok = await isAdmin()
     if (!ok) return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
-    const body = await request.json().catch(() => ({})) as any
+    const body = (await request.json().catch(() => ({}))) as Partial<{ id: string; status: string }>
     const id = (body.id || '').toString()
     const status = (body.status || '').toString()
     if (!id || !status) return NextResponse.json({ error: 'id and status required' }, { status: 400 })
 
-    const data: any = { status }
+    const data: { status: string; resolvedAt?: Date } = { status }
     if (status === 'resolved') {
       data.resolvedAt = new Date()
     }
 
-    const updated = await (prisma as any).supportReport.update({ where: { id }, data })
+    const updated = await prisma.supportReport.update({ where: { id }, data })
     return NextResponse.json({ ok: true, item: updated })
   } catch (error) {
     console.error('Update report error:', error)

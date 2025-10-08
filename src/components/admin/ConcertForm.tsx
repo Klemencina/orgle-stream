@@ -188,8 +188,8 @@ export default function ConcertForm({
         date: formatDateForDisplay(concert.date),
         time: formatTimeForDisplay(concert.date),
         isVisible: concert.isVisible !== false, // Default to true if not set
-        stripeProductId: (concert as any).stripeProductId || '',
-        stripePriceId: (concert as any).stripePriceId || '',
+        stripeProductId: (concert as Partial<LocalizedConcert> & { stripeProductId?: string }).stripeProductId || '',
+        stripePriceId: (concert as Partial<LocalizedConcert> & { stripePriceId?: string }).stripePriceId || '',
       });
 
       // For new concerts, just populate current locale
@@ -222,8 +222,8 @@ export default function ConcertForm({
             date: formatDateForDisplay(concert.date),
             time: formatTimeForDisplay(concert.date),
             isVisible: concert.isVisible !== false,
-            stripeProductId: (concert as any).stripeProductId || '',
-            stripePriceId: (concert as any).stripePriceId || '',
+            stripeProductId: (concert as Partial<LocalizedConcert> & { stripeProductId?: string }).stripeProductId || '',
+            stripePriceId: (concert as Partial<LocalizedConcert> & { stripePriceId?: string }).stripePriceId || '',
           },
           translations: {
             ...translations,
@@ -307,6 +307,8 @@ export default function ConcertForm({
               date: formatDateForDisplay(concert.date),
               time: formatTimeForDisplay(concert.date),
               isVisible: concert.isVisible !== false,
+              stripeProductId: data.stripeProductId || '',
+              stripePriceId: data.stripePriceId || '',
             },
             translations: Object.entries(newTranslations).map(([locale, t]) => ({
               locale,
@@ -361,8 +363,8 @@ export default function ConcertForm({
             date: formatDateForDisplay(concert.date),
             time: formatTimeForDisplay(concert.date),
             isVisible: concert.isVisible !== false,
-            stripeProductId: (concert as any).stripeProductId || '',
-            stripePriceId: (concert as any).stripePriceId || '',
+            stripeProductId: (concert as Partial<LocalizedConcert> & { stripeProductId?: string }).stripeProductId || '',
+            stripePriceId: (concert as Partial<LocalizedConcert> & { stripePriceId?: string }).stripePriceId || '',
           },
           translations: {
             [locale]: {

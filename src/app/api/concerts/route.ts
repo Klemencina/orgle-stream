@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to localized format
-    const localizedConcerts: LocalizedConcert[] = concerts.map(concert => {
+    const localizedConcerts = concerts.map(concert => {
       const translation = concert.translations[0]
       if (!translation) {
         console.error(`No translation found for concert ${concert.id} in locale ${locale}`)
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return {
+      const base = {
         id: concert.id,
         title: translation.title,
         subtitle: translation.subtitle || undefined,
@@ -112,8 +112,8 @@ export async function GET(request: NextRequest) {
         venue: translation.venue,
         description: translation.description,
         isVisible: concert.isVisible,
-        stripeProductId: (concert as any).stripeProductId || null,
-        stripePriceId: (concert as any).stripePriceId || null,
+        stripeProductId: (concert as unknown as { stripeProductId?: string | null }).stripeProductId ?? undefined,
+        stripePriceId: (concert as unknown as { stripePriceId?: string | null }).stripePriceId ?? undefined,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
         performers: isValidPerformers(translation.performers) ? translation.performers : undefined,
@@ -141,7 +141,8 @@ export async function GET(request: NextRequest) {
             order: piece.order
           }
         })
-      }
+      } satisfies LocalizedConcert
+      return base
     })
 
     return NextResponse.json(localizedConcerts)

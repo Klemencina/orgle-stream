@@ -44,7 +44,7 @@ export default function ConcertPage() {
   const locale = params.locale as string;
   const t = useTranslations();
   const { user, isLoaded } = useUser();
-  const isAdminClient = isLoaded && (user?.publicMetadata as any)?.role === 'admin';
+  const isAdminClient = isLoaded && ((user?.publicMetadata as Record<string, unknown> | undefined)?.role === 'admin');
 
   const [timeLeft, setTimeLeft] = useState<CountdownTime>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLive, setIsLive] = useState(false);
@@ -385,9 +385,9 @@ export default function ConcertPage() {
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                   {t('concert.purchaseToWatch')}
                 </h3>
-                {typeof (concert as any).priceAmountCents === 'number' && (
+                {typeof (concert as Partial<LocalizedConcert> & { priceAmountCents?: number; priceCurrency?: string }).priceAmountCents === 'number' && (
                   <p className="text-center text-gray-700 dark:text-gray-200 mb-4">
-                    {new Intl.NumberFormat(locale, { style: 'currency', currency: ((concert as any).priceCurrency || 'eur').toUpperCase() }).format((((concert as any).priceAmountCents || 0) / 100))}
+                    {new Intl.NumberFormat(locale, { style: 'currency', currency: ((concert as Partial<LocalizedConcert> & { priceCurrency?: string }).priceCurrency || 'eur').toUpperCase() }).format((((concert as Partial<LocalizedConcert> & { priceAmountCents?: number }).priceAmountCents || 0) / 100))}
                   </p>
                 )}
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -503,8 +503,8 @@ export default function ConcertPage() {
                     setReportEmail('');
                     setReportMessage('');
                     setReportType('access');
-                  } catch (err: any) {
-                    setReportError(err?.message || 'submit_failed');
+                    } catch (err: unknown) {
+                    setReportError(err instanceof Error ? err.message : 'submit_failed');
                   } finally {
                     setReportSubmitting(false);
                   }
@@ -529,7 +529,7 @@ export default function ConcertPage() {
                   </label>
                   <select
                     value={reportType}
-                    onChange={(e) => setReportType(e.target.value as any)}
+                    onChange={(e) => setReportType(e.target.value as 'access' | 'quality' | 'payment' | 'other')}
                     className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
                   >
                     <option value="access">{t('concert.report.type.access')}</option>

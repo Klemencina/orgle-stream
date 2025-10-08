@@ -28,8 +28,9 @@ export async function GET(request: NextRequest) {
         const paid = session.payment_status === 'paid' || session.status === 'complete'
 
         // Harden verification: ensure the session belongs to this user and concert
-        const sessionUserId = (session.metadata as any)?.userId as string | undefined
-        const sessionConcertId = (session.metadata as any)?.concertId as string | undefined
+        const metadata = (session.metadata ?? {}) as Record<string, string>
+        const sessionUserId = metadata.userId
+        const sessionConcertId = metadata.concertId
         const isOwner = Boolean(sessionUserId && sessionUserId === userId)
         const isSameConcert = Boolean(sessionConcertId && sessionConcertId === concertId)
 
@@ -40,9 +41,9 @@ export async function GET(request: NextRequest) {
         if (paid) {
           const amountTotal = typeof session.amount_total === 'number' ? session.amount_total : 0
           const currency = (session.currency as string | undefined) || 'eur'
-          const existing = await (prisma as any).ticket.findUnique({ where: { userId_concertId: { userId, concertId } } })
+          const existing = await prisma.ticket.findUnique({ where: { userId_concertId: { userId, concertId } } })
           if (!existing) {
-            await (prisma as any).ticket.create({
+            await prisma.ticket.create({
               data: {
                 userId,
                 concertId,
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
               }
             })
           } else if (existing.status !== 'paid') {
-            await (prisma as any).ticket.update({
+            await prisma.ticket.update({
               where: { id: existing.id },
               data: {
                 amountCents: amountTotal || existing.amountCents,
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const ticket = await (prisma as any).ticket.findUnique({ where: { userId_concertId: { userId, concertId } } })
+    const ticket = await prisma.ticket.findUnique({ where: { userId_concertId: { userId, concertId } } })
     return NextResponse.json({ purchased: Boolean(ticket && ticket.status === 'paid') })
   } catch (error) {
     console.error('Purchase check error:', error)

@@ -63,4 +63,7 @@ export interface LocalizedConcert {
   // Optional pricing for display
   priceAmountCents?: number
   priceCurrency?: string
+  // Optional Stripe references (admin UI may read them)
+  stripeProductId?: string
+  stripePriceId?: string
 }

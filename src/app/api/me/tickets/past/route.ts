@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     const now = new Date()
     const dateFilter = when === 'past' ? { lt: now } : when === 'upcoming' ? { gte: now } : undefined
-    const tickets = await (prisma as any).ticket.findMany({
+    const tickets = await prisma.ticket.findMany({
       where: { userId, status: 'paid', ...(dateFilter ? { concert: { date: dateFilter } } : {}) },
       orderBy: { createdAt: 'desc' },
       select: {
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const items = (tickets as any[]).map((t) => {
+    const items = tickets.map((t) => {
       const tr = t.concert.translations[0]
       return {
         ticketId: t.id,

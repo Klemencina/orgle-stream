@@ -1,9 +1,7 @@
 'use client';
 
 import AdminGuard from '@/components/admin/AdminGuard';
-import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
 
 interface SupportReport {
   id: string;
@@ -32,10 +30,6 @@ export default function AdminReportsPage() {
 }
 
 function ReportsContent() {
-  const t = useTranslations('admin.dashboard');
-  const params = useParams();
-  const locale = params.locale as string;
-
   const [reports, setReports] = useState<SupportReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +43,9 @@ function ReportsContent() {
       if (!res.ok) throw new Error('Failed to fetch reports');
       const data = await res.json();
       setReports(Array.isArray(data.items) ? data.items : []);
-    } catch (e: any) {
-      setError(e?.message || 'Error');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Error';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -70,7 +65,7 @@ function ReportsContent() {
       });
       if (!res.ok) throw new Error('Failed to resolve');
       await fetchReports();
-    } catch (e) {
+    } catch {
       // ignore simple error UI for now
     }
   };
@@ -84,7 +79,7 @@ function ReportsContent() {
           <select
             className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as 'open' | 'resolved' | 'all')}
           >
             <option value="open">Open</option>
             <option value="resolved">Resolved</option>

@@ -33,9 +33,6 @@ export default clerkMiddleware(async (auth, req) => {
     // Check admin role for admin routes (including admin API routes)
     if (isAdminRoute(req)) {
       const isConcertsGetRequest = req.nextUrl.pathname.startsWith('/api/concerts') && req.method === 'GET';
-      const isUploadRequest = req.nextUrl.pathname.startsWith('/api/upload');
-      const isConcertsWriteRequest = req.nextUrl.pathname.startsWith('/api/concerts') &&
-        (req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE');
 
       // Allow GET requests to /api/concerts for all users
       if (isConcertsGetRequest) {

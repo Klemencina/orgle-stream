@@ -47,19 +47,32 @@ function DashboardContent() {
         if (!pastRes.ok || !upcomingRes.ok) throw new Error('Failed to load tickets');
         const [pastData, upcomingData] = await Promise.all([pastRes.json(), upcomingRes.json()]);
         if (isMounted) {
-          setPast((pastData.items || []).map((it: any) => ({
+          type TicketItem = {
+            ticketId: string
+            stripePaymentIntentId: string | null
+            stripeCheckoutSessionId: string | null
+            concertId: string
+            date: string | number | Date
+            title: string
+            subtitle: string | null
+            venue: string
+            amountCents: number
+            currency: string
+            purchasedAt: string | number | Date
+          }
+          setPast((pastData.items || []).map((it: TicketItem) => ({
             ...it,
             date: typeof it.date === 'string' ? it.date : new Date(it.date).toISOString(),
             purchasedAt: typeof it.purchasedAt === 'string' ? it.purchasedAt : new Date(it.purchasedAt).toISOString(),
           })));
-          setUpcoming((upcomingData.items || []).map((it: any) => ({
+          setUpcoming((upcomingData.items || []).map((it: TicketItem) => ({
             ...it,
             date: typeof it.date === 'string' ? it.date : new Date(it.date).toISOString(),
             purchasedAt: typeof it.purchasedAt === 'string' ? it.purchasedAt : new Date(it.purchasedAt).toISOString(),
           })));
         }
-      } catch (e: any) {
-        if (isMounted) setError(e?.message || 'Error');
+      } catch (e: unknown) {
+        if (isMounted) setError(e instanceof Error ? e.message : 'Error');
       } finally {
         if (isMounted) setLoading(false);
       }

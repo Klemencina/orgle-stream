@@ -109,8 +109,8 @@ export async function GET(
       const allTranslationsData = {
         id: concert.id,
         date: concert.date.toISOString(),
-        stripeProductId: (concert as any).stripeProductId || null,
-        stripePriceId: (concert as any).stripePriceId || null,
+        stripeProductId: (concert as unknown as { stripeProductId?: string | null }).stripeProductId || null,
+        stripePriceId: (concert as unknown as { stripePriceId?: string | null }).stripePriceId || null,
         isVisible: concert.isVisible,
         createdAt: concert.createdAt.toISOString(),
         updatedAt: concert.updatedAt.toISOString(),
@@ -156,7 +156,7 @@ export async function GET(
         if (!userId) {
           return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
         }
-        const ticket = await (prisma as any).ticket.findUnique({
+        const ticket = await prisma.ticket.findUnique({
           where: { userId_concertId: { userId, concertId: concert.id } },
           select: { status: true },
         })
@@ -219,10 +219,11 @@ export async function GET(
     // Optionally enrich with Stripe price info for displaying cost on the client
     let priceAmountCents: number | undefined
     let priceCurrency: string | undefined
-    if ((concert as any).stripePriceId) {
+    const concertStripePriceId = (concert as unknown as { stripePriceId?: string | null }).stripePriceId
+    if (concertStripePriceId) {
       try {
         const stripe = getStripe()
-        const price = await stripe.prices.retrieve((concert as any).stripePriceId as string)
+        const price = await stripe.prices.retrieve(concertStripePriceId as string)
         if (typeof price.unit_amount === 'number') {
           priceAmountCents = price.unit_amount
           priceCurrency = (price.currency || 'eur').toLowerCase()
@@ -240,8 +241,8 @@ export async function GET(
       venue: translation.venue,
       description: translation.description,
       isVisible: concert.isVisible,
-      stripeProductId: (concert as any).stripeProductId || null,
-      stripePriceId: (concert as any).stripePriceId || null,
+      stripeProductId: ((concert as unknown as { stripeProductId?: string | null }).stripeProductId ?? undefined),
+      stripePriceId: ((concert as unknown as { stripePriceId?: string | null }).stripePriceId ?? undefined),
       priceAmountCents,
       priceCurrency,
       createdAt: concert.createdAt.toISOString(),

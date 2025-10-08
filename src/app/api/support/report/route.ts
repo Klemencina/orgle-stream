@@ -6,7 +6,17 @@ export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({})) as any
+    const body = (await request.json().catch(() => ({}))) as Partial<{
+      email: string
+      type: string
+      message?: string
+      concertId: string
+      locale?: string
+      isLive?: boolean
+      everLive?: boolean
+      windowOpen?: boolean
+      purchased?: boolean
+    }>
     const email = (body.email || '').toString().trim()
     const type = (body.type || 'access').toString()
     const message = (body.message || '').toString()
@@ -19,9 +29,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'missing_concert' }, { status: 400 })
     }
 
-    const { userId } = await auth().catch(() => ({ userId: null as any }))
+    const { userId } = await auth().catch(() => ({ userId: null as unknown as string | null }))
 
-    const created = await (prisma as any).supportReport.create({
+    const created = await prisma.supportReport.create({
       data: {
         email,
         type,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/db'
+import type Stripe from 'stripe'
 
 export const runtime = 'nodejs'
 
@@ -24,9 +25,10 @@ export async function POST(request: NextRequest) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as any
-        const concertId = session?.metadata?.concertId as string | undefined
-        const userId = session?.metadata?.userId as string | undefined
+        const session = event.data.object as Stripe.Checkout.Session
+        const metadata = (session.metadata ?? {}) as Record<string, string>
+        const concertId = metadata.concertId
+        const userId = metadata.userId
         if (!concertId || !userId) break
 
         const paymentIntentId = session.payment_intent as string | null
