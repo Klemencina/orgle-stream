@@ -130,7 +130,7 @@ export async function GET(
             locale: translation.locale,
             title: translation.title,
             composer: translation.composer,
-            subtitles: (translation as any).subtitles || []
+            subtitles: (translation as { subtitles?: string[] }).subtitles || []
           }))
         }))
       }
@@ -284,7 +284,7 @@ export async function GET(
           title: pieceTranslation.title,
           composer: pieceTranslation.composer,
           order: piece.order,
-          subtitles: (pieceTranslation as any).subtitles || []
+          subtitles: (pieceTranslation as { subtitles?: string[] }).subtitles || []
         }
       })
     }
@@ -484,7 +484,7 @@ export async function PUT(
           title: pieceTranslation.title,
           composer: pieceTranslation.composer,
           order: piece.order,
-          subtitles: (pieceTranslation as any).subtitles || []
+          subtitles: (pieceTranslation as { subtitles?: string[] }).subtitles || []
         }
       })
     }
