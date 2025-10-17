@@ -156,13 +156,31 @@ export async function GET(
         if (!userId) {
           return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
         }
-        const ticket = await prisma.ticket.findUnique({
-          where: { userId_concertId: { userId, concertId: concert.id } },
-          select: { status: true },
-        })
-        const hasAccess = Boolean(ticket && ticket.status === 'paid')
-        if (!hasAccess) {
-          return NextResponse.json({ error: 'Purchase required' }, { status: 403 })
+        // Allow admins to bypass purchase requirement
+        try {
+          const adminBypass = await isAdmin()
+          if (adminBypass) {
+            // proceed without ticket check
+          } else {
+            const ticket = await prisma.ticket.findUnique({
+              where: { userId_concertId: { userId, concertId: concert.id } },
+              select: { status: true },
+            })
+            const hasAccess = Boolean(ticket && ticket.status === 'paid')
+            if (!hasAccess) {
+              return NextResponse.json({ error: 'Purchase required' }, { status: 403 })
+            }
+          }
+        } catch {
+          // On failure to verify admin, fall back to purchase requirement
+          const ticket = await prisma.ticket.findUnique({
+            where: { userId_concertId: { userId, concertId: concert.id } },
+            select: { status: true },
+          })
+          const hasAccess = Boolean(ticket && ticket.status === 'paid')
+          if (!hasAccess) {
+            return NextResponse.json({ error: 'Purchase required' }, { status: 403 })
+          }
         }
       }
       const playbackUrl = process.env.IVS_PLAYBACK_URL || null
