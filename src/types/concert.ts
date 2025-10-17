@@ -9,6 +9,7 @@ export interface ProgramPieceTranslation {
   locale: string
   title: string
   composer: string
+  subtitles?: string[]
   programPieceId: string
 }
 
@@ -46,6 +47,7 @@ export interface LocalizedProgramPiece {
   title: string
   composer: string
   order: number
+  subtitles?: string[]
 }
 
 export interface LocalizedConcert {

@@ -8,32 +8,30 @@ datasource db {
 }
 
 model Concert {
-  id           String               @id @default(cuid())
-  date         DateTime
-  isVisible    Boolean              @default(true)
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-  translations ConcertTranslation[]
-  program      ProgramPiece[]
-  tickets      Ticket[]
-
-  // Stripe linkage for per-concert product/pricing (optional)
-  stripeProductId String? @db.VarChar(255)
-  stripePriceId   String? @db.VarChar(255)
+  id              String               @id @default(cuid())
+  date            DateTime
+  isVisible       Boolean              @default(true)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  stripePriceId   String?              @db.VarChar(255)
+  stripeProductId String?              @db.VarChar(255)
+  translations    ConcertTranslation[]
+  program         ProgramPiece[]
+  tickets         Ticket[]
 
   @@map("concerts")
 }
 
 model ConcertTranslation {
-  id           String  @id @default(cuid())
-  locale       String
-  title        String
-  subtitle     String?
-  venue        String
-  description  String
-  performers   Json?
-  concertId    String
-  concert      Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
+  id          String  @id @default(cuid())
+  locale      String
+  title       String
+  venue       String
+  description String
+  concertId   String
+  performers  Json?
+  subtitle    String?
+  concert     Concert @relation(fields: [concertId], references: [id], onDelete: Cascade)
 
   @@unique([concertId, locale])
   @@map("concert_translations")
@@ -54,6 +52,7 @@ model ProgramPieceTranslation {
   locale         String
   title          String
   composer       String
+  subtitles      String[]
   programPieceId String
   programPiece   ProgramPiece @relation(fields: [programPieceId], references: [id], onDelete: Cascade)
 
@@ -63,16 +62,16 @@ model ProgramPieceTranslation {
 
 /// Records a successful purchase of a concert by a user
 model Ticket {
-  id               String   @id @default(cuid())
-  userId           String   // Clerk user ID
-  concertId        String
-  concert          Concert  @relation(fields: [concertId], references: [id], onDelete: Cascade)
-  amountCents      Int
-  currency         String   @default("eur")
-  status           String   // e.g. 'paid', 'refunded'
-  stripePaymentIntentId String? @db.VarChar(255)
-  stripeCheckoutSessionId String? @db.VarChar(255)
-  createdAt        DateTime @default(now())
+  id                      String   @id @default(cuid())
+  userId                  String
+  concertId               String
+  amountCents             Int
+  currency                String   @default("eur")
+  status                  String
+  stripePaymentIntentId   String?  @db.VarChar(255)
+  stripeCheckoutSessionId String?  @db.VarChar(255)
+  createdAt               DateTime @default(now())
+  concert                 Concert  @relation(fields: [concertId], references: [id], onDelete: Cascade)
 
   @@unique([userId, concertId])
   @@map("tickets")
@@ -80,23 +79,21 @@ model Ticket {
 
 /// User-reported support issues related to concerts/payments/access
 model SupportReport {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  resolvedAt  DateTime?
-  status      String   @default("open") // 'open' | 'resolved'
-
-  email       String
-  type        String   // 'access' | 'quality' | 'payment' | 'other'
-  message     String?
-
-  concertId   String
-  userId      String?  // optional Clerk user id
-  locale      String?
-  isLive      Boolean?
-  everLive    Boolean?
-  windowOpen  Boolean?
-  purchased   Boolean?
-  userAgent   String?
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+  status     String    @default("open")
+  email      String
+  type       String
+  message    String?
+  concertId  String
+  userId     String?
+  locale     String?
+  isLive     Boolean?
+  everLive   Boolean?
+  windowOpen Boolean?
+  purchased  Boolean?
+  userAgent  String?
 
   @@map("support_reports")
 }

@@ -33,6 +33,7 @@ interface TranslationInput {
 interface ProgramPieceInput {
   title: string
   composer: string
+  subtitles?: string[]
 }
 
 interface ProgramLocaleInput {
@@ -128,7 +129,8 @@ export async function GET(
           translations: piece.translations.map((translation) => ({
             locale: translation.locale,
             title: translation.title,
-            composer: translation.composer
+            composer: translation.composer,
+            subtitles: (translation as any).subtitles || []
           }))
         }))
       }
@@ -281,7 +283,8 @@ export async function GET(
           id: piece.id,
           title: pieceTranslation.title,
           composer: pieceTranslation.composer,
-          order: piece.order
+          order: piece.order,
+          subtitles: (pieceTranslation as any).subtitles || []
         }
       })
     }
@@ -404,15 +407,15 @@ export async function PUT(
             const maxLen = Math.max(sl.pieces.length, original.pieces.length)
             const rows = [] as {
               order: number
-              translations: { create: { locale: 'sl' | 'original'; title: string; composer: string }[] }
+              translations: { create: { locale: 'sl' | 'original'; title: string; composer: string; subtitles?: string[] }[] }
             }[]
             for (let i = 0; i < maxLen; i++) {
               rows.push({
                 order: i,
                 translations: {
                   create: [
-                    { locale: 'sl', title: sl.pieces[i]?.title || '', composer: sl.pieces[i]?.composer || '' },
-                    { locale: 'original', title: original.pieces[i]?.title || '', composer: original.pieces[i]?.composer || '' }
+                    { locale: 'sl', title: sl.pieces[i]?.title || '', composer: sl.pieces[i]?.composer || '', subtitles: (sl.pieces[i]?.subtitles || []).map(s => (s || '').trim()).filter(Boolean) },
+                    { locale: 'original', title: original.pieces[i]?.title || '', composer: original.pieces[i]?.composer || '', subtitles: (original.pieces[i]?.subtitles || []).map(s => (s || '').trim()).filter(Boolean) }
                   ]
                 }
               })
@@ -480,7 +483,8 @@ export async function PUT(
           id: piece.id,
           title: pieceTranslation.title,
           composer: pieceTranslation.composer,
-          order: piece.order
+          order: piece.order,
+          subtitles: (pieceTranslation as any).subtitles || []
         }
       })
     }

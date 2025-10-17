@@ -683,6 +683,15 @@ export default function ConcertPage() {
                       <div className={`font-medium ${isIntermission ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
                         {chosen?.title || ''}
                       </div>
+                      {(chosen as unknown as { subtitles?: string[] })?.subtitles?.length ? (
+                        <div className="mt-1 ml-4 space-y-0.5">
+                          {((chosen as unknown as { subtitles?: string[] }).subtitles || []).map((s, idx) => (
+                            <div key={idx} className="text-sm text-gray-500 dark:text-gray-400 italic">
+                              — {s}
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                       {chosen?.composer && (
                         <div className="text-xs text-gray-600 dark:text-gray-400">{chosen.composer}</div>
                       )}

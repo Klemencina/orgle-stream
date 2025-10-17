@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LocalizedConcert } from '@/types/concert';
 import { locales } from '@/i18n';
 import { useTranslations } from 'next-intl';
@@ -49,6 +49,7 @@ interface Performer {
 interface ProgramPiece {
   title: string;
   composer: string;
+  subtitles?: string[];
 }
 
 interface TranslationData {
@@ -102,8 +103,8 @@ export default function ConcertForm({
 
   // Program pieces: only two versions, Slovenian and Original
   const [program, setProgram] = useState<Record<string, ProgramPiece[]>>({
-    sl: [{ title: '', composer: '' }],
-    original: [{ title: '', composer: '' }]
+    sl: [{ title: '', composer: '', subtitles: [] }],
+    original: [{ title: '', composer: '', subtitles: [] }]
   });
 
   // Track images that need to be deleted from R2
@@ -117,6 +118,9 @@ export default function ConcertForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Deduplicate subtitle add/remove operations under React StrictMode
+  const subtitleOpIdRef = useRef<string | null>(null);
 
   // Store original data for change detection
   const [originalData, setOriginalData] = useState<{
@@ -298,9 +302,9 @@ export default function ConcertForm({
 
       // Build program only for 'sl' and 'original'
       const buildProgramFor = (loc: string): ProgramPiece[] => {
-        const pieces = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+        const pieces = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string; subtitles?: string[] }[] }) => {
           const tr = piece.translations.find((t: { locale: string }) => t.locale === loc);
-          return { title: tr?.title || '', composer: tr?.composer || '' };
+          return { title: tr?.title || '', composer: tr?.composer || '', subtitles: tr?.subtitles || [] };
         });
         return pieces.length > 0 ? pieces : [{ title: '', composer: '' }];
       };
@@ -335,16 +339,16 @@ export default function ConcertForm({
               return acc;
             }, {}),
             program: (() => {
-              const sl = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+              const sl = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string; subtitles?: string[] }[] }) => {
                 const tr = piece.translations.find((t: { locale: string }) => t.locale === 'sl');
-                return { title: tr?.title || '', composer: tr?.composer || '' };
+                return { title: tr?.title || '', composer: tr?.composer || '', subtitles: tr?.subtitles || [] };
               });
-              const original = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string }[] }) => {
+              const original = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string; subtitles?: string[] }[] }) => {
                 const tr = piece.translations.find((t: { locale: string }) => t.locale === 'original');
-                return { title: tr?.title || '', composer: tr?.composer || '' };
+                return { title: tr?.title || '', composer: tr?.composer || '', subtitles: tr?.subtitles || [] };
               });
               const maxLen = Math.max(sl.length, original.length);
-              const pad = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '' }));
+              const pad = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '', subtitles: [] }));
               return { sl: pad(sl), original: pad(original) };
             })()
           });
@@ -555,7 +559,7 @@ export default function ConcertForm({
       const next = { ...prev };
       // Ensure paired index exists in both locales
       const maxLen = Math.max(next.sl.length, next.original.length, index + 1);
-      const ensureLen = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '' }));
+      const ensureLen = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '', subtitles: [] }));
       next.sl = ensureLen(next.sl);
       next.original = ensureLen(next.original);
       // Update the value
@@ -568,7 +572,7 @@ export default function ConcertForm({
     setProgram(prev => {
       const next = { ...prev };
       const newLength = Math.max(next.sl.length, next.original.length) + 1;
-      const padTo = (arr: ProgramPiece[], len: number) => arr.concat(Array(Math.max(0, len - arr.length)).fill({ title: '', composer: '' }));
+      const padTo = (arr: ProgramPiece[], len: number) => arr.concat(Array(Math.max(0, len - arr.length)).fill({ title: '', composer: '', subtitles: [] }));
       next.sl = padTo(next.sl, newLength);
       next.original = padTo(next.original, newLength);
       return next;
@@ -582,9 +586,94 @@ export default function ConcertForm({
       if (minLen <= 1) return prev;
       const removeAt = (arr: ProgramPiece[]) => arr.filter((_, i) => i !== index);
       const next = { sl: removeAt(prev.sl), original: removeAt(prev.original) };
-      if (next.sl.length === 0) next.sl = [{ title: '', composer: '' }];
-      if (next.original.length === 0) next.original = [{ title: '', composer: '' }];
+      if (next.sl.length === 0) next.sl = [{ title: '', composer: '', subtitles: [] }];
+      if (next.original.length === 0) next.original = [{ title: '', composer: '', subtitles: [] }];
       return next;
+    });
+  };
+
+  const ensureSubtitleParity = (targetLocale: 'sl' | 'original', pieceIndex: number) => {
+    setProgram(prev => {
+      const otherLocale = targetLocale === 'sl' ? 'original' : 'sl';
+      const next = { ...prev } as Record<'sl' | 'original', ProgramPiece[]>;
+      const target = next[targetLocale][pieceIndex] || { title: '', composer: '', subtitles: [] };
+      const other = next[otherLocale][pieceIndex] || { title: '', composer: '', subtitles: [] };
+      const targetLen = (target.subtitles || []).length;
+      const otherLen = (other.subtitles || []).length;
+      if (otherLen < targetLen) {
+        const pad = Array(targetLen - otherLen).fill('');
+        other.subtitles = (other.subtitles || []).concat(pad);
+      } else if (targetLen < otherLen) {
+        const pad = Array(otherLen - targetLen).fill('');
+        target.subtitles = (target.subtitles || []).concat(pad);
+      }
+      next[targetLocale][pieceIndex] = { ...target };
+      next[otherLocale][pieceIndex] = { ...other };
+      return next;
+    });
+  };
+
+  const addSubtitle = (_localeKey: 'sl' | 'original', pieceIndex: number) => {
+    if (subtitleOpIdRef.current) return; // dedupe under StrictMode
+    subtitleOpIdRef.current = 'add';
+
+    setProgram(prev => {
+      const slPieces = [...prev.sl];
+      const originalPieces = [...prev.original];
+
+      if (!slPieces[pieceIndex]) slPieces[pieceIndex] = { title: '', composer: '', subtitles: [] };
+      if (!originalPieces[pieceIndex]) originalPieces[pieceIndex] = { title: '', composer: '', subtitles: [] };
+
+      const addEmptySubtitle = (piece: ProgramPiece): ProgramPiece => ({
+        ...piece,
+        subtitles: [...(piece.subtitles || []), '']
+      });
+
+      slPieces[pieceIndex] = addEmptySubtitle(slPieces[pieceIndex]);
+      originalPieces[pieceIndex] = addEmptySubtitle(originalPieces[pieceIndex]);
+
+      return { sl: slPieces, original: originalPieces };
+    });
+
+    setTimeout(() => { subtitleOpIdRef.current = null; }, 0);
+  };
+
+  const removeSubtitle = (_localeKey: 'sl' | 'original', pieceIndex: number, subtitleIndex: number) => {
+    if (subtitleOpIdRef.current) return; // dedupe under StrictMode
+    subtitleOpIdRef.current = 'remove';
+
+    setProgram(prev => {
+      const slPieces = [...prev.sl];
+      const originalPieces = [...prev.original];
+
+      const updateFor = (pieces: ProgramPiece[]) => {
+        const piece = pieces[pieceIndex] || { title: '', composer: '', subtitles: [] };
+        const subs = [...(piece.subtitles || [])];
+        if (subs[subtitleIndex] !== undefined) subs.splice(subtitleIndex, 1);
+        pieces[pieceIndex] = { ...piece, subtitles: subs };
+      };
+
+      updateFor(slPieces);
+      updateFor(originalPieces);
+
+      return { sl: slPieces, original: originalPieces };
+    });
+
+    setTimeout(() => { subtitleOpIdRef.current = null; }, 0);
+  };
+
+  const updateSubtitle = (localeKey: 'sl' | 'original', pieceIndex: number, subtitleIndex: number, value: string) => {
+    setProgram(prev => {
+      const slPieces = [...prev.sl];
+      const originalPieces = [...prev.original];
+
+      const pieces = localeKey === 'sl' ? slPieces : originalPieces;
+      const piece = pieces[pieceIndex] || { title: '', composer: '', subtitles: [] };
+      const subs = [...(piece.subtitles || [])];
+      subs[subtitleIndex] = value;
+      pieces[pieceIndex] = { ...piece, subtitles: subs };
+
+      return { sl: slPieces, original: originalPieces };
     });
   };
 
@@ -1200,6 +1289,39 @@ export default function ConcertForm({
                 >
                   {t('removePiece')}
                 </button>
+              </div>
+              <div className="md:col-span-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Subtitles</span>
+                  <button
+                    type="button"
+                    onClick={() => addSubtitle(programActiveTab, index)}
+                    className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 px-2 py-1 rounded"
+                  >
+                    + Add subtitle
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {(piece.subtitles || []).map((sub, sIdx) => (
+                    <div key={sIdx} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={sub}
+                        onChange={(e) => updateSubtitle(programActiveTab, index, sIdx, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder={`Subtitle ${sIdx + 1}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSubtitle(programActiveTab, index, sIdx)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-2 rounded"
+                        aria-label="Remove subtitle"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ))}
