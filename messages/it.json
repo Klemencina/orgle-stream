@@ -83,6 +83,10 @@
     "loading": "Caricamento concerti...",
     "loadingError": "Errore nel Caricamento dei Concerti",
     "tryAgain": "Riprova",
+    "noFutureConcerts": "Nessun Concerto in Programma",
+    "noFutureConcertsMessage": "Al momento non ci sono concerti in programma. Ricontrolla presto per nuovi eventi!",
+    "followFacebook": "Seguici su Facebook per aggiornamenti regolari",
+    "followFacebookLink": "Visita la nostra pagina Facebook",
     "newsletter": {
       "title": "Ricevi Aggiornamenti sui Concerti",
       "description": "Sii il primo a sapere di nuovi concerti e performance speciali. Iscriviti alla nostra newsletter!",

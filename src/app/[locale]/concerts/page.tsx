@@ -103,93 +103,112 @@ export default function ConcertsPage() {
           </div>
         </div>
 
-        {/* Concerts Grid */}
-        <div
-          className={
-            `grid gap-6 ` +
-            (concerts.length === 1
-              ? 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1'
-              : concerts.length === 2
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-                : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3')
-          }
-        >
-          {concerts.map((concert) => (
-            <div key={concert.id} className="w-full h-full bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col">
-              
-
-              {/* Concert Details */}
-              <div className="p-6 flex-1 flex flex-col">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 break-words whitespace-normal">
-                  {concert.title}
-                </h2>
-                {concert.subtitle && (
-                  <h3 className="text-lg text-gray-700 dark:text-gray-200 mb-2 break-words whitespace-normal">
-                    {concert.subtitle}
-                  </h3>
-                )}
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-gray-600 dark:text-gray-300">
-                    <span className="text-lg mr-2">📅</span>
-                    <span className="text-sm">
-                      {new Date(concert.date).toLocaleDateString(locale, {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center text-gray-600 dark:text-gray-300">
-                    <span className="text-lg mr-2">🕒</span>
-                    <span className="text-sm">
-                      {new Date(concert.date).toLocaleTimeString(locale, {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                      })}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center text-gray-600 dark:text-gray-300">
-                    <span className="text-lg mr-2">📍</span>
-                    <span className="text-sm break-words whitespace-normal">{concert.venue}</span>
-                  </div>
-
-                </div>
-
-                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 break-words whitespace-normal">
-                  {concert.description}
-                </p>
-
-                {/* Program Preview */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t('concerts.programHighlights')}:</h4>
-                  <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                    {concert.program.slice(0, 2).map((piece) => (
-                      <li key={piece.id} className="flex items-center break-words whitespace-normal">
-                        <span className="mr-2">♪</span>
-                        {piece.title}
-                      </li>
-                    ))}
-                    {concert.program.length > 2 && (
-                      <li className="text-gray-500">+{concert.program.length - 2} {t('concerts.morePieces')}</li>
-                    )}
-                  </ul>
-                </div>
-
-                {/* View Concert Button */}
-                <Link href={`/${locale}/concerts/${concert.id}${isAdminView ? '?admin=true' : ''}`}>
-                  <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
-                    {t('concerts.viewDetails')}
-                  </button>
-                </Link>
-              </div>
+        {/* Concerts Grid or Empty State */}
+        {concerts.length === 0 ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center max-w-md">
+              <div className="text-6xl mb-4">🎹</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('concerts.noFutureConcerts')}</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">{t('concerts.noFutureConcertsMessage')}</p>
+              <p className="text-gray-600 dark:text-gray-300 mb-4 text-sm">{t('concerts.followFacebook')}</p>
+              <a
+                href="https://www.facebook.com/orgleKoper"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+              >
+                {t('concerts.followFacebookLink')}
+              </a>
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div
+            className={
+              `grid gap-6 ` +
+              (concerts.length === 1
+                ? 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1'
+                : concerts.length === 2
+                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
+                  : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3')
+            }
+          >
+            {concerts.map((concert) => (
+              <div key={concert.id} className="w-full h-full bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col">
+                
+
+                {/* Concert Details */}
+                <div className="p-6 flex-1 flex flex-col">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 break-words whitespace-normal">
+                    {concert.title}
+                  </h2>
+                  {concert.subtitle && (
+                    <h3 className="text-lg text-gray-700 dark:text-gray-200 mb-2 break-words whitespace-normal">
+                      {concert.subtitle}
+                    </h3>
+                  )}
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-gray-600 dark:text-gray-300">
+                      <span className="text-lg mr-2">📅</span>
+                      <span className="text-sm">
+                        {new Date(concert.date).toLocaleDateString(locale, {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center text-gray-600 dark:text-gray-300">
+                      <span className="text-lg mr-2">🕒</span>
+                      <span className="text-sm">
+                        {new Date(concert.date).toLocaleTimeString(locale, {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center text-gray-600 dark:text-gray-300">
+                      <span className="text-lg mr-2">📍</span>
+                      <span className="text-sm break-words whitespace-normal">{concert.venue}</span>
+                    </div>
+
+                  </div>
+
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 break-words whitespace-normal">
+                    {concert.description}
+                  </p>
+
+                  {/* Program Preview */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t('concerts.programHighlights')}:</h4>
+                    <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                      {concert.program.slice(0, 2).map((piece) => (
+                        <li key={piece.id} className="flex items-center break-words whitespace-normal">
+                          <span className="mr-2">♪</span>
+                          {piece.title}
+                        </li>
+                      ))}
+                      {concert.program.length > 2 && (
+                        <li className="text-gray-500">+{concert.program.length - 2} {t('concerts.morePieces')}</li>
+                      )}
+                    </ul>
+                  </div>
+
+                  {/* View Concert Button */}
+                  <Link href={`/${locale}/concerts/${concert.id}${isAdminView ? '?admin=true' : ''}`}>
+                    <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
+                      {t('concerts.viewDetails')}
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         
       </div>

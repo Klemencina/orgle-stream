@@ -83,6 +83,10 @@
     "loading": "Loading concerts...",
     "loadingError": "Error Loading Concerts",
     "tryAgain": "Try Again",
+    "noFutureConcerts": "No Upcoming Concerts",
+    "noFutureConcertsMessage": "There are currently no upcoming concerts scheduled. Check back soon for new events!",
+    "followFacebook": "Follow us on Facebook for regular updates",
+    "followFacebookLink": "Visit our Facebook page",
     "newsletter": {
       "title": "Get Orgle Koper Stream Updates",
       "description": "Be the first to know about new Orgle Koper streams and special events. Sign up for our newsletter!",
