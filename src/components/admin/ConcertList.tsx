@@ -88,7 +88,8 @@ export default function ConcertList({
     );
   }
 
-  if (concerts.length === 0) {
+  // Show "No Concerts Yet" only when there are truly no concerts at all
+  if (totalConcerts === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         <div className="text-center">
@@ -180,94 +181,111 @@ export default function ConcertList({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
-            {concerts.map((concert) => (
-              <tr key={concert.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="ml-0">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {concert.title}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {concert.performers && concert.performers.length > 0
-                          ? (() => {
-                              const maxDisplay = 3;
-                              const performerNames = concert.performers.map(p => p.name);
-                              const displayed = performerNames.slice(0, maxDisplay);
-                              const remaining = performerNames.length - maxDisplay;
-                              
-                              return (
-                                <span 
-                                  title={performerNames.join(', ')}
-                                  className="cursor-help"
-                                >
-                                  {displayed.join(', ')}
-                                  {remaining > 0 && (
-                                    <span className="text-gray-400">
-                                      {' '}and {remaining} more
-                                    </span>
-                                  )}
-                                </span>
-                              );
-                            })()
-                          : 'No performers'}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-white">
-                    {formatDate(concert.date)}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-white">
-                    {concert.venue}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    isUpcoming(concert.date)
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                  }`}>
-                    {isUpcoming(concert.date) ? t('upcoming') : t('past')}
-                  </span>
-                  
-                  {!concert.isVisible && (
-                    <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                      {t('hidden')}
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex space-x-2">
-                    <a
-                      href={`/${locale}/concerts/${concert.id}?admin=true`}
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-600"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="View"
-                    >
-                      View
-                    </a>
-                    <button
-                      onClick={() => onEditConcert(concert)}
-                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      {t('edit')}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(concert.id)}
-                      disabled={deletingId === concert.id}
-                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {deletingId === concert.id ? t('deleting') : t('delete')}
-                    </button>
+            {concerts.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-8 text-center">
+                  <div className="text-gray-500 dark:text-gray-400">
+                    <p className="text-sm font-medium mb-1">
+                      {t('showing')} 0 {t('of')} {totalConcerts}
+                    </p>
+                    {(showUpcomingOnly || hideHiddenConcerts) && (
+                      <p className="text-xs mt-1">
+                        Adjust filters above to view more concerts.
+                      </p>
+                    )}
                   </div>
                 </td>
               </tr>
-            ))}
+            ) : (
+              concerts.map((concert) => (
+                <tr key={concert.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="ml-0">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {concert.title}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {concert.performers && concert.performers.length > 0
+                            ? (() => {
+                                const maxDisplay = 3;
+                                const performerNames = concert.performers.map(p => p.name);
+                                const displayed = performerNames.slice(0, maxDisplay);
+                                const remaining = performerNames.length - maxDisplay;
+                                
+                                return (
+                                  <span 
+                                    title={performerNames.join(', ')}
+                                    className="cursor-help"
+                                  >
+                                    {displayed.join(', ')}
+                                    {remaining > 0 && (
+                                      <span className="text-gray-400">
+                                        {' '}and {remaining} more
+                                      </span>
+                                    )}
+                                  </span>
+                                );
+                              })()
+                            : 'No performers'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 dark:text-white">
+                      {formatDate(concert.date)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 dark:text-white">
+                      {concert.venue}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      isUpcoming(concert.date)
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                    }`}>
+                      {isUpcoming(concert.date) ? t('upcoming') : t('past')}
+                    </span>
+                    
+                    {!concert.isVisible && (
+                      <span className="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                        {t('hidden')}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <a
+                        href={`/${locale}/concerts/${concert.id}?admin=true`}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-600"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View"
+                      >
+                        View
+                      </a>
+                      <button
+                        onClick={() => onEditConcert(concert)}
+                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                      >
+                        {t('edit')}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(concert.id)}
+                        disabled={deletingId === concert.id}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingId === concert.id ? t('deleting') : t('delete')}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
