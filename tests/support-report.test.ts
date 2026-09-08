@@ -35,3 +35,13 @@ test('keeps missing diagnostic flags unknown and does not treat string false as 
   assert.equal(result.data.windowOpen, true)
   assert.equal(result.data.locale, undefined)
 })
+
+test('resolving sets the completion time and reopening clears it', async () => {
+  const { parseReportUpdate } = await import('../src/lib/support-report')
+  const now = new Date('2026-09-08T18:00:00Z')
+  assert.deepEqual(parseReportUpdate({ id: 'case', status: 'resolved' }, now), { id: 'case', data: { status: 'resolved', resolvedAt: now } })
+  assert.deepEqual(parseReportUpdate({ id: 'case', status: 'open' }, now), { id: 'case', data: { status: 'open', resolvedAt: null } })
+  for (const input of [null, [], {}, { id: {}, status: 'open' }, { id: 'case', status: 'deleted' }, { id: ' ', status: 'open' }]) {
+    assert.equal(parseReportUpdate(input), null)
+  }
+})

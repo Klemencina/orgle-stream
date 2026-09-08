@@ -25,3 +25,10 @@ export function parseSupportReport(input: unknown) {
     isLive: flag('isLive'), everLive: flag('everLive'), windowOpen: flag('windowOpen'), purchased: flag('purchased'),
   } } as const
 }
+
+export function parseReportUpdate(input: unknown, now = new Date()) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null
+  const { id, status } = input as Record<string, unknown>
+  if (typeof id !== 'string' || !id.trim() || id.length > 128 || (status !== 'open' && status !== 'resolved')) return null
+  return { id: id.trim(), data: { status, resolvedAt: status === 'resolved' ? now : null } }
+}
