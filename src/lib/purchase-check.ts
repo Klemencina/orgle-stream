@@ -26,6 +26,7 @@ export function startPurchaseCheck(options: {
     controller.signal.addEventListener('abort', abort, { once: true })
     requestTimeout = setTimeout(abort, 10_000)
     let status: 'pending' | 'error' = 'error'
+    let purchased: boolean | null = null
     try {
       const query = new URLSearchParams({ concertId: options.concertId })
       if (options.returning && options.sessionId) query.set('sessionId', options.sessionId)
@@ -37,16 +38,18 @@ export function startPurchaseCheck(options: {
         emit({ purchased: null, status: 'error' })
         return
       }
-      if (data.purchased === true) {
+      purchased = data.purchased === true ? true : null
+      if (data.purchased === true && !data.checkoutPending) {
         emit({ purchased: true, status: 'idle' })
         return
       }
-      if (data.purchased !== false) throw new Error('Invalid purchase response')
+      if (typeof data.purchased !== 'boolean') throw new Error('Invalid purchase response')
       if (!options.returning) {
         emit({ purchased: false, status: 'idle' })
         return
       }
       status = 'pending'
+      emit({ purchased, status: 'checking' })
     } catch {
       if (controller.signal.aborted) return
     } finally {
@@ -56,7 +59,7 @@ export function startPurchaseCheck(options: {
     if (options.returning && attempt < 6) {
       timer = setTimeout(() => void check(), attempt * 1000)
     } else {
-      emit({ purchased: null, status })
+      emit({ purchased, status })
     }
   }
   emit({ purchased: null, status: 'checking' })

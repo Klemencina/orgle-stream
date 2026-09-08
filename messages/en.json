@@ -1,4 +1,16 @@
 {
+  "festivalPass": {
+    "title": "{year} festival pass",
+    "description": "One purchase gives you online access to every festival concert in {year}, including concerts added later.",
+    "liveOnly": "Live streams only, during each concert’s viewing window. Times shown are in Slovenia. Recordings are not included.",
+    "noCredit": "Individual tickets remain available. Earlier ticket purchases are not deducted from the pass price.",
+    "owned": "You have a {year} festival pass.",
+    "included": "Included in your {year} festival pass",
+    "buy": "Buy festival pass",
+    "opening": "Opening checkout...",
+    "signIn": "Sign in to buy the pass",
+    "error": "Could not open checkout. If you have already started a payment, finish or check that payment before trying again. Contact support if the problem continues."
+  },
   "purchaseCheck": {
     "checking": "Checking your ticket...",
     "pending": "Your payment has not been confirmed yet. Check again shortly. Please do not pay again while confirmation is pending.",

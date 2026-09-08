@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { LocalizedConcert, ProgramPiece } from '@/types/concert';
 import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
+import FestivalPassOffer from '@/components/FestivalPassOffer';
 import { startPurchaseCheck, type PurchaseCheck } from '@/lib/purchase-check';
 import { REPORT_EMAIL_LIMIT, REPORT_MESSAGE_LIMIT } from '@/lib/support-report';
 
@@ -365,6 +366,8 @@ export default function ConcertPage() {
                 )}
               </div>
             )}
+
+            {!isAdminClient && <FestivalPassOffer concertId={concertId} refreshKey={`${purchased}:${purchaseStatus}`} />}
 
             {/* Purchase/Login CTA - hidden for admins */}
             {purchased === false && !isAdminClient && !hasEnded && (

@@ -97,3 +97,20 @@ model SupportReport {
 
   @@map("support_reports")
 }
+
+/// A year-wide streaming purchase, separate from individual concert tickets.
+model FestivalPass {
+  id                      String   @id @default(cuid())
+  userId                  String
+  year                    Int
+  amountCents             Int      @default(0)
+  currency                String   @default("eur")
+  status                  String
+  stripePriceId           String   @db.VarChar(255)
+  stripePaymentIntentId   String?  @db.VarChar(255)
+  stripeCheckoutSessionId String?  @db.VarChar(255)
+  createdAt               DateTime @default(now())
+
+  @@unique([userId, year])
+  @@map("festival_passes")
+}

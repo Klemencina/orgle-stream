@@ -99,3 +99,16 @@ test('leaving during the retry delay cancels further requests', async t => {
   await flush()
   assert.equal(calls, 1)
 })
+
+test('an existing individual ticket does not stop waiting for a new pass payment', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const states: PurchaseCheck[] = []
+  let calls = 0
+  const stop = startPurchaseCheck({ concertId: 'concert', returning: true, onState: s => states.push(s), fetcher: async () => Response.json({ purchased: true, checkoutPending: ++calls < 2 }) })
+  await flush()
+  assert.deepEqual(states.at(-1), { purchased: true, status: 'checking' })
+  t.mock.timers.tick(1000)
+  await flush()
+  assert.deepEqual(states.at(-1), { purchased: true, status: 'idle' })
+  stop()
+})

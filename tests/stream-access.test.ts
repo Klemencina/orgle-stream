@@ -8,6 +8,7 @@ function fixture(overrides: Partial<Parameters<typeof getStreamResponse>[0]> = {
   return {
     db: {
       concert: { findUnique: async () => ({ id: 'concert', date: new Date(now) }) },
+      festivalPass: { findUnique: async () => null },
       ticket: { findUnique: async () => ({ status: ticketStatus }) },
     } as unknown as PrismaClient,
     concertId: 'concert', checkOnly: false, adminPreview: false,

@@ -1,4 +1,16 @@
 {
+  "festivalPass": {
+    "title": "Festivalski paket {year}",
+    "description": "En nakup omogoča spletni ogled vseh festivalskih koncertov v letu {year}, tudi naknadno dodanih.",
+    "liveOnly": "Samo prenosi v živo v času ogleda posameznega koncerta. Naveden je čas v Sloveniji. Posnetki niso vključeni.",
+    "noCredit": "Posamezne vstopnice ostajajo na voljo. Prejšnji nakupi vstopnic se ne odštejejo od cene paketa.",
+    "owned": "Imate festivalski paket {year}.",
+    "included": "Vključeno v vaš festivalski paket {year}",
+    "buy": "Kupi festivalski paket",
+    "opening": "Odpiranje plačila...",
+    "signIn": "Prijavite se za nakup paketa",
+    "error": "Plačila ni bilo mogoče odpreti. Če ste plačilo že začeli, ga dokončajte ali preverite, preden poskusite znova. Če težava ostaja, se obrnite na podporo."
+  },
   "purchaseCheck": {
     "checking": "Preverjanje vaše vstopnice...",
     "pending": "Vaše plačilo še ni potrjeno. Kmalu preverite znova. Dokler čakate na potrditev, ne plačujte ponovno.",
