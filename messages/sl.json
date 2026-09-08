@@ -1,4 +1,10 @@
 {
+  "purchaseCheck": {
+    "checking": "Preverjanje vaše vstopnice...",
+    "pending": "Vaše plačilo še ni potrjeno. Kmalu preverite znova. Dokler čakate na potrditev, ne plačujte ponovno.",
+    "error": "Vstopnice ni bilo mogoče preveriti. Preverite povezavo in se prepričajte, da ste prijavljeni z računom, ki ste ga uporabili pri nakupu, nato poskusite znova.",
+    "retry": "Znova preveri vstopnico"
+  },
   "player": {
     "adminPreview": "Skrbniški predogled",
     "videoLabel": "Videoprenos koncerta",

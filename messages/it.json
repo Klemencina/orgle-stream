@@ -1,4 +1,10 @@
 {
+  "purchaseCheck": {
+    "checking": "Verifica del biglietto...",
+    "pending": "Il pagamento non è ancora stato confermato. Controlla di nuovo tra poco. Non pagare di nuovo mentre attendi la conferma.",
+    "error": "Impossibile verificare il biglietto. Controlla la connessione e assicurati di aver effettuato l'accesso con l'account usato per l'acquisto, poi riprova.",
+    "retry": "Verifica di nuovo il biglietto"
+  },
   "player": {
     "adminPreview": "Anteprima amministratore",
     "videoLabel": "Video del concerto in diretta",

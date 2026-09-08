@@ -6,6 +6,10 @@ import { fulfillCheckout } from '@/lib/tickets'
 
 export const runtime = 'nodejs'
 
+function json(body: unknown, options: { status?: number } = {}) {
+  return NextResponse.json(body, { ...options, headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } })
+}
+
 // Check purchase state for a concert for current user
 export async function GET(request: NextRequest) {
   try {
@@ -14,11 +18,11 @@ export async function GET(request: NextRequest) {
     const concertId = searchParams.get('concertId') || ''
     const sessionId = searchParams.get('sessionId') || ''
     if (!concertId) {
-      return NextResponse.json({ error: 'concertId required' }, { status: 400 })
+      return json({ error: 'concertId required' }, { status: 400 })
     }
 
     if (!userId) {
-      return NextResponse.json({ purchased: false, requiresAuth: true })
+      return json({ purchased: false, requiresAuth: true })
     }
 
     // If sessionId is provided, verify session with Stripe and mark paid if needed
@@ -36,7 +40,7 @@ export async function GET(request: NextRequest) {
 
         if (!isOwner || !isSameConcert) {
           // Do not mark as paid if the session doesn't match the authenticated user and concert
-          return NextResponse.json({ purchased: false, mismatch: true })
+          return json({ purchased: false, mismatch: true })
         }
         await fulfillCheckout(prisma, session)
       } catch (err) {
@@ -45,10 +49,10 @@ export async function GET(request: NextRequest) {
     }
 
     const ticket = await prisma.ticket.findUnique({ where: { userId_concertId: { userId, concertId } } })
-    return NextResponse.json({ purchased: Boolean(ticket && ticket.status === 'paid') })
+    return json({ purchased: Boolean(ticket && ticket.status === 'paid') })
   } catch (error) {
     console.error('Purchase check error:', error)
-    return NextResponse.json({ error: 'Failed to check purchase' }, { status: 500 })
+    return json({ error: 'Failed to check purchase' }, { status: 500 })
   }
 }
 

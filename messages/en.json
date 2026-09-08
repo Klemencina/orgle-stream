@@ -1,4 +1,10 @@
 {
+  "purchaseCheck": {
+    "checking": "Checking your ticket...",
+    "pending": "Your payment has not been confirmed yet. Check again shortly. Please do not pay again while confirmation is pending.",
+    "error": "We could not verify your ticket. Check your connection and make sure you are signed in with the account used for checkout, then try again.",
+    "retry": "Check ticket again"
+  },
   "player": {
     "adminPreview": "Admin preview",
     "videoLabel": "Live concert video",

@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { LocalizedConcert, ProgramPiece } from '@/types/concert';
 import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
+import { startPurchaseCheck, type PurchaseCheck } from '@/lib/purchase-check';
 
 // Define the dynamic component at module scope to avoid remounting on every render
 const StreamPlayer = dynamic(() => import('@/components/StreamPlayer'), { ssr: false });
@@ -65,6 +66,10 @@ export default function ConcertPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [purchased, setPurchased] = useState<boolean | null>(null);
+  const [purchaseStatus, setPurchaseStatus] = useState<PurchaseCheck['status']>('checking');
+  const [purchaseAttempt, setPurchaseAttempt] = useState(0);
+  const checkoutReturned = searchParams.get('checkout') === 'success';
+  const checkoutSessionId = searchParams.get('session_id');
   const [reportOpen, setReportOpen] = useState(false);
   const [reportEmail, setReportEmail] = useState('');
   const [reportType, setReportType] = useState<'access' | 'quality' | 'payment' | 'other'>('access');
@@ -135,59 +140,17 @@ export default function ConcertPage() {
   }, [concertId, locale, previewRequested]);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    const controller = new AbortController();
-    setPurchased(null);
-    async function fetchPurchase() {
-      if (!concertId) return;
-      try {
-        const res = await fetch(`/api/purchase?concertId=${encodeURIComponent(concertId)}`, { cache: 'no-store', signal: controller.signal });
-        const data = res.ok ? await res.json() : null;
-        if (!controller.signal.aborted) setPurchased(Boolean(data?.purchased));
-      } catch {
-        if (!controller.signal.aborted) setPurchased(false);
-      }
-    }
-    void fetchPurchase();
-    return () => controller.abort();
-  }, [concertId, user?.id, isLoaded]);
-
-  // If returning from checkout, poll a few times to wait for webhook and refresh purchase state
-  useEffect(() => {
-    if (!concertId) return;
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const cameFromCheckout = params.get('checkout') === 'success';
-    const sessionId = params.get('session_id');
-    if (!cameFromCheckout) return;
-
-    let aborted = false;
-    (async () => {
-      const maxAttempts = 6;
-      for (let attempt = 1; attempt <= maxAttempts && !aborted; attempt++) {
-        try {
-          const url = sessionId ? `/api/purchase?concertId=${concertId}&sessionId=${encodeURIComponent(sessionId)}` : `/api/purchase?concertId=${concertId}`
-          const res = await fetch(url, { cache: 'no-store' });
-          if (res.ok) {
-            const data = await res.json();
-            const isPurchased = Boolean(data?.purchased);
-            setPurchased(isPurchased);
-            if (isPurchased) break;
-          }
-        } catch {}
-        await new Promise(r => setTimeout(r, 1000 * attempt));
-      }
-      // Clean checkout param from URL
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('checkout');
-        url.searchParams.delete('session_id');
-        window.history.replaceState({}, '', url.toString());
-      } catch {}
-    })();
-
-    return () => { aborted = true };
-  }, [concertId]);
+    if (!isLoaded || !concertId) return;
+    return startPurchaseCheck({
+      concertId,
+      sessionId: checkoutSessionId,
+      returning: checkoutReturned,
+      onState: ({ purchased, status }) => {
+        setPurchased(purchased);
+        setPurchaseStatus(status);
+      },
+    });
+  }, [concertId, user?.id, isLoaded, checkoutReturned, checkoutSessionId, purchaseAttempt]);
 
   useEffect(() => {
     if (!concert) return;
@@ -387,6 +350,17 @@ export default function ConcertPage() {
                       <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.seconds, 'seconds', t)}</div>
                     </div>
                   </div>
+                )}
+              </div>
+            )}
+
+            {!isAdminClient && purchaseStatus !== 'idle' && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 text-center" role="status">
+                <p>{t(`purchaseCheck.${purchaseStatus}`)}</p>
+                {purchaseStatus !== 'checking' && (
+                  <button className="mt-4 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded" onClick={() => setPurchaseAttempt(value => value + 1)}>
+                    {t('purchaseCheck.retry')}
+                  </button>
                 )}
               </div>
             )}
