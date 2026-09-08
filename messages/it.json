@@ -1,4 +1,19 @@
 {
+  "player": {
+    "adminPreview": "Anteprima amministratore",
+    "videoLabel": "Video del concerto in diretta",
+    "loading": "Caricamento della diretta...",
+    "reconnecting": "Connessione interrotta. Riconnessione...",
+    "play": "Riproduci il concerto",
+    "retry": "Riprova",
+    "signIn": "Accedi per guardare questo concerto.",
+    "purchaseRequired": "Per guardare questo concerto è necessario un biglietto pagato.",
+    "outsideWindow": "La visione non è disponibile in questo momento.",
+    "notFound": "Questo concerto non è disponibile.",
+    "notConfigured": "La diretta non è ancora pronta. Riprova più tardi.",
+    "unsupported": "Questo browser non supporta la diretta. Usa un browser recente.",
+    "connection": "Impossibile connettersi alla diretta. Controlla la connessione e riprova."
+},
   "nav": {
     "home": "Home",
     "concerts": "Concerti",

@@ -1,4 +1,19 @@
 {
+  "player": {
+    "adminPreview": "Skrbniški predogled",
+    "videoLabel": "Videoprenos koncerta",
+    "loading": "Nalaganje prenosa...",
+    "reconnecting": "Povezava je prekinjena. Ponovno povezovanje...",
+    "play": "Predvajaj koncert",
+    "retry": "Poskusi znova",
+    "signIn": "Za ogled koncerta se prijavite.",
+    "purchaseRequired": "Za ogled koncerta potrebujete plačano vstopnico.",
+    "outsideWindow": "Ogled trenutno ni na voljo.",
+    "notFound": "Ta koncert ni na voljo.",
+    "notConfigured": "Prenos še ni pripravljen. Poskusite pozneje.",
+    "unsupported": "Ta brskalnik ne podpira prenosa. Uporabite novejši brskalnik.",
+    "connection": "Povezava s prenosom ni uspela. Preverite povezavo in poskusite znova."
+},
   "nav": {
     "home": "Domov",
     "concerts": "Koncerti",

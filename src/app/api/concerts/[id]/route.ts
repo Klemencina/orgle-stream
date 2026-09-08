@@ -6,6 +6,7 @@ import { LocalizedConcert, Performer } from '@/types/concert'
 import { auth } from '@clerk/nextjs/server'
 import { isAdmin } from '@/lib/auth'
 import { archiveConcert, replaceConcertDetails } from '@/lib/concerts'
+import { getStreamResponse, probePlayback } from '@/lib/stream-access'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -62,13 +63,23 @@ export async function GET(
     const checkOnly = searchParams.get('check') === 'true'
     const allTranslations = searchParams.get('allTranslations') === 'true'
     const admin = searchParams.get('admin') === 'true'
+    const { id } = await params
+    if (wantStream || checkOnly) {
+      return await getStreamResponse({
+        db: prisma, concertId: id, checkOnly: checkOnly && !wantStream,
+        adminPreview: admin,
+        getUserId: async () => (await auth()).userId,
+        isAdmin,
+        playbackUrl: process.env.IVS_PLAYBACK_URL,
+        checkAvailability: () => probePlayback(process.env.IVS_PLAYBACK_URL),
+      })
+    }
     if (admin) {
       const hasAdmin = await isAdmin()
       if (!hasAdmin) {
         return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
       }
     }
-    const { id } = await params
 
     const concert = await prisma.concert.findUnique({
       where: {
@@ -136,95 +147,6 @@ export async function GET(
         }))
       }
         return NextResponse.json(allTranslationsData)
-    }
-
-    // If the client is requesting the gated stream URL, enforce time window and purchase
-    if (wantStream || checkOnly) {
-      const now = Date.now()
-      const startTime = concert.date.getTime()
-      const fifteenMinutesBefore = startTime - 15 * 60 * 1000
-      const threeHoursAfter = startTime + 3 * 60 * 60 * 1000
-
-      if (now < fifteenMinutesBefore || now > threeHoursAfter) {
-        if (checkOnly) {
-          return NextResponse.json({ available: false, now })
-        }
-        return NextResponse.json({ error: 'Stream not available at this time' }, { status: 403 })
-      }
-
-      // Within viewing window
-      // For stream delivery, require authenticated user with paid ticket
-      if (wantStream) {
-        const { userId } = await auth()
-        if (!userId) {
-          return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-        }
-        // Allow admins to bypass purchase requirement
-        try {
-          const adminBypass = await isAdmin()
-          if (adminBypass) {
-            // proceed without ticket check
-          } else {
-            const ticket = await prisma.ticket.findUnique({
-              where: { userId_concertId: { userId, concertId: concert.id } },
-              select: { status: true },
-            })
-            const hasAccess = Boolean(ticket && ticket.status === 'paid')
-            if (!hasAccess) {
-              return NextResponse.json({ error: 'Purchase required' }, { status: 403 })
-            }
-          }
-        } catch {
-          // On failure to verify admin, fall back to purchase requirement
-          const ticket = await prisma.ticket.findUnique({
-            where: { userId_concertId: { userId, concertId: concert.id } },
-            select: { status: true },
-          })
-          const hasAccess = Boolean(ticket && ticket.status === 'paid')
-          if (!hasAccess) {
-            return NextResponse.json({ error: 'Purchase required' }, { status: 403 })
-          }
-        }
-      }
-      const playbackUrl = process.env.IVS_PLAYBACK_URL || null
-
-      if (checkOnly) {
-        // Only report available when the HLS master playlist is reachable
-        if (!playbackUrl) {
-          return NextResponse.json({ available: false, now })
-        }
-
-        // Probe playback availability with a short timeout
-        try {
-          const controller = new AbortController()
-          const timeout = setTimeout(() => controller.abort(), 2500)
-          const res = await fetch(playbackUrl, {
-            method: 'GET',
-            headers: { 'cache-control': 'no-cache' },
-            signal: controller.signal,
-          })
-          clearTimeout(timeout)
-          if (!res.ok) {
-            return NextResponse.json({ available: false, now })
-          }
-          const contentType = res.headers.get('content-type') || ''
-          if (!contentType.includes('application/vnd.apple.mpegurl') && !contentType.includes('application/x-mpegURL')) {
-            return NextResponse.json({ available: false, now })
-          }
-          const text = await res.text()
-          const hasPlaylistMarkers = text.includes('#EXTM3U')
-          // If playlist exists at all during live, IVS typically returns a valid M3U8; weak check here
-          return NextResponse.json({ available: hasPlaylistMarkers, now })
-        } catch {
-          return NextResponse.json({ available: false, now })
-        }
-      } else {
-        if (!playbackUrl) {
-          return NextResponse.json({ error: 'Stream not configured' }, { status: 404 })
-        }
-        // Do not expose the raw URL in client-rendered props; return directly from the API
-        return NextResponse.json({ playbackUrl })
-      }
     }
 
     // Single translation for public viewing

@@ -1,4 +1,19 @@
 {
+  "player": {
+    "adminPreview": "Admin preview",
+    "videoLabel": "Live concert video",
+    "loading": "Loading the stream...",
+    "reconnecting": "Connection interrupted. Reconnecting...",
+    "play": "Play concert",
+    "retry": "Try again",
+    "signIn": "Sign in to watch this concert.",
+    "purchaseRequired": "A paid ticket is required to watch this concert.",
+    "outsideWindow": "Viewing is not available at this time.",
+    "notFound": "This concert is unavailable.",
+    "notConfigured": "The stream is not ready. Please try again later.",
+    "unsupported": "This browser cannot play the stream. Please use a recent browser.",
+    "connection": "The stream could not connect. Check your connection and try again."
+},
   "nav": {
     "home": "Home",
     "concerts": "Concerts",

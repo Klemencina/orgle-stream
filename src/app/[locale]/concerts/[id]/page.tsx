@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { LocalizedConcert, ProgramPiece } from '@/types/concert';
 import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
@@ -42,10 +42,14 @@ export default function ConcertPage() {
   const params = useParams();
   const concertId = params.id as string;
   const locale = params.locale as string;
+  const searchParams = useSearchParams();
+  const previewRequested = searchParams.get('admin') === 'true';
   const t = useTranslations();
   const { user, isLoaded } = useUser();
   const isAdminClient = isLoaded && ((user?.publicMetadata as Record<string, unknown> | undefined)?.role === 'admin');
 
+  const adminPreview = Boolean(isAdminClient && previewRequested);
+  const [serverOffset, setServerOffset] = useState(0);
   const [timeLeft, setTimeLeft] = useState<CountdownTime>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLive, setIsLive] = useState(false);
   const [everLive, setEverLive] = useState(false);
@@ -86,7 +90,7 @@ export default function ConcertPage() {
     async function fetchConcert() {
       try {
         const currentLocale = locale || 'en';
-        const isAdmin = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
+        const isAdmin = previewRequested;
         const adminQuery = isAdmin ? '&admin=true' : '';
         const response = await fetch(`/api/concerts/${concertId}?locale=${currentLocale}${adminQuery}`, {
           method: 'GET',
@@ -128,24 +132,24 @@ export default function ConcertPage() {
     if (concertId && locale) {
       fetchConcert();
     }
-  }, [concertId, locale]);
+  }, [concertId, locale, previewRequested]);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    const controller = new AbortController();
+    setPurchased(null);
     async function fetchPurchase() {
       if (!concertId) return;
       try {
-        const res = await fetch(`/api/purchase?concertId=${concertId}`, { cache: 'no-store' });
-        if (!res.ok) {
-          setPurchased(false);
-          return;
-        }
-        const data = await res.json();
-        setPurchased(Boolean(data?.purchased));
+        const res = await fetch(`/api/purchase?concertId=${encodeURIComponent(concertId)}`, { cache: 'no-store', signal: controller.signal });
+        const data = res.ok ? await res.json() : null;
+        if (!controller.signal.aborted) setPurchased(Boolean(data?.purchased));
       } catch {
-        setPurchased(false);
+        if (!controller.signal.aborted) setPurchased(false);
       }
     }
-    fetchPurchase();
+    void fetchPurchase();
+    return () => controller.abort();
   }, [concertId, user?.id, isLoaded]);
 
   // If returning from checkout, poll a few times to wait for webhook and refresh purchase state
@@ -191,8 +195,8 @@ export default function ConcertPage() {
     const targetDate = new Date(concert.date).getTime();
 
     const timer = setInterval(() => {
-      const now = new Date().getTime();
-      const difference = targetDate - now;
+      const now = Date.now() + serverOffset;
+      const difference = Math.max(0, targetDate - now);
       setTimeLeft({
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
         hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
@@ -202,39 +206,45 @@ export default function ConcertPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [concert]);
+  }, [concert, serverOffset]);
 
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    let aborted = false;
+    if (!concert) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let request: AbortController | null = null;
+    setIsLive(false);
+    setEverLive(false);
     async function checkServerAvailability() {
-      if (!concert) return;
+      if (stopped) return;
+      if (document.visibilityState === 'hidden') {
+        timer = setTimeout(checkServerAvailability, 15000);
+        return;
+      }
+      request = new AbortController();
+      const timeout = setTimeout(() => request?.abort(), 5000);
       try {
-        const res = await fetch(`/api/concerts/${concert.id}?check=true`, { cache: 'no-store' });
-        if (!res.ok) {
-          if (!aborted && !everLive) setIsLive(false);
-          return;
-        }
+        const res = await fetch(`/api/concerts/${encodeURIComponent(concert!.id)}?check=true${adminPreview ? '&admin=true' : ''}`, {
+          cache: 'no-store', signal: request.signal,
+        });
+        if (!res.ok) throw new Error('Status unavailable');
         const data = await res.json();
-        const available = Boolean(data?.available);
-        if (!aborted) {
-          console.log(`Stream availability check: isLive=${available}, everLive=${everLive}`);
+        if (!stopped) {
+          const available = Boolean(data.available);
           setIsLive(available);
           if (available) setEverLive(true);
+          if (typeof data.now === 'number') setServerOffset(data.now - Date.now());
         }
       } catch {
-        if (!aborted) setIsLive(false);
+        if (!stopped) setIsLive(false);
+      } finally {
+        clearTimeout(timeout);
+        if (!stopped) timer = setTimeout(checkServerAvailability, 15000);
       }
     }
-    if (concert) {
-      checkServerAvailability();
-      interval = setInterval(checkServerAvailability, 15000);
-    }
-    return () => {
-      aborted = true;
-      if (interval) clearInterval(interval);
-    };
-  }, [concert, everLive]);
+    void checkServerAvailability();
+    return () => { stopped = true; clearTimeout(timer); request?.abort(); };
+  }, [concert, adminPreview]);
 
   if (loading) {
     return (
@@ -285,7 +295,7 @@ export default function ConcertPage() {
 
   // Compute stream window state
   const startTime = new Date(concert.date).getTime();
-  const nowTs = Date.now();
+  const nowTs = Date.now() + serverOffset;
   const windowStart = startTime - 15 * 60 * 1000;
   const windowEnd = startTime + 3 * 60 * 60 * 1000;
   const windowOpen = nowTs >= windowStart && nowTs <= windowEnd;
@@ -348,7 +358,7 @@ export default function ConcertPage() {
             </div>
 
             {/* Countdown Timer - only show if concert hasn't started and hasn't ended */}
-            {!isLive && !everLive && !hasEnded && (
+            {!adminPreview && !isLive && !everLive && !hasEnded && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                   {t('concert.countdown')}
@@ -382,7 +392,7 @@ export default function ConcertPage() {
             )}
 
             {/* Purchase/Login CTA - hidden for admins */}
-            {purchased === false && !isAdminClient && (
+            {purchased === false && !isAdminClient && !hasEnded && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                   {t('concert.purchaseToWatch')}
@@ -450,15 +460,15 @@ export default function ConcertPage() {
             )}
 
             {/* Live status visible to all; stream player only for purchasers */}
-            {(isLive || (everLive && windowOpen)) && (
+            {(adminPreview || (windowOpen && (isLive || everLive))) && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                  {t('concert.liveNow')}
+                  {adminPreview ? t('player.adminPreview') : t('concert.liveNow')}
                 </h3>
                 {(purchased === true || isAdminClient) && (
                   <>
                     <div className="mb-4">
-                      <StreamPlayer key={`stream-${concert.id}`} concertId={concert.id} />
+                      <StreamPlayer key={`stream-${concert.id}-${user?.id}`} concertId={concert.id} adminPreview={adminPreview} />
                     </div>
                   </>
                 )}
