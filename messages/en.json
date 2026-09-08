@@ -190,7 +190,7 @@
     }
   },
   "dashboard": {
-    "title": "Your Orgle Koper Dashboard",
+    "title": "Your tickets",
     "welcome": "Welcome to your Dashboard",
     "listeningTime": "Listening Time",
     "favoritePieces": "Favorite Pieces",
@@ -202,7 +202,20 @@
     "listenedTo": "Listened to",
     "addedToFavorites": "Added to favorites",
     "createdPlaylist": "Created playlist",
-    "ago": "ago"
+    "ago": "ago",
+    "signIn": "Sign in to view your tickets",
+    "home": "Go to home",
+    "upcoming": "Current and upcoming concerts",
+    "past": "Past concerts",
+    "noUpcoming": "You have no tickets for current or upcoming concerts.",
+    "noPast": "You have no tickets for past concerts.",
+    "loading": "Loading tickets...",
+    "error": "Your tickets could not be loaded. Please try again.",
+    "retry": "Try again",
+    "purchased": "Purchased {date} · {amount}",
+    "ticketId": "Ticket ID: {id}",
+    "viewConcert": "View concert",
+    "timezone": "Concert time in Slovenia"
   },
   "languages": {
     "english": "English",

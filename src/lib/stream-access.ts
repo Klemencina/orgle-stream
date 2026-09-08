@@ -1,10 +1,7 @@
 import type { PrismaClient } from '@prisma/client'
 
-export function getViewingWindow(date: Date, now = Date.now()) {
-  const windowStart = date.getTime() - 15 * 60 * 1000
-  const windowEnd = date.getTime() + 3 * 60 * 60 * 1000
-  return { windowStart, windowEnd, windowOpen: now >= windowStart && now <= windowEnd }
-}
+import { getViewingWindow } from './viewing-window'
+export { getViewingWindow } from './viewing-window'
 
 export async function getStreamResponse(options: {
   db: PrismaClient

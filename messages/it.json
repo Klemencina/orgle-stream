@@ -190,7 +190,7 @@
     }
   },
   "dashboard": {
-    "title": "La Tua Dashboard di Musica per Organo",
+    "title": "I tuoi biglietti",
     "welcome": "Benvenuto nella tua Dashboard",
     "listeningTime": "Tempo di Ascolto",
     "favoritePieces": "Pezzi Preferiti",
@@ -202,7 +202,20 @@
     "listenedTo": "Ascoltato",
     "addedToFavorites": "Aggiunto ai preferiti",
     "createdPlaylist": "Playlist creata",
-    "ago": "fa"
+    "ago": "fa",
+    "signIn": "Accedi per vedere i tuoi biglietti",
+    "home": "Torna alla pagina iniziale",
+    "upcoming": "Concerti in corso e in programma",
+    "past": "Concerti passati",
+    "noUpcoming": "Non hai biglietti per concerti in corso o in programma.",
+    "noPast": "Non hai biglietti per concerti passati.",
+    "loading": "Caricamento dei biglietti...",
+    "error": "Impossibile caricare i biglietti. Riprova.",
+    "retry": "Riprova",
+    "purchased": "Acquistato il {date} · {amount}",
+    "ticketId": "Numero del biglietto: {id}",
+    "viewConcert": "Vai al concerto",
+    "timezone": "Orario del concerto in Slovenia"
   },
   "languages": {
     "english": "English",

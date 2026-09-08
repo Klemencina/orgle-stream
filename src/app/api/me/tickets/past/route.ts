@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
+import { getTicketDateFilter } from '@/lib/viewing-window'
 
 export const runtime = 'nodejs'
+
+function json(body: unknown, options: { status?: number } = {}) {
+  return NextResponse.json(body, { ...options, headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } })
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth()
     if (!userId) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      return json({ error: 'Authentication required' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const locale = (searchParams.get('locale') || 'en').toLowerCase()
     const when = (searchParams.get('when') || 'all').toLowerCase() as 'past' | 'upcoming' | 'all'
 
-    const now = new Date()
-    const dateFilter = when === 'past' ? { lt: now } : when === 'upcoming' ? { gte: now } : undefined
+    const dateFilter = getTicketDateFilter(when)
     const tickets = await prisma.ticket.findMany({
       where: { userId, status: 'paid', ...(dateFilter ? { concert: { date: dateFilter } } : {}) },
       orderBy: { createdAt: 'desc' },
@@ -57,10 +61,10 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ items })
+    return json({ items })
   } catch (error) {
     console.error('List past tickets error:', error)
-    return NextResponse.json({ error: 'Failed to list past tickets' }, { status: 500 })
+    return json({ error: 'Failed to list past tickets' }, { status: 500 })
   }
 }
 

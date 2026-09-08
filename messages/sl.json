@@ -213,7 +213,7 @@
     }
   },
   "dashboard": {
-    "title": "Vaša nadzorna plošča Orgle Koper",
+    "title": "Vaše vstopnice",
     "welcome": "Dobrodošli na nadzorni plošči",
     "listeningTime": "Čas poslušanja",
     "favoritePieces": "Priljubljene skladbe",
@@ -225,7 +225,20 @@
     "listenedTo": "Poslušal sem",
     "addedToFavorites": "Dodal med priljubljene",
     "createdPlaylist": "Ustvaril seznam predvajanja",
-    "ago": "nazaj"
+    "ago": "nazaj",
+    "signIn": "Za ogled vstopnic se prijavite",
+    "home": "Na domačo stran",
+    "upcoming": "Trenutni in prihajajoči koncerti",
+    "past": "Pretekli koncerti",
+    "noUpcoming": "Nimate vstopnic za trenutne ali prihajajoče koncerte.",
+    "noPast": "Nimate vstopnic za pretekle koncerte.",
+    "loading": "Nalaganje vstopnic...",
+    "error": "Vstopnic ni bilo mogoče naložiti. Poskusite znova.",
+    "retry": "Poskusi znova",
+    "purchased": "Kupljeno {date} · {amount}",
+    "ticketId": "Številka vstopnice: {id}",
+    "viewConcert": "Ogled koncerta",
+    "timezone": "Čas koncerta v Sloveniji"
   },
   "languages": {
     "english": "English",
