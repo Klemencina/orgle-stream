@@ -9,6 +9,7 @@ import { LocalizedConcert, ProgramPiece } from '@/types/concert';
 import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import { startPurchaseCheck, type PurchaseCheck } from '@/lib/purchase-check';
+import { REPORT_EMAIL_LIMIT, REPORT_MESSAGE_LIMIT } from '@/lib/support-report';
 
 // Define the dynamic component at module scope to avoid remounting on every render
 const StreamPlayer = dynamic(() => import('@/components/StreamPlayer'), { ssr: false });
@@ -501,12 +502,15 @@ export default function ConcertPage() {
                     if (!res.ok) {
                       throw new Error(data?.error || 'submit_failed');
                     }
-                    setReportSubmittedId(data?.caseId || null);
+                    if (data?.ok !== true || typeof data.caseId !== 'string' || !data.caseId) {
+                      throw new Error('submit_failed');
+                    }
+                    setReportSubmittedId(data.caseId);
                     setReportSubmittedEmail(reportEmail);
                     setReportEmail('');
                     setReportMessage('');
                     setReportType('access');
-                    } catch (err: unknown) {
+                  } catch (err: unknown) {
                     setReportError(err instanceof Error ? err.message : 'submit_failed');
                   } finally {
                     setReportSubmitting(false);
@@ -514,10 +518,14 @@ export default function ConcertPage() {
                 }}
               >
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="report-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('concert.report.emailLabel')}
                   </label>
                   <input
+                    id="report-email"
+                    disabled={reportSubmitting}
+                    maxLength={REPORT_EMAIL_LIMIT}
+                    autoComplete="email"
                     type="email"
                     required
                     value={reportEmail}
@@ -527,10 +535,12 @@ export default function ConcertPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="report-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('concert.report.typeLabel')}
                   </label>
                   <select
+                    id="report-type"
+                    disabled={reportSubmitting}
                     value={reportType}
                     onChange={(e) => setReportType(e.target.value as 'access' | 'quality' | 'payment' | 'other')}
                     className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
@@ -542,10 +552,13 @@ export default function ConcertPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="report-message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('concert.report.messageLabel')}
                   </label>
                   <textarea
+                    id="report-message"
+                    disabled={reportSubmitting}
+                    maxLength={REPORT_MESSAGE_LIMIT}
                     value={reportMessage}
                     onChange={(e) => setReportMessage(e.target.value)}
                     placeholder={t('concert.report.messagePlaceholder')}
@@ -554,10 +567,10 @@ export default function ConcertPage() {
                   />
                 </div>
                 {reportError && (
-                  <div className="text-red-600 text-sm">{t('concert.report.submitError')}</div>
+                  <div role="alert" className="text-red-600 dark:text-red-400 text-sm">{t(reportError === 'invalid_email' ? 'concert.report.invalidEmail' : 'concert.report.submitError')}</div>
                 )}
                 {reportSubmittedId && (
-                  <div className="space-y-1">
+                  <div role="status" className="space-y-1">
                     <div className="text-green-700 dark:text-green-300 text-sm">
                       {t('concert.report.submitSuccess')} #{reportSubmittedId}
                     </div>

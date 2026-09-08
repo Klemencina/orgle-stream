@@ -164,10 +164,11 @@
       "messagePlaceholder": "Descrivi cosa è successo…",
       "submit": "Invia segnalazione",
       "submitting": "Invio…",
-      "submitSuccess": "Grazie! Ti risponderemo via email. Caso",
+      "submitSuccess": "La segnalazione è stata salvata. Caso",
       "replyNotice": "Riceverai una risposta a {email} da admin@orglekoper.si.",
       "submitError": "Impossibile inviare la segnalazione. Riprova.",
-      "close": "Chiudi"
+      "close": "Chiudi",
+      "invalidEmail": "Inserisci un indirizzo email valido per ricevere una risposta."
     }
   },
   "checkout": {

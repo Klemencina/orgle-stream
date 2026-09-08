@@ -1,31 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { auth } from '@clerk/nextjs/server'
+import { parseSupportReport } from '@/lib/support-report'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json().catch(() => ({}))) as Partial<{
-      email: string
-      type: string
-      message?: string
-      concertId: string
-      locale?: string
-      isLive?: boolean
-      everLive?: boolean
-      windowOpen?: boolean
-      purchased?: boolean
-    }>
-    const email = (body.email || '').toString().trim()
-    const type = (body.type || 'access').toString()
-    const message = (body.message || '').toString()
-    const concertId = (body.concertId || '').toString()
-    const locale = (body.locale || '').toString()
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ error: 'invalid_email' }, { status: 400 })
+    const parsed = parseSupportReport(await request.json().catch(() => null))
+    if ('error' in parsed) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 })
     }
-    if (!concertId) {
+    const concert = await prisma.concert.findUnique({ where: { id: parsed.data.concertId }, select: { id: true } })
+    if (!concert) {
       return NextResponse.json({ error: 'missing_concert' }, { status: 400 })
     }
 
@@ -33,16 +20,8 @@ export async function POST(request: NextRequest) {
 
     const created = await prisma.supportReport.create({
       data: {
-        email,
-        type,
-        message: message || undefined,
-        concertId,
-        locale: locale || undefined,
-        isLive: !!body.isLive,
-        everLive: !!body.everLive,
-        windowOpen: !!body.windowOpen,
-        purchased: typeof body.purchased === 'boolean' ? body.purchased : null,
-        userAgent: request.headers.get('user-agent') || undefined,
+        ...parsed.data,
+        userAgent: request.headers.get('user-agent')?.slice(0, 1024) || undefined,
         userId: userId || null,
         status: 'open',
       }

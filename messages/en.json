@@ -164,10 +164,11 @@
       "messagePlaceholder": "Describe what happened…",
       "submit": "Send report",
       "submitting": "Sending…",
-      "submitSuccess": "Thanks! We’ll email you shortly. Case",
+      "submitSuccess": "Your report has been saved. Case",
       "replyNotice": "You will receive a reply at {email} from admin@orglekoper.si.",
       "submitError": "Couldn’t send report. Please try again.",
-      "close": "Close"
+      "close": "Close",
+      "invalidEmail": "Enter a valid email address so we can reply."
     }
   },
   "checkout": {

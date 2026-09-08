@@ -180,10 +180,11 @@
       "messagePlaceholder": "Opišite, kaj se je zgodilo…",
       "submit": "Pošlji prijavo",
       "submitting": "Pošiljanje…",
-      "submitSuccess": "Hvala! Kmalu vam odgovorimo. Zadeva",
+      "submitSuccess": "Vaša prijava je shranjena. Zadeva",
       "replyNotice": "Odgovor boste prejeli na {email} z naslova admin@orglekoper.si.",
       "submitError": "Prijave ni bilo mogoče poslati. Poskusite znova.",
-      "close": "Zapri"
+      "close": "Zapri",
+      "invalidEmail": "Vnesite veljaven e-poštni naslov, da vam lahko odgovorimo."
     }
   },
   "purchase": {
