@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client'
 import { LocalizedConcert, Performer } from '@/types/concert'
 import { auth } from '@clerk/nextjs/server'
 import { isAdmin } from '@/lib/auth'
+import { archiveConcert, replaceConcertDetails } from '@/lib/concerts'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -304,6 +305,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { date, isVisible, translations, program, stripeProductId, stripePriceId } = body as UpdateConcertBody
     const { searchParams } = new URL(request.url)
@@ -365,20 +370,6 @@ export async function PUT(
         { status: 400 }
       )
     }
-
-    // Delete existing program pieces and their translations
-    await prisma.programPiece.deleteMany({
-      where: {
-        concertId: id
-      }
-    })
-
-    // Delete existing concert translations
-    await prisma.concertTranslation.deleteMany({
-      where: {
-        concertId: id
-      }
-    })
 
     const updateArgs = Prisma.validator<Prisma.ConcertUpdateArgs>()({
       where: {
@@ -446,7 +437,7 @@ export async function PUT(
         }
       }
     })
-    const concert = await prisma.concert.update(updateArgs)
+    const concert = await replaceConcertDetails(prisma, id, (tx) => tx.concert.update(updateArgs))
 
     // Transform to localized format
     const translation = concert.translations?.[0]
@@ -504,14 +495,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    await prisma.concert.delete({
-      where: {
-        id: id
-      }
-    })
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
 
-    return NextResponse.json({ message: 'Concert deleted successfully' })
+    const { id } = await params
+    await archiveConcert(prisma, id)
+
+    return NextResponse.json({ message: 'Concert archived successfully' })
   } catch (error) {
     console.error('Error deleting concert:', error)
     return NextResponse.json(

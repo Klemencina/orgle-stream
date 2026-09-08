@@ -9,11 +9,10 @@ export function getStripe(): Stripe {
       throw new Error('STRIPE_SECRET_KEY is not set')
     }
     stripeInstance = new Stripe(secretKey, {
-      apiVersion: '2025-09-30.clover',
+      apiVersion: '2025-10-29.clover',
       typescript: true,
     })
   }
   return stripeInstance
 }
-
 

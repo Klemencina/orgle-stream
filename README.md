@@ -1,5 +1,7 @@
 # Orgle Stream 🎼
 
+See [testing](TESTING.md) for local checks. Back up existing databases and verify recovery before applying schema changes.
+
 A modern concert streaming platform built with Next.js that enables live and on-demand streaming of classical music concerts with multi-language support and comprehensive admin management
 
 ## ✨ Features
@@ -69,6 +71,8 @@ A modern concert streaming platform built with Next.js that enables live and on-
    ```
 
 4. **Set up the database**
+
+   The commands below are only for a new, empty development database. For an existing database, review schema changes and verify a backup before applying them.
    ```bash
    pnpm prisma generate
    pnpm prisma db push
@@ -178,4 +182,3 @@ pnpm prisma generate # Regenerate Prisma client
 - [Next.js Documentation](https://nextjs.org/docs) - Framework documentation
 - [Prisma Documentation](https://www.prisma.io/docs) - Database toolkit
 - [Clerk Documentation](https://docs.clerk.com) - Authentication service
-

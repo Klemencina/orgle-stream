@@ -32,7 +32,16 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env
-.env.local
+.env.*
+!.env.example
+/backups/
+/private-notes/
+/DATABASE_RECOVERY.md
+/FESTIVAL_READINESS.md
+snapshot-*.json
+*.backup
+*.dump
+*.sql.gz
 
 # vercel
 .vercel

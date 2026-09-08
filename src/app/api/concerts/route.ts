@@ -175,6 +175,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!(await isAdmin())) {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { date, isVisible, translations, program, stripeProductId, stripePriceId } = body as CreateConcertBody
     const { searchParams } = new URL(request.url)

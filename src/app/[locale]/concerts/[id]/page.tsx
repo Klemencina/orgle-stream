@@ -58,6 +58,8 @@ export default function ConcertPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = useState<string>('');
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [purchased, setPurchased] = useState<boolean | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportEmail, setReportEmail] = useState('');
@@ -144,7 +146,7 @@ export default function ConcertPage() {
       }
     }
     fetchPurchase();
-  }, [concertId]);
+  }, [concertId, user?.id, isLoaded]);
 
   // If returning from checkout, poll a few times to wait for webhook and refresh purchase state
   useEffect(() => {
@@ -396,26 +398,33 @@ export default function ConcertPage() {
                       <>
                         <button
                           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl mx-auto"
-                        onClick={async () => {
+                          disabled={checkoutLoading}
+                          onClick={async () => {
+                            if (checkoutLoading) return;
+                            setCheckoutLoading(true);
+                            setCheckoutError(null);
                             try {
-                            const origin = typeof window !== 'undefined' ? window.location.origin : ''
-                            const successUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-                            const cancelUrl = `${origin}/${locale}/concerts/${concert.id}?checkout=cancel`
                               const res = await fetch('/api/checkout', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ concertId: concert.id, successUrl, cancelUrl })
-                              })
-                              const data = await res.json()
-                              if (data?.url) {
-                                window.location.href = data.url
-                              }
-                            } catch {}
+                                body: JSON.stringify({ concertId: concert.id, locale }),
+                              });
+                              const data = await res.json();
+                              if (!res.ok) throw new Error(data.error || t('concert.checkoutFailed'));
+                              if (data.alreadyOwned) setPurchased(true);
+                              else if (data.url) window.location.href = data.url;
+                              else throw new Error(t('concert.checkoutFailed'));
+                            } catch (err) {
+                              setCheckoutError(err instanceof Error ? err.message : t('concert.checkoutFailed'));
+                            } finally {
+                              setCheckoutLoading(false);
+                            }
                           }}
                           type="button"
                         >
-                          {t('concert.buyTicket')}
+                          {checkoutLoading ? t('concert.checkoutLoading') : t('concert.buyTicket')}
                         </button>
+                        {checkoutError && <p role="alert" className="text-sm text-red-600 text-center">{checkoutError}</p>}
                         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                           {t('policy.refundNotice')} <a href={`/${locale}/refund-policy`} className="underline hover:text-orange-500 dark:hover:text-orange-400">{t('policy.refundPolicy')}</a>.
                         </p>

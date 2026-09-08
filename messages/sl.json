@@ -137,6 +137,8 @@
     "recentActivity": "Nedavna dejavnost Orgle Koper",
     "smallConcertDescription": "odspidaj na majho orgeljski koncert",
     "purchaseToWatch": "Za ogled prenosa kupite vstopnico",
+    "checkoutLoading": "Odpiranje plačila...",
+    "checkoutFailed": "Plačila ni bilo mogoče odpreti. Poskusite znova.",
     "buyTicket": "Kupi vstopnico",
     "loginToPurchase": "Prijavite se za nakup ali ogled",
     "ticketNotAvailable": "Vstopnica še ni na voljo",
@@ -165,6 +167,8 @@
   },
   "purchase": {
     "purchaseToWatch": "Za ogled prenosa kupite vstopnico",
+    "checkoutLoading": "Odpiranje plačila...",
+    "checkoutFailed": "Plačila ni bilo mogoče odpreti. Poskusite znova.",
     "buyTicket": "Kupi vstopnico",
     "loginToPurchase": "Prijavite se za nakup"
   },
@@ -291,11 +295,11 @@
       "stream": "Prenos",
       "hidden": "Skrit",
       "edit": "Uredi",
-      "delete": "Izbriši",
-      "deleting": "Brišem...",
-      "confirmDelete": "Ali ste prepričani, da želite izbrisati ta koncert? Tega dejanja ni mogoče razveljaviti.",
-      "deleteFailed": "Izbris koncerta ni uspel. Poskusite znova.",
-      "deleteError": "Napaka pri brisanju koncerta"
+      "delete": "Arhiviraj",
+      "deleting": "Arhiviranje...",
+      "confirmDelete": "Arhiviram ta koncert? Skrit bo obiskovalcem. Program in vstopnice bodo ohranjeni. Z urejanjem ga lahko znova objavite.",
+      "deleteFailed": "Koncerta ni bilo mogoče arhivirati. Poskusite znova.",
+      "deleteError": "Koncerta ni bilo mogoče arhivirati"
     }
   }
 }

@@ -37,7 +37,7 @@ export default function AdminConcertsPage() {
   };
 
   const deleteConcert = async (concertId: string) => {
-    if (!confirm('Are you sure you want to delete this concert?')) {
+    if (!confirm('Archive this concert? Its program and ticket records will be kept.')) {
       return;
     }
 
@@ -47,13 +47,13 @@ export default function AdminConcertsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete concert');
+        throw new Error('Failed to archive concert');
       }
 
       // Refresh the list
       fetchConcerts();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete concert');
+      alert(err instanceof Error ? err.message : 'Failed to archive concert');
     }
   };
 
@@ -239,7 +239,7 @@ export default function AdminConcertsPage() {
                             onClick={() => deleteConcert(concert.id)}
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                           >
-                            Delete
+                            Archive
                           </button>
                         </div>
                       </td>

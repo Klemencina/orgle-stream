@@ -121,6 +121,8 @@
     "recentActivity": "Attività Recente di Organo",
     "smallConcertDescription": "suona su piccolo concerto d'organo",
     "purchaseToWatch": "Acquista un biglietto per guardare",
+    "checkoutLoading": "Apertura del pagamento...",
+    "checkoutFailed": "Impossibile aprire il pagamento. Riprova.",
     "buyTicket": "Acquista biglietto",
     "loginToPurchase": "Accedi per acquistare o guardare",
     "ticketNotAvailable": "Biglietto non ancora disponibile",
@@ -270,11 +272,11 @@
       "stream": "Stream",
       "hidden": "Nascosto",
       "edit": "Modifica",
-      "delete": "Elimina",
-      "deleting": "Eliminazione...",
-      "confirmDelete": "Sei sicuro di voler eliminare questo concerto? Questa azione non può essere annullata.",
-      "deleteFailed": "Eliminazione del concerto fallita. Riprova.",
-      "deleteError": "Errore nell'eliminazione del concerto"
+      "delete": "Archivia",
+      "deleting": "Archiviazione...",
+      "confirmDelete": "Archiviare questo concerto? Sarà nascosto ai visitatori. Il programma e i biglietti saranno conservati. Puoi renderlo nuovamente visibile modificandolo.",
+      "deleteFailed": "Impossibile archiviare il concerto. Riprova.",
+      "deleteError": "Impossibile archiviare il concerto"
     }
   }
 }

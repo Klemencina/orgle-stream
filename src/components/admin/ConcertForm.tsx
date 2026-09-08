@@ -592,27 +592,6 @@ export default function ConcertForm({
     });
   };
 
-  const ensureSubtitleParity = (targetLocale: 'sl' | 'original', pieceIndex: number) => {
-    setProgram(prev => {
-      const otherLocale = targetLocale === 'sl' ? 'original' : 'sl';
-      const next = { ...prev } as Record<'sl' | 'original', ProgramPiece[]>;
-      const target = next[targetLocale][pieceIndex] || { title: '', composer: '', subtitles: [] };
-      const other = next[otherLocale][pieceIndex] || { title: '', composer: '', subtitles: [] };
-      const targetLen = (target.subtitles || []).length;
-      const otherLen = (other.subtitles || []).length;
-      if (otherLen < targetLen) {
-        const pad = Array(targetLen - otherLen).fill('');
-        other.subtitles = (other.subtitles || []).concat(pad);
-      } else if (targetLen < otherLen) {
-        const pad = Array(otherLen - targetLen).fill('');
-        target.subtitles = (target.subtitles || []).concat(pad);
-      }
-      next[targetLocale][pieceIndex] = { ...target };
-      next[otherLocale][pieceIndex] = { ...other };
-      return next;
-    });
-  };
-
   const addSubtitle = (_localeKey: 'sl' | 'original', pieceIndex: number) => {
     if (subtitleOpIdRef.current) return; // dedupe under StrictMode
     subtitleOpIdRef.current = 'add';

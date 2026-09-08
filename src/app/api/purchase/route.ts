@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import { getStripe } from '@/lib/stripe'
+import { fulfillCheckout } from '@/lib/tickets'
 
 export const runtime = 'nodejs'
 
@@ -25,7 +26,6 @@ export async function GET(request: NextRequest) {
       try {
         const stripe = getStripe()
         const session = await stripe.checkout.sessions.retrieve(sessionId)
-        const paid = session.payment_status === 'paid' || session.status === 'complete'
 
         // Harden verification: ensure the session belongs to this user and concert
         const metadata = (session.metadata ?? {}) as Record<string, string>
@@ -38,35 +38,7 @@ export async function GET(request: NextRequest) {
           // Do not mark as paid if the session doesn't match the authenticated user and concert
           return NextResponse.json({ purchased: false, mismatch: true })
         }
-        if (paid) {
-          const amountTotal = typeof session.amount_total === 'number' ? session.amount_total : 0
-          const currency = (session.currency as string | undefined) || 'eur'
-          const existing = await prisma.ticket.findUnique({ where: { userId_concertId: { userId, concertId } } })
-          if (!existing) {
-            await prisma.ticket.create({
-              data: {
-                userId,
-                concertId,
-                amountCents: amountTotal || 0,
-                currency,
-                status: 'paid',
-                stripePaymentIntentId: (session.payment_intent as string | null) || undefined,
-                stripeCheckoutSessionId: session.id,
-              }
-            })
-          } else if (existing.status !== 'paid') {
-            await prisma.ticket.update({
-              where: { id: existing.id },
-              data: {
-                amountCents: amountTotal || existing.amountCents,
-                currency,
-                status: 'paid',
-                stripePaymentIntentId: (session.payment_intent as string | null) || existing.stripePaymentIntentId,
-                stripeCheckoutSessionId: session.id,
-              }
-            })
-          }
-        }
+        await fulfillCheckout(prisma, session)
       } catch (err) {
         console.error('Session verify failed:', err)
       }

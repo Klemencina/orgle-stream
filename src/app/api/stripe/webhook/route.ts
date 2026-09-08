@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { prisma } from '@/lib/db'
 import type Stripe from 'stripe'
+import { closeUnpaidCheckout, fulfillCheckout } from '@/lib/tickets'
 
 export const runtime = 'nodejs'
 
@@ -24,43 +25,15 @@ export async function POST(request: NextRequest) {
 
   try {
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        const metadata = (session.metadata ?? {}) as Record<string, string>
-        const concertId = metadata.concertId
-        const userId = metadata.userId
-        if (!concertId || !userId) break
-
-        const paymentIntentId = session.payment_intent as string | null
-        const amountTotal = typeof session.amount_total === 'number' ? session.amount_total : 0
-        const currency = (session.currency as string | undefined) || 'eur'
-
-        // Mark or create ticket as paid
-        const existing = await prisma.ticket.findUnique({ where: { userId_concertId: { userId, concertId } } })
-        if (!existing) {
-          await prisma.ticket.create({
-            data: {
-              userId,
-              concertId,
-              amountCents: amountTotal || 0,
-              currency,
-              status: 'paid',
-              stripePaymentIntentId: paymentIntentId || undefined,
-              stripeCheckoutSessionId: session.id,
-            },
-          })
-        } else {
-          await prisma.ticket.update({
-            where: { id: existing.id },
-            data: {
-              amountCents: amountTotal || existing.amountCents,
-              currency,
-              status: 'paid',
-              stripePaymentIntentId: paymentIntentId || existing.stripePaymentIntentId,
-              stripeCheckoutSessionId: session.id,
-            },
-          })
-        }
+      case 'checkout.session.completed':
+      case 'checkout.session.async_payment_succeeded': {
+        await fulfillCheckout(prisma, event.data.object as Stripe.Checkout.Session)
+        break
+      }
+      case 'checkout.session.async_payment_failed':
+      case 'checkout.session.expired': {
+        await closeUnpaidCheckout(prisma, event.data.object as Stripe.Checkout.Session,
+          event.type === 'checkout.session.expired' ? 'expired' : 'failed')
         break
       }
       default:
@@ -73,11 +46,4 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ received: true })
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
-
 
