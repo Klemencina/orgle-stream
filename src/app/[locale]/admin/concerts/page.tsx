@@ -121,6 +121,7 @@ export default function AdminConcertsPage() {
           </div>
           
           <button
+            hidden={showForm}
             onClick={() => setShowForm(true)}
             className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
           >
@@ -130,7 +131,7 @@ export default function AdminConcertsPage() {
 
         {/* Concert Form */}
         {showForm && (
-          <div className="mb-8">
+          <div className="mb-8 max-w-5xl mx-auto">
             <ConcertForm
               concert={editingConcert}
               onConcertCreated={handleCreateConcert}
@@ -142,7 +143,7 @@ export default function AdminConcertsPage() {
         )}
 
         {/* Concerts Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+        <div hidden={showForm} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t('allConcerts')} ({concerts.length})
