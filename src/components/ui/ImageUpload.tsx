@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
 interface ImageUploadProps {
@@ -27,6 +27,18 @@ export default function ImageUpload({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [preview, setPreview] = useState<{ file: File; url: string } | null>(null);
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(selectedFile);
+    setPreview({ file: selectedFile, url });
+    return () => URL.revokeObjectURL(url);
+  }, [selectedFile]);
+  const previewUrl = selectedFile ? (preview?.file === selectedFile ? preview.url : undefined) : currentImageUrl;
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -104,26 +116,17 @@ export default function ImageUpload({
         {(currentImageUrl || selectedFile) && (
           <div className="relative">
             <div className="relative w-40 h-40 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-              {currentImageUrl ? (
+              {previewUrl && (
                 <Image
-                  src={currentImageUrl}
-                  alt="Current image"
+                  src={previewUrl}
+                  alt={selectedFile ? selectedFile.name : 'Current image'}
                   fill
+                  sizes="160px"
+                  unoptimized={Boolean(selectedFile)}
                   className="object-cover"
-                  onError={() => {
-                    setUploadError('Failed to load image');
-                  }}
+                  onError={() => setUploadError('Failed to load image')}
                 />
-              ) : selectedFile ? (
-                <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📸</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedFile.name}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
+              )}
             </div>
             <button
               type="button"

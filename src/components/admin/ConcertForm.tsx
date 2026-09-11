@@ -5,6 +5,7 @@ import { LocalizedConcert } from '@/types/concert';
 import { locales } from '@/i18n';
 import { useTranslations } from 'next-intl';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { reorderPerformerData } from '@/lib/performer-order';
 
 // Slovenian date formatting utilities
 const formatDateForDisplay = (isoDate: string): string => {
@@ -118,6 +119,8 @@ export default function ConcertForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  const [detailsLoaded, setDetailsLoaded] = useState(!isEditing);
 
   // Deduplicate subtitle add/remove operations under React StrictMode
   const subtitleOpIdRef = useRef<string | null>(null);
@@ -192,10 +195,35 @@ export default function ConcertForm({
     });
   };
 
+  const unsavedChanges = touched && hasChanges();
+  useEffect(() => {
+    if (!unsavedChanges) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    const warnBeforeNavigation = (event: MouseEvent) => {
+      const link = (event.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!link || link.target === '_blank' || link.hasAttribute('download') || link.href === window.location.href || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      if (!window.confirm(t('discardChanges'))) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    document.addEventListener('click', warnBeforeNavigation, true);
+    return () => {
+      window.removeEventListener('beforeunload', warnBeforeUnload);
+      document.removeEventListener('click', warnBeforeNavigation, true);
+    };
+  }, [unsavedChanges, t]);
+
   useEffect(() => {
     // Clear images to delete and selected files when concert changes or component mounts
     setImagesToDelete(new Set());
     setSelectedFiles(new Map());
+    setTouched(false);
+    setDetailsLoaded(!isEditing);
 
     if (concert) {
       setBasicData({
@@ -338,68 +366,14 @@ export default function ConcertForm({
               acc[curr.locale] = curr;
               return acc;
             }, {}),
-            program: (() => {
-              const sl = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string; subtitles?: string[] }[] }) => {
-                const tr = piece.translations.find((t: { locale: string }) => t.locale === 'sl');
-                return { title: tr?.title || '', composer: tr?.composer || '', subtitles: tr?.subtitles || [] };
-              });
-              const original = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string; subtitles?: string[] }[] }) => {
-                const tr = piece.translations.find((t: { locale: string }) => t.locale === 'original');
-                return { title: tr?.title || '', composer: tr?.composer || '', subtitles: tr?.subtitles || [] };
-              });
-              const maxLen = Math.max(sl.length, original.length);
-              const pad = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '', subtitles: [] }));
-              return { sl: pad(sl), original: pad(original) };
-            })()
+            program: { sl: buildProgramFor('sl'), original: buildProgramFor('original') }
           });
         }
+      setDetailsLoaded(true);
     } catch (error) {
       console.error('Error fetching all translations:', error);
-      // Fallback to current locale only
-      setTranslations(prev => ({
-        ...prev,
-        [locale]: {
-          title: concert?.title || '',
-          subtitle: concert?.subtitle || '',
-          venue: concert?.venue || getDefaultVenue(locale),
-          description: concert?.description || '',
-          performers: (concert?.performers || []).map(performer => ({
-            ...performer,
-            selectedFile: null // Initialize selectedFile as null
-          }))
-        }
-      }));
-
-      // Set originalData for fallback case
-      if (concert) {
-        setOriginalData({
-          basicData: {
-            date: formatDateForDisplay(concert.date),
-            time: formatTimeForDisplay(concert.date),
-            isVisible: concert.isVisible !== false,
-            stripeProductId: (concert as Partial<LocalizedConcert> & { stripeProductId?: string }).stripeProductId || '',
-            stripePriceId: (concert as Partial<LocalizedConcert> & { stripePriceId?: string }).stripePriceId || '',
-          },
-          translations: {
-            [locale]: {
-              title: concert?.title || '',
-              subtitle: concert?.subtitle || '',
-              venue: concert?.venue || '',
-              description: concert?.description || '',
-              performers: (concert?.performers || []).map(performer => ({
-                ...performer,
-                selectedFile: null // Initialize selectedFile as null
-              }))
-            }
-          },
-          program: {
-            [locale]: concert?.program?.map(piece => ({
-              title: piece.title,
-              composer: piece.composer,
-            })) || []
-          },
-        });
-      }
+      setError(t('loadAllDetailsFailed'));
+      setDetailsLoaded(false);
     }
   };
 
@@ -422,6 +396,7 @@ export default function ConcertForm({
   };
 
   const handlePerformersChange = (locale: string, performers: Array<{name: string, img: string, fileName?: string, selectedFile?: File | null, opis: string}>) => {
+    setTouched(true);
     setTranslations(prev => ({
       ...prev,
       [locale]: {
@@ -431,7 +406,21 @@ export default function ConcertForm({
     }));
   };
 
+  const getPerformerOrder = () => Array.from({
+    length: Math.max(0, ...Object.values(translations).map(t => t.performers?.length || 0)),
+  }, (_, index) => index);
+
+  const applyPerformerOrder = (order: number[]) => {
+    if (loading || !detailsLoaded) return;
+    const next = reorderPerformerData<TranslationData, Performer>(translations, selectedFiles, order);
+    setTranslations(next.translations);
+    setSelectedFiles(next.files);
+    setTouched(true);
+  };
+
   const handleImageSelected = (performerIndex: number, file: File) => {
+    if (loading || !detailsLoaded) return;
+    setTouched(true);
     // Store the selected file (use performer index as key since images are shared across locales)
     const fileKey = `selected-${performerIndex}`;
     setSelectedFiles(prev => new Map([...prev, [fileKey, file]]));
@@ -459,6 +448,8 @@ export default function ConcertForm({
   };
 
   const handleImageRemoved = (performerIndex: number) => {
+    if (loading || !detailsLoaded) return;
+    setTouched(true);
     // Find the performer across all locales to get the fileName
     let fileNameToDelete = '';
     const performerName = Object.values(translations).find(t =>
@@ -571,6 +562,7 @@ export default function ConcertForm({
   };
 
   const addProgramPiece = () => {
+    setTouched(true);
     setProgram(prev => {
       const next = { ...prev };
       const newLength = Math.max(next.sl.length, next.original.length) + 1;
@@ -582,6 +574,7 @@ export default function ConcertForm({
   };
 
   const removeProgramPiece = (_locale: string, index: number) => {
+    setTouched(true);
     // Remove at the same index in both locales, ensure at least one row remains
     setProgram(prev => {
       const minLen = Math.min(prev.sl.length, prev.original.length);
@@ -595,6 +588,7 @@ export default function ConcertForm({
   };
 
   const addSubtitle = (_localeKey: 'sl' | 'original', pieceIndex: number) => {
+    setTouched(true);
     if (subtitleOpIdRef.current) return; // dedupe under StrictMode
     subtitleOpIdRef.current = 'add';
 
@@ -620,6 +614,7 @@ export default function ConcertForm({
   };
 
   const removeSubtitle = (_localeKey: 'sl' | 'original', pieceIndex: number, subtitleIndex: number) => {
+    setTouched(true);
     if (subtitleOpIdRef.current) return; // dedupe under StrictMode
     subtitleOpIdRef.current = 'remove';
 
@@ -662,6 +657,7 @@ export default function ConcertForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!detailsLoaded || loading) return;
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -749,6 +745,7 @@ export default function ConcertForm({
       // Clear selected files after successful upload
       setSelectedFiles(new Map());
 
+      setTouched(false);
       setSuccess(concert ? 'Concert updated successfully!' : 'Concert created successfully!');
 
       if (isEditing) {
@@ -769,7 +766,7 @@ export default function ConcertForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} onChangeCapture={() => setTouched(true)} className="space-y-6">
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
@@ -785,6 +782,7 @@ export default function ConcertForm({
         </div>
       )}
 
+      <fieldset disabled={loading || !detailsLoaded} className="space-y-6">
       {/* Basic Information (Non-translatable) */}
       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
@@ -1066,7 +1064,7 @@ export default function ConcertForm({
                           className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg space-y-4"
                           draggable
                           onDragStart={(e) => {
-                            e.dataTransfer.setData('text/plain', index.toString());
+                            e.dataTransfer.setData('application/x-concert-performer', index.toString());
                             e.currentTarget.style.opacity = '0.5';
                           }}
                           onDragEnd={(e) => {
@@ -1082,17 +1080,13 @@ export default function ConcertForm({
                           onDrop={(e) => {
                             e.preventDefault();
                             e.currentTarget.style.borderColor = '';
-                            const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                            
-                            // Update performers for all locales, preserving locale-specific descriptions
-                            const allLocales = Object.keys(translations);
-                            allLocales.forEach(locale => {
-                              const currentPerformers = [...(translations[locale].performers || [])];
-                              const draggedPerformer = currentPerformers[draggedIndex];
-                              currentPerformers.splice(draggedIndex, 1);
-                              currentPerformers.splice(index, 0, draggedPerformer);
-                              handlePerformersChange(locale, currentPerformers);
-                            });
+                            const source = e.dataTransfer.getData('application/x-concert-performer');
+                            if (!source) return;
+                            const draggedIndex = Number(source);
+                            const order = getPerformerOrder();
+                            if (!Number.isInteger(draggedIndex) || draggedIndex < 0 || draggedIndex >= order.length) return;
+                            order.splice(index, 0, order.splice(draggedIndex, 1)[0]);
+                            applyPerformerOrder(order);
                           }}
                         >
                           {/* Header with Drag Handle, Name and Remove button */}
@@ -1108,13 +1102,7 @@ export default function ConcertForm({
                             <button
                               type="button"
                               onClick={() => {
-                                const newPerformers = (translations[loc].performers || []).filter((_, i) => i !== index);
-                                
-                                // Remove performer from all locales since they are shared
-                                const allLocales = Object.keys(translations);
-                                allLocales.forEach(locale => {
-                                  handlePerformersChange(locale, newPerformers);
-                                });
+                                applyPerformerOrder(getPerformerOrder().filter(i => i !== index));
                               }}
                               className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm"
                             >
@@ -1139,7 +1127,7 @@ export default function ConcertForm({
                                     allLocales.forEach(locale => {
                                       const newPerformers = [...(translations[locale].performers || [])];
                                       if (newPerformers[index]) {
-                                        newPerformers[index].name = e.target.value;
+                                        newPerformers[index] = { ...newPerformers[index], name: e.target.value };
                                         handlePerformersChange(locale, newPerformers);
                                       }
                                     });
@@ -1178,7 +1166,7 @@ export default function ConcertForm({
                                 onChange={(e) => {
                                   // Update description only for current locale since it's language-specific
                                   const newPerformers = [...(translations[loc].performers || [])];
-                                  newPerformers[index].opis = e.target.value;
+                                  newPerformers[index] = { ...newPerformers[index], opis: e.target.value };
                                   handlePerformersChange(loc, newPerformers);
                                 }}
                                 rows={4}
@@ -1314,20 +1302,41 @@ export default function ConcertForm({
         </div>
       </div>
 
+      <details className="rounded-lg border border-gray-200 dark:border-gray-600 p-4">
+        <summary className="cursor-pointer font-medium">{t('programPreview')}</summary>
+        <p className="mt-2 text-sm text-gray-500">{programActiveTab === 'sl' ? 'Slovensko' : 'Original'}</p>
+        <div className="mt-3 space-y-4">
+          {program[programActiveTab].map((piece, index) => (
+            <div key={index}>
+              <div className="whitespace-pre-line break-words font-medium">{piece.title}</div>
+              {(piece.subtitles || []).filter(Boolean).map((subtitle, subtitleIndex) => (
+                <div key={subtitleIndex} className="ml-4 text-sm italic text-gray-500">{subtitle}</div>
+              ))}
+              <div className="text-xs text-gray-600 dark:text-gray-400">{piece.composer}</div>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      </fieldset>
+
       {/* Form Actions */}
       <div className="flex flex-col sm:flex-row sm:justify-end sm:space-x-4 space-y-3 sm:space-y-0 pt-6 border-t border-gray-200 dark:border-gray-600">
         <button
           type="button"
-          onClick={onCancel}
+          disabled={loading}
+          onClick={() => {
+            if (!unsavedChanges || window.confirm(t('discardChanges'))) onCancel();
+          }}
           className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 order-2 sm:order-1"
         >
           {t('cancel')}
         </button>
         <button
           type="submit"
-          disabled={loading || (isEditing ? !hasChanges() : false)}
+          disabled={loading || !detailsLoaded || (isEditing ? !hasChanges() : false)}
           className={`px-6 py-2 rounded-lg transition-colors duration-200 order-1 sm:order-2 ${
-            loading || (isEditing ? !hasChanges() : false)
+            loading || !detailsLoaded || (isEditing ? !hasChanges() : false)
               ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
               : 'bg-orange-500 hover:bg-orange-600 text-white'
           }`}
