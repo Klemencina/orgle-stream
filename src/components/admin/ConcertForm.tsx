@@ -538,8 +538,10 @@ export default function ConcertForm({
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Upload failed');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || (response.status === 413
+            ? 'The image is too large for the server. Try a smaller image.'
+            : `Image upload failed (${response.status}). Please try again.`));
         }
 
         const data = await response.json();

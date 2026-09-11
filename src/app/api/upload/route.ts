@@ -13,11 +13,20 @@ const getR2Config = () => {
     throw new Error('Missing R2 credentials. Please set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY environment variables.');
   }
 
-  if (!bucketName && !publicBucketUrl) {
-    throw new Error('Missing bucket configuration. Please set either R2_BUCKET_NAME or R2_PUBLIC_URL environment variable.');
+  if (!bucketName) {
+    throw new Error('Missing R2_BUCKET_NAME. Set the bucket name used by the R2 S3 API.');
   }
 
-  return { accountId, accessKeyId, secretAccessKey, bucketName, publicBucketUrl };
+  if (!publicBucketUrl) {
+    throw new Error('Missing R2_PUBLIC_URL. Set the public development URL or custom domain for this bucket.');
+  }
+
+  const publicUrl = new URL(publicBucketUrl.includes('://') ? publicBucketUrl : `https://${publicBucketUrl}`);
+  if (!['http:', 'https:'].includes(publicUrl.protocol) || publicUrl.username || publicUrl.password || publicUrl.search || publicUrl.hash) {
+    throw new Error('R2_PUBLIC_URL must be an HTTP or HTTPS URL without credentials, query parameters, or a fragment.');
+  }
+
+  return { accountId, accessKeyId, secretAccessKey, bucketName, publicBucketUrl: publicUrl.href.replace(/\/+$/, '') };
 };
 
 let s3Client: S3Client | null = null;
@@ -26,20 +35,9 @@ const getS3Client = () => {
   if (!s3Client) {
     const config = getR2Config();
 
-    // Determine the endpoint based on whether we have a public URL or traditional bucket
-    let endpoint: string;
-    if (config.publicBucketUrl) {
-      // Extract account ID from public URL if needed
-      // Public URLs are typically like: https://pub-xxxxxxxxxxxxx.r2.dev
-      // We might need to construct the endpoint differently
-      endpoint = `https://${config.accountId}.r2.cloudflarestorage.com`;
-    } else {
-      endpoint = `https://${config.accountId}.r2.cloudflarestorage.com`;
-    }
-
     s3Client = new S3Client({
       region: 'auto',
-      endpoint: endpoint,
+      endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
       credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
@@ -49,13 +47,22 @@ const getS3Client = () => {
   return s3Client;
 };
 
+function getStorageErrorMessage(error: unknown, fallback: string) {
+  const storageError = error as { $metadata?: { httpStatusCode?: number } } | null;
+  const status = storageError?.$metadata?.httpStatusCode;
+  if (status === 401 || status === 403) {
+    return 'Image storage rejected access. Check the R2 S3 credentials and Object Read & Write permission for R2_BUCKET_NAME.';
+  }
+  return error instanceof Error ? error.message : fallback;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const config = getR2Config();
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file');
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
@@ -78,33 +85,18 @@ export async function POST(request: NextRequest) {
     // Convert file to buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Use bucket name for upload (required for S3 API)
-    const uploadBucketName = config.bucketName || 'default-bucket';
-
     // Upload to R2
     const uploadCommand = new PutObjectCommand({
-      Bucket: uploadBucketName,
+      Bucket: config.bucketName,
       Key: fileName,
       Body: fileBuffer,
       ContentType: file.type,
-      // Make the image publicly accessible
-      ACL: 'public-read',
     });
 
     const s3Client = getS3Client();
     await s3Client.send(uploadCommand);
 
-    // Generate public URL - use public URL if provided, otherwise construct from bucket name
-    let publicUrl: string;
-    if (config.publicBucketUrl) {
-      // Remove protocol from public URL if present
-      const cleanPublicUrl = config.publicBucketUrl.replace(/^https?:\/\//, '');
-      publicUrl = `https://${cleanPublicUrl}/${fileName}`;
-    } else if (config.bucketName) {
-      publicUrl = `https://${config.bucketName}.r2.dev/${fileName}`;
-    } else {
-      throw new Error('Unable to generate public URL: no bucket name or public URL configured');
-    }
+    const publicUrl = `${config.publicBucketUrl}/${fileName}`;
 
     return NextResponse.json({
       url: publicUrl,
@@ -115,7 +107,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Upload error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
+    const errorMessage = getStorageErrorMessage(error, 'Failed to upload file');
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
@@ -135,12 +127,9 @@ export async function DELETE(request: NextRequest) {
 
     const s3Client = getS3Client();
 
-    // Use bucket name for delete (required for S3 API)
-    const deleteBucketName = config.bucketName || 'default-bucket';
-
     // Delete from R2
     const deleteCommand = new DeleteObjectCommand({
-      Bucket: deleteBucketName,
+      Bucket: config.bucketName,
       Key: fileName,
     });
 
@@ -153,7 +142,7 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('Delete error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to delete file';
+    const errorMessage = getStorageErrorMessage(error, 'Failed to delete file');
     return NextResponse.json(
       { error: errorMessage },
       { status: 500 }
