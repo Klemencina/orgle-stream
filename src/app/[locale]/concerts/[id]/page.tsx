@@ -10,6 +10,7 @@ import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import { startPurchaseCheck, type PurchaseCheck } from '@/lib/purchase-check';
 import { REPORT_EMAIL_LIMIT, REPORT_MESSAGE_LIMIT } from '@/lib/support-report';
+import { getViewingWindow } from '@/lib/viewing-window';
 
 // Define the dynamic component at module scope to avoid remounting on every render
 const StreamPlayer = dynamic(() => import('@/components/StreamPlayer'), { ssr: false });
@@ -258,11 +259,8 @@ export default function ConcertPage() {
   // Duration no longer displayed in the program
 
   // Compute stream window state
-  const startTime = new Date(concert.date).getTime();
   const nowTs = Date.now() + serverOffset;
-  const windowStart = startTime - 15 * 60 * 1000;
-  const windowEnd = startTime + 3 * 60 * 60 * 1000;
-  const windowOpen = nowTs >= windowStart && nowTs <= windowEnd;
+  const { windowOpen, windowEnd } = getViewingWindow(new Date(concert.date), nowTs, { adminPreview });
   const hasEnded = nowTs > windowEnd;
 
   return (
@@ -322,7 +320,7 @@ export default function ConcertPage() {
             </div>
 
             {/* Countdown Timer - only show if concert hasn't started and hasn't ended */}
-            {!adminPreview && !isLive && !everLive && !hasEnded && (
+            {!isLive && !everLive && !hasEnded && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                   {t('concert.countdown')}
@@ -435,7 +433,7 @@ export default function ConcertPage() {
             )}
 
             {/* Live status visible to all; stream player only for purchasers */}
-            {(adminPreview || (windowOpen && (isLive || everLive))) && (
+            {windowOpen && (isLive || everLive) && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
                   {adminPreview ? t('player.adminPreview') : t('concert.liveNow')}

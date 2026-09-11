@@ -27,8 +27,8 @@ export async function getStreamResponse(options: {
     select: { id: true, date: true },
   })
   if (!concert) return json({ error: 'Concert not found', code: 'notFound' }, 404)
-  const window = getViewingWindow(concert.date, now)
-  if (!window.windowOpen && !admin) {
+  const window = getViewingWindow(concert.date, now, { adminPreview: admin })
+  if (!window.windowOpen) {
     return checkOnly ? json({ available: false, now, ...window }) :
       json({ error: 'Stream not available at this time', code: 'outsideWindow' }, 403)
   }

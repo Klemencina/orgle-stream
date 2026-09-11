@@ -38,11 +38,36 @@ test('public status does not expose playback URLs', async () => {
   assert.equal(body.playbackUrl, undefined)
 })
 
-test('viewing window blocks ordinary viewers while admin preview permits rehearsal', async () => {
-  assert.equal((await getStreamResponse(fixture({ now: now + 86400000 }))).status, 403)
-  assert.equal((await getStreamResponse(fixture({ now: now + 86400000, adminPreview: true }))).status, 403)
-  const response = await getStreamResponse(fixture({ now: now + 86400000, adminPreview: true, isAdmin: async () => true }, 'pending'))
+test('admin preview waits for the scheduled start and closes at the end of the viewing window', async () => {
+  let probes = 0
+  for (const time of [now - 1, now - 86400000, now + 3 * 60 * 60 * 1000 + 1]) {
+    for (const checkOnly of [false, true]) {
+      const response = await getStreamResponse(fixture({
+        now: time, adminPreview: true, isAdmin: async () => true, checkOnly,
+        checkAvailability: async () => { probes++; return true },
+      }, 'pending'))
+      const body = await response.json()
+      assert.equal(response.status, checkOnly ? 200 : 403)
+      assert.equal(body.playbackUrl, undefined)
+      if (checkOnly) assert.equal(body.available, false)
+      else assert.equal(body.code, 'outsideWindow')
+    }
+  }
+  assert.equal(probes, 0)
+})
+
+test('admin preview can watch during the concert without a paid ticket', async () => {
+  for (const time of [now, now + 3 * 60 * 60 * 1000]) {
+    const response = await getStreamResponse(fixture({ now: time, adminPreview: true, isAdmin: async () => true }, 'pending'))
+    assert.equal(response.status, 200)
+  }
+  assert.equal((await getStreamResponse(fixture({ adminPreview: true }))).status, 403)
+})
+
+test('admin preview reports an offline stream as unavailable during the concert', async () => {
+  const response = await getStreamResponse(fixture({ adminPreview: true, isAdmin: async () => true, checkOnly: true, checkAvailability: async () => false }))
   assert.equal(response.status, 200)
+  assert.equal((await response.json()).available, false)
 })
 
 test('hidden concerts are only queried by a verified admin preview', async () => {
