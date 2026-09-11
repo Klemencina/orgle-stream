@@ -250,6 +250,8 @@
       "performerInfo": "Dettagli Esecutore",
       "composer": "Compositore",
       "duration": "Durata",
+      "programTitles": "Titoli dei brani",
+      "programTitlesHelp": "Inserisci ogni titolo su una riga separata. Tutti i titoli appaiono sopra il compositore.",
       "addPiece": "Aggiungi Pezzo",
       "removePiece": "Rimuovi",
       "fillWithSample": "Riempi con Dati di Esempio",

@@ -686,7 +686,7 @@ export default function ConcertPage() {
                     <div key={piece.id} className={`py-2 px-3 rounded-lg ${
                       isIntermission ? 'bg-gray-100 dark:bg-gray-700 italic' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}>
-                      <div className={`font-medium ${isIntermission ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                      <div className={`whitespace-pre-line break-words font-medium ${isIntermission ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
                         {chosen?.title || ''}
                       </div>
                       {(chosen as unknown as { subtitles?: string[] })?.subtitles?.length ? (

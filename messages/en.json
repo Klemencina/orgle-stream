@@ -250,6 +250,8 @@
       "performerInfo": "Performer Details",
       "composer": "Composer",
       "duration": "Duration",
+      "programTitles": "Piece titles",
+      "programTitlesHelp": "Enter each title on a separate line. All titles appear above the composer.",
       "addPiece": "Add Piece",
       "removePiece": "Remove",
       "fillWithSample": "Fill with Sample Data",

@@ -273,6 +273,8 @@
       "performerInfo": "Informacije o izvajalcu",
       "composer": "Skladatelj",
       "duration": "Trajanje",
+      "programTitles": "Naslovi skladb",
+      "programTitlesHelp": "Vsak naslov vnesite v svojo vrstico. Vsi naslovi se izpišejo nad skladateljem.",
       "addPiece": "Dodaj skladbo",
       "removePiece": "Odstrani",
       "fillWithSample": "Zapolni s primernimi podatki",

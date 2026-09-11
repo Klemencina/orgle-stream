@@ -189,7 +189,7 @@ export default function ConcertsPage() {
                       {concert.program.slice(0, 2).map((piece) => (
                         <li key={piece.id} className="flex items-center break-words whitespace-normal">
                           <span className="mr-2">♪</span>
-                          {piece.title}
+                          <span className="min-w-0 whitespace-pre-line">{piece.title}</span>
                         </li>
                       ))}
                       {concert.program.length > 2 && (

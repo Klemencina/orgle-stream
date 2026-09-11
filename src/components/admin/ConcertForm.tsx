@@ -1240,15 +1240,20 @@ export default function ConcertForm({
           {program[programActiveTab].map((piece, index) => (
             <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('title')}
+                <label htmlFor={`program-title-${programActiveTab}-${index}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('programTitles')}
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  id={`program-title-${programActiveTab}-${index}`}
+                  rows={3}
+                  aria-describedby={`program-title-help-${programActiveTab}-${index}`}
                   value={piece.title}
                   onChange={(e) => handleProgramChange(programActiveTab, index, 'title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
+                <p id={`program-title-help-${programActiveTab}-${index}`} className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {t('programTitlesHelp')}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
