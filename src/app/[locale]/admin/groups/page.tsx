@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
+import { getGroupName } from '@/lib/group-name';
 import AdminGuard from '@/components/admin/AdminGuard';
 
-type Group = { id?: string; name: string; stripePriceId: string; salesEnabled: boolean; concertIds: string[]; membershipLocked?: boolean };
+type Group = { id?: string; name: string; nameEn?: string | null; nameIt?: string | null; stripePriceId: string; salesEnabled: boolean; concertIds: string[]; membershipLocked?: boolean };
 type Concert = { id: string; title: string; subtitle?: string | null; date: string; isVisible: boolean };
-const emptyGroup = (): Group => ({ name: '', stripePriceId: '', salesEnabled: false, concertIds: [] });
+const emptyGroup = (): Group => ({ name: '', nameEn: '', nameIt: '', stripePriceId: '', salesEnabled: false, concertIds: [] });
 
 export default function GroupsPage() {
   return <AdminGuard><Groups /></AdminGuard>;
@@ -87,7 +88,19 @@ function Groups() {
         <form onSubmit={save} className="mt-6 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
           <fieldset disabled={saving} className="space-y-5">
             <legend className="mb-4 text-xl font-semibold">{editing.id ? t('edit') : t('create')}</legend>
-            <label className="block">{t('name')}<input required maxLength={160} value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} className={field} /></label>
+            <fieldset className="space-y-3">
+              <legend className="font-semibold">{t('name')}</legend>
+              {([
+                ['name', 'Slovenščina'],
+                ['nameEn', 'English'],
+                ['nameIt', 'Italiano'],
+              ] as const).map(([key, label]) => (
+                <label key={key} className="block">{label}{key === 'name' && ' *'}
+                  <input required={key === 'name'} maxLength={160} value={editing[key] || ''} onChange={e => setEditing({ ...editing, [key]: e.target.value })} className={field} />
+                </label>
+              ))}
+              <p className="text-sm text-gray-600 dark:text-gray-300">{t('nameTranslationsHelp')}</p>
+            </fieldset>
             <label className="block">{t('priceId')}<input value={editing.stripePriceId} placeholder="price_..." onChange={e => setEditing({ ...editing, stripePriceId: e.target.value })} className={field} /></label>
             <p className="text-sm text-gray-600 dark:text-gray-300">{t('stripeHelp')} <a href="https://dashboard.stripe.com/products" target="_blank" rel="noreferrer" className="underline">{t('openStripe')}</a></p>
             <fieldset>
@@ -123,7 +136,7 @@ function Groups() {
         <div className="mt-6 space-y-4">
           {!groups.length && <p>{t('empty')}</p>}
           {groups.map(group => <article key={group.id} className="rounded-xl border border-gray-300 dark:border-gray-700 p-5">
-            <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-semibold">{group.name}</h2><button className={button} onClick={() => edit(group)}>{t('edit')}</button></div>
+            <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-semibold">{getGroupName(group, locale)}</h2><button className={button} onClick={() => edit(group)}>{t('edit')}</button></div>
             <p className="mt-2">{t(group.salesEnabled ? 'onSale' : 'offSale')} · {t('concerts', { count: group.concertIds.length })}</p>
             <ul className="mt-3 list-inside list-disc space-y-2 text-sm">
               {concerts.filter(c => group.concertIds.includes(c.id)).map(c => (

@@ -102,6 +102,8 @@ model SupportReport {
 model ConcertGroup {
   id            String         @id @default(cuid())
   name          String
+  nameEn        String?
+  nameIt        String?
   stripePriceId String?        @db.VarChar(255)
   salesEnabled  Boolean        @default(false)
   createdAt     DateTime       @default(now())

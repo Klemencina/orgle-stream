@@ -1,3 +1,4 @@
+import { getGroupName } from '@/lib/group-name'
 import { NextRequest } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
     })
     const offers = await Promise.all(groups.map(async group => {
       const pass = group.passes[0]
-      const base = { groupId: group.id, name: group.name }
+      const base = { groupId: group.id, name: getGroupName(group, locale) }
       if (pass?.status === 'paid') return { ...base, owned: true }
       const remaining = group.concerts.filter(c => c.date.getTime() + VIEWING_DURATION_MS >= Date.now())
       if (!group.salesEnabled || !group.stripePriceId || !remaining.length) return null

@@ -1,3 +1,4 @@
+import { getGroupName } from '@/lib/group-name'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { Prisma } from '@prisma/client'
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest) {
     const findManyArgs = Prisma.validator<Prisma.ConcertFindManyArgs>()({
       where: admin ? {} : { isVisible: true },
       include: {
-        groups: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
+        groups: { select: { id: true, name: true, nameEn: true, nameIt: true }, orderBy: { name: 'asc' } },
         program: {
           include: {
             translations: {
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
         // Return a fallback concert instead of throwing an error
         return {
           id: concert.id,
-          groups: concert.groups,
+          groups: concert.groups.map(group => ({ id: group.id, name: getGroupName(group, locale) })),
           title: `Concert ${concert.id}`,
           subtitle: undefined,
           date: concert.date.toISOString(),
@@ -109,7 +110,7 @@ export async function GET(request: NextRequest) {
 
       const base = {
         id: concert.id,
-        groups: concert.groups,
+        groups: concert.groups.map(group => ({ id: group.id, name: getGroupName(group, locale) })),
         title: translation.title,
         subtitle: translation.subtitle || undefined,
         date: concert.date.toISOString(),

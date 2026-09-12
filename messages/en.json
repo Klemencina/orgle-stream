@@ -370,6 +370,7 @@
     }
   },
   "concertGroups": {
+    "nameTranslationsHelp": "Enter the group name in each language. Missing translations use the Slovenian name.",
     "futureOnly": "Future concerts only",
     "hiddenSelected": "{count} selected concerts are hidden by the filters. They remain in the group.",
     "noMatches": "No concerts match these filters.",

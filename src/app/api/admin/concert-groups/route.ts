@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       prisma.concert.findMany({ orderBy: { date: 'asc' }, include: { translations: true } }),
     ])
     return json({
-      groups: groups.map(g => ({ id: g.id, name: g.name, stripePriceId: g.stripePriceId || '', salesEnabled: g.salesEnabled, concertIds: g.concerts.map(c => c.id), membershipLocked: g._count.passes > 0 })),
+      groups: groups.map(g => ({ id: g.id, name: g.name, nameEn: g.nameEn, nameIt: g.nameIt, stripePriceId: g.stripePriceId || '', salesEnabled: g.salesEnabled, concertIds: g.concerts.map(c => c.id), membershipLocked: g._count.passes > 0 })),
       concerts: concerts.map(c => {
         const translation = c.translations.find(t => t.locale === locale) || c.translations[0]
         return { id: c.id, date: c.date, isVisible: c.isVisible, title: translation?.title || c.id, subtitle: translation?.subtitle || null }

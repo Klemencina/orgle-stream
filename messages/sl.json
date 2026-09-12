@@ -393,6 +393,7 @@
     }
   },
   "concertGroups": {
+    "nameTranslationsHelp": "Vnesite ime skupine v vsakem jeziku. Če prevod manjka, se prikaže slovensko ime.",
     "futureOnly": "Samo prihodnji koncerti",
     "hiddenSelected": "Število izbranih koncertov, skritih zaradi filtrov: {count}. Ostanejo v skupini.",
     "noMatches": "Noben koncert ne ustreza filtrom.",

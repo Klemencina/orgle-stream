@@ -370,6 +370,7 @@
     }
   },
   "concertGroups": {
+    "nameTranslationsHelp": "Inserisci il nome del gruppo in ogni lingua. Se manca una traduzione, viene mostrato il nome sloveno.",
     "futureOnly": "Solo concerti futuri",
     "hiddenSelected": "Concerti selezionati nascosti dai filtri: {count}. Restano nel gruppo.",
     "noMatches": "Nessun concerto corrisponde ai filtri.",

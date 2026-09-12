@@ -1,3 +1,4 @@
+import { getGroupName } from './group-name'
 import type { PrismaClient } from '@prisma/client'
 import { getTicketDateFilter } from './viewing-window'
 
@@ -57,7 +58,7 @@ export async function listPurchasedConcerts(db: PrismaClient, userId: string, lo
       existing.add(concert.id)
       const tr = concert.translations[0]
       items.push({
-        ticketId: `pass:${pass.id}:${concert.id}`, passName: pass.group.name,
+        ticketId: `pass:${pass.id}:${concert.id}`, passName: getGroupName(pass.group, locale),
         stripePaymentIntentId: null, stripeCheckoutSessionId: null,
         concertId: concert.id, date: concert.date, title: tr?.title || '', subtitle: tr?.subtitle || null, venue: tr?.venue || '',
         amountCents: 0, currency: pass.currency, purchasedAt: pass.createdAt,
@@ -65,5 +66,5 @@ export async function listPurchasedConcerts(db: PrismaClient, userId: string, lo
     }
   }
   items.sort((a, b) => when === 'past' ? b.date.getTime() - a.date.getTime() : a.date.getTime() - b.date.getTime())
-  return { items, passes: passes.map(p => ({ id: p.id, name: p.group.name, amountCents: p.amountCents, currency: p.currency, purchasedAt: p.createdAt })) }
+  return { items, passes: passes.map(p => ({ id: p.id, name: getGroupName(p.group, locale), amountCents: p.amountCents, currency: p.currency, purchasedAt: p.createdAt })) }
 }

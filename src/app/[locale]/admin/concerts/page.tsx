@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
@@ -18,13 +18,9 @@ export default function AdminConcertsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingConcert, setEditingConcert] = useState<LocalizedConcert | null>(null);
 
-  useEffect(() => {
-    fetchConcerts();
-  }, []);
-
-  const fetchConcerts = async () => {
+  const fetchConcerts = useCallback(async () => {
     try {
-      const response = await fetch('/api/concerts');
+      const response = await fetch(`/api/concerts?locale=${encodeURIComponent(locale)}&admin=true`);
       if (!response.ok) {
         throw new Error('Failed to fetch concerts');
       }
@@ -35,7 +31,11 @@ export default function AdminConcertsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [locale]);
+
+  useEffect(() => {
+    fetchConcerts();
+  }, [fetchConcerts]);
 
   const deleteConcert = async (concertId: string) => {
     if (!confirm('Archive this concert? Its program and ticket records will be kept.')) {
