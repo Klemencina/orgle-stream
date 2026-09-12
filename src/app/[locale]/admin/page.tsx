@@ -200,18 +200,13 @@ function AdminContent() {
       {/* Concert Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+          <div role="dialog" aria-modal="true" aria-labelledby="concert-editor-title" className="bg-white dark:bg-gray-800 rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-3 sm:p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 id="concert-editor-title" className="text-2xl font-bold text-gray-900 dark:text-white">
                   {editingConcert ? t('editConcert') : t('addNewConcertModal')}
                 </h2>
-                <button
-                  onClick={handleCancelEdit}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
-                >
-                  ×
-                </button>
+
               </div>
               <ConcertForm
                 concert={editingConcert}

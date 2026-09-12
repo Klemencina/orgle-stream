@@ -5,6 +5,7 @@ import { LocalizedConcert } from '@/types/concert';
 import { locales } from '@/i18n';
 import { useTranslations } from 'next-intl';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { reorderPerformerData } from '@/lib/performer-order';
 
 // Slovenian date formatting utilities
 const formatDateForDisplay = (isoDate: string): string => {
@@ -113,11 +114,14 @@ export default function ConcertForm({
   // Track selected files that need to be uploaded
   const [selectedFiles, setSelectedFiles] = useState<Map<string, File>>(new Map());
 
-  const [activeTab, setActiveTab] = useState('en');
+  const [activeTab, setActiveTab] = useState(locales.includes(locale as typeof locales[number]) ? locale : 'sl');
+  const [editorSection, setEditorSection] = useState<'details' | 'performers' | 'program' | 'tickets'>('details');
   const [programActiveTab, setProgramActiveTab] = useState<'sl' | 'original'>('sl');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  const [detailsLoaded, setDetailsLoaded] = useState(!isEditing);
 
   // Deduplicate subtitle add/remove operations under React StrictMode
   const subtitleOpIdRef = useRef<string | null>(null);
@@ -192,10 +196,35 @@ export default function ConcertForm({
     });
   };
 
+  const unsavedChanges = touched && hasChanges();
+  useEffect(() => {
+    if (!unsavedChanges) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    const warnBeforeNavigation = (event: MouseEvent) => {
+      const link = (event.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!link || link.target === '_blank' || link.hasAttribute('download') || link.href === window.location.href || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      if (!window.confirm(t('discardChanges'))) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    document.addEventListener('click', warnBeforeNavigation, true);
+    return () => {
+      window.removeEventListener('beforeunload', warnBeforeUnload);
+      document.removeEventListener('click', warnBeforeNavigation, true);
+    };
+  }, [unsavedChanges, t]);
+
   useEffect(() => {
     // Clear images to delete and selected files when concert changes or component mounts
     setImagesToDelete(new Set());
     setSelectedFiles(new Map());
+    setTouched(false);
+    setDetailsLoaded(!isEditing);
 
     if (concert) {
       setBasicData({
@@ -338,68 +367,14 @@ export default function ConcertForm({
               acc[curr.locale] = curr;
               return acc;
             }, {}),
-            program: (() => {
-              const sl = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string; subtitles?: string[] }[] }) => {
-                const tr = piece.translations.find((t: { locale: string }) => t.locale === 'sl');
-                return { title: tr?.title || '', composer: tr?.composer || '', subtitles: tr?.subtitles || [] };
-              });
-              const original = (data.program || []).map((piece: { translations: { locale: string; title: string; composer: string; subtitles?: string[] }[] }) => {
-                const tr = piece.translations.find((t: { locale: string }) => t.locale === 'original');
-                return { title: tr?.title || '', composer: tr?.composer || '', subtitles: tr?.subtitles || [] };
-              });
-              const maxLen = Math.max(sl.length, original.length);
-              const pad = (arr: ProgramPiece[]) => arr.concat(Array(Math.max(0, maxLen - arr.length)).fill({ title: '', composer: '', subtitles: [] }));
-              return { sl: pad(sl), original: pad(original) };
-            })()
+            program: { sl: buildProgramFor('sl'), original: buildProgramFor('original') }
           });
         }
+      setDetailsLoaded(true);
     } catch (error) {
       console.error('Error fetching all translations:', error);
-      // Fallback to current locale only
-      setTranslations(prev => ({
-        ...prev,
-        [locale]: {
-          title: concert?.title || '',
-          subtitle: concert?.subtitle || '',
-          venue: concert?.venue || getDefaultVenue(locale),
-          description: concert?.description || '',
-          performers: (concert?.performers || []).map(performer => ({
-            ...performer,
-            selectedFile: null // Initialize selectedFile as null
-          }))
-        }
-      }));
-
-      // Set originalData for fallback case
-      if (concert) {
-        setOriginalData({
-          basicData: {
-            date: formatDateForDisplay(concert.date),
-            time: formatTimeForDisplay(concert.date),
-            isVisible: concert.isVisible !== false,
-            stripeProductId: (concert as Partial<LocalizedConcert> & { stripeProductId?: string }).stripeProductId || '',
-            stripePriceId: (concert as Partial<LocalizedConcert> & { stripePriceId?: string }).stripePriceId || '',
-          },
-          translations: {
-            [locale]: {
-              title: concert?.title || '',
-              subtitle: concert?.subtitle || '',
-              venue: concert?.venue || '',
-              description: concert?.description || '',
-              performers: (concert?.performers || []).map(performer => ({
-                ...performer,
-                selectedFile: null // Initialize selectedFile as null
-              }))
-            }
-          },
-          program: {
-            [locale]: concert?.program?.map(piece => ({
-              title: piece.title,
-              composer: piece.composer,
-            })) || []
-          },
-        });
-      }
+      setError(t('loadAllDetailsFailed'));
+      setDetailsLoaded(false);
     }
   };
 
@@ -422,6 +397,7 @@ export default function ConcertForm({
   };
 
   const handlePerformersChange = (locale: string, performers: Array<{name: string, img: string, fileName?: string, selectedFile?: File | null, opis: string}>) => {
+    setTouched(true);
     setTranslations(prev => ({
       ...prev,
       [locale]: {
@@ -431,7 +407,21 @@ export default function ConcertForm({
     }));
   };
 
+  const getPerformerOrder = () => Array.from({
+    length: Math.max(0, ...Object.values(translations).map(t => t.performers?.length || 0)),
+  }, (_, index) => index);
+
+  const applyPerformerOrder = (order: number[]) => {
+    if (loading || !detailsLoaded) return;
+    const next = reorderPerformerData<TranslationData, Performer>(translations, selectedFiles, order);
+    setTranslations(next.translations);
+    setSelectedFiles(next.files);
+    setTouched(true);
+  };
+
   const handleImageSelected = (performerIndex: number, file: File) => {
+    if (loading || !detailsLoaded) return;
+    setTouched(true);
     // Store the selected file (use performer index as key since images are shared across locales)
     const fileKey = `selected-${performerIndex}`;
     setSelectedFiles(prev => new Map([...prev, [fileKey, file]]));
@@ -459,6 +449,8 @@ export default function ConcertForm({
   };
 
   const handleImageRemoved = (performerIndex: number) => {
+    if (loading || !detailsLoaded) return;
+    setTouched(true);
     // Find the performer across all locales to get the fileName
     let fileNameToDelete = '';
     const performerName = Object.values(translations).find(t =>
@@ -538,8 +530,10 @@ export default function ConcertForm({
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Upload failed');
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || (response.status === 413
+            ? 'The image is too large for the server. Try a smaller image.'
+            : `Image upload failed (${response.status}). Please try again.`));
         }
 
         const data = await response.json();
@@ -568,7 +562,21 @@ export default function ConcertForm({
     });
   };
 
+  const moveProgramPiece = (index: number, direction: -1 | 1) => {
+    setTouched(true);
+    setProgram(prev => {
+      const target = index + direction;
+      if (target < 0 || target >= prev.sl.length || target >= prev.original.length) return prev;
+      return Object.fromEntries(Object.entries(prev).map(([locale, pieces]) => {
+        const next = [...pieces];
+        [next[index], next[target]] = [next[target], next[index]];
+        return [locale, next];
+      }));
+    });
+  };
+
   const addProgramPiece = () => {
+    setTouched(true);
     setProgram(prev => {
       const next = { ...prev };
       const newLength = Math.max(next.sl.length, next.original.length) + 1;
@@ -580,6 +588,7 @@ export default function ConcertForm({
   };
 
   const removeProgramPiece = (_locale: string, index: number) => {
+    setTouched(true);
     // Remove at the same index in both locales, ensure at least one row remains
     setProgram(prev => {
       const minLen = Math.min(prev.sl.length, prev.original.length);
@@ -593,6 +602,7 @@ export default function ConcertForm({
   };
 
   const addSubtitle = (_localeKey: 'sl' | 'original', pieceIndex: number) => {
+    setTouched(true);
     if (subtitleOpIdRef.current) return; // dedupe under StrictMode
     subtitleOpIdRef.current = 'add';
 
@@ -618,6 +628,7 @@ export default function ConcertForm({
   };
 
   const removeSubtitle = (_localeKey: 'sl' | 'original', pieceIndex: number, subtitleIndex: number) => {
+    setTouched(true);
     if (subtitleOpIdRef.current) return; // dedupe under StrictMode
     subtitleOpIdRef.current = 'remove';
 
@@ -660,6 +671,7 @@ export default function ConcertForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!detailsLoaded || loading) return;
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -747,6 +759,7 @@ export default function ConcertForm({
       // Clear selected files after successful upload
       setSelectedFiles(new Map());
 
+      setTouched(false);
       setSuccess(concert ? 'Concert updated successfully!' : 'Concert created successfully!');
 
       if (isEditing) {
@@ -767,9 +780,35 @@ export default function ConcertForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form noValidate onSubmit={(event) => {
+      event.preventDefault();
+      const invalid = Array.from(event.currentTarget.elements).find(element =>
+        (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) && element.willValidate && !element.validity.valid
+      ) as HTMLInputElement | HTMLTextAreaElement | undefined;
+      if (invalid) {
+        const section = invalid.closest<HTMLElement>('[data-editor-section]')?.dataset.editorSection;
+        const language = invalid.closest<HTMLElement>('[data-editor-locale]')?.dataset.editorLocale;
+        if (section) setEditorSection(section as typeof editorSection);
+        if (language) setActiveTab(language);
+        requestAnimationFrame(() => { invalid.focus(); invalid.reportValidity(); });
+        return;
+      }
+      void handleSubmit(event);
+    }} onChangeCapture={() => setTouched(true)} className="space-y-5">
+      <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-700 dark:bg-gray-800">
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('editorHelp')}</p>
+        <nav aria-label={t('editorSections')} className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {(['details', 'performers', 'program', 'tickets'] as const).map((section, index) => (
+            <button key={section} type="button" aria-current={editorSection === section ? 'step' : undefined}
+              onClick={() => setEditorSection(section)}
+              className={`rounded-lg border px-3 py-3 text-left text-sm font-medium transition-colors ${editorSection === section ? 'border-orange-500 bg-orange-50 text-orange-800 dark:bg-orange-950 dark:text-orange-200' : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700'}`}>
+              <span className="mr-2 opacity-60">{index + 1}.</span>{t(`section_${section}`)}
+            </button>
+          ))}
+        </nav>
+      </div>
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div role="alert" className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
         </div>
       )}
@@ -783,90 +822,43 @@ export default function ConcertForm({
         </div>
       )}
 
+      <fieldset disabled={loading || !detailsLoaded} className="space-y-6">
       {/* Basic Information (Non-translatable) */}
-      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+      <div hidden={editorSection !== 'details'} data-editor-section="details" className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('basicInfo')}</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="concert-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('date')} *
             </label>
             <input
-              type="text"
+              id="concert-date"
+              type="date"
               name="date"
-              value={basicData.date}
-              onChange={handleBasicDataChange}
-              placeholder="DD.MM.YYYY"
-              pattern="^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[012])\.\d{4}$"
-              title="Please enter date in DD.MM.YYYY format"
+              value={basicData.date ? formatDateForStorage(basicData.date) : ''}
+              onChange={(e) => {
+                const [year, month, day] = e.target.value.split('-');
+                setBasicData(prev => ({ ...prev, date: year && month && day ? `${day}.${month}.${year}` : '' }));
+              }}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="concert-time" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('time')} *
             </label>
             <input
-              type="text"
+              id="concert-time"
+              type="time"
               name="time"
               value={basicData.time}
               onChange={handleBasicDataChange}
-              placeholder="HH:MM"
-              pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"
-              title="Please enter time in 24-hour format (HH:MM)"
-              maxLength={5}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-              onKeyDown={(e) => {
-                const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-                const isNumber = /^[0-9]$/.test(e.key);
-                const isColon = e.key === ':';
-
-                if (!allowedKeys.includes(e.key) && !isNumber && !isColon) {
-                  e.preventDefault();
-                }
-
-                // Auto-add colon
-                const target = e.target as HTMLInputElement;
-                if (isNumber && target.value.length === 2 && !target.value.includes(':')) {
-                  setTimeout(() => {
-                    target.value = target.value + ':';
-                    // Trigger change event
-                    const event = new Event('input', { bubbles: true });
-                    target.dispatchEvent(event);
-                  }, 0);
-                }
-              }}
-              onBlur={(e) => {
-                const value = e.target.value;
-                if (value && !value.includes(':')) {
-                  // If user didn't add colon, format it
-                  if (value.length === 4) {
-                    e.target.value = `${value.slice(0, 2)}:${value.slice(2)}`;
-                  } else if (value.length === 3) {
-                    e.target.value = `0${value.slice(0, 1)}:${value.slice(1)}`;
-                  } else if (value.length === 2) {
-                    e.target.value = `${value}:00`;
-                  } else if (value.length === 1) {
-                    e.target.value = `0${value}:00`;
-                  }
-                }
-
-                // Ensure proper formatting
-                const formattedValue = e.target.value;
-                if (formattedValue) {
-                  const [hours, minutes] = formattedValue.split(':');
-                  const hour24 = parseInt(hours, 10);
-                  const min24 = parseInt(minutes || '0', 10);
-                  if (hour24 >= 0 && hour24 <= 23 && min24 >= 0 && min24 <= 59) {
-                    e.target.value = `${hour24.toString().padStart(2, '0')}:${min24.toString().padStart(2, '0')}`;
-                  }
-                }
-              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-500 dark:text-white"
             />
           </div>
           <div className="md:col-span-2">
@@ -891,18 +883,19 @@ export default function ConcertForm({
       </div>
 
       {/* Stripe Settings */}
-      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+      <div hidden={editorSection !== 'tickets'} data-editor-section="tickets" className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Stripe</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300">Link a Stripe Product/Price to make this concert purchasable.</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('section_tickets')}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300">{t('ticketSetupHelp')}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="stripe-product" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Stripe Product ID
             </label>
             <input
               type="text"
+              id="stripe-product"
               name="stripeProductId"
               value={basicData.stripeProductId}
               onChange={handleBasicDataChange}
@@ -911,11 +904,12 @@ export default function ConcertForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="stripe-price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Stripe Price ID
             </label>
             <input
               type="text"
+              id="stripe-price"
               name="stripePriceId"
               value={basicData.stripePriceId}
               onChange={handleBasicDataChange}
@@ -928,19 +922,20 @@ export default function ConcertForm({
       </div>
 
       {/* Translation Tabs */}
-      <div>
+      <div hidden={editorSection !== 'details' && editorSection !== 'performers'} className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('translations')}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editorSection === 'performers' ? t('section_performers') : t('translations')}</h3>
         </div>
 
         {/* Tab Navigation */}
         <div className="border-b border-gray-200 dark:border-gray-600">
-          <nav className="-mb-px flex space-x-8">
+          <nav aria-label={t('translations')} className="-mb-px flex gap-4 overflow-x-auto">
             {locales.map((loc) => (
               <button
                 key={loc}
                 type="button"
                 onClick={() => setActiveTab(loc)}
+                aria-pressed={activeTab === loc}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
                   activeTab === loc
                     ? 'border-orange-500 text-orange-500 dark:text-orange-400'
@@ -948,6 +943,18 @@ export default function ConcertForm({
                 }`}
               >
                 {localeNames[loc as keyof typeof localeNames]}
+                <span className="block text-xs font-normal mt-1">
+                  {editorSection === 'performers'
+                    ? getPerformerOrder().length > 0
+                      ? t('biographyProgress', {
+                          filled: (translations[loc].performers || []).filter(performer => performer.opis.trim()).length,
+                          total: getPerformerOrder().length,
+                        })
+                      : t('noPerformersShort')
+                    : translations[loc].title.trim() && translations[loc].venue.trim()
+                      ? t('detailsComplete')
+                      : t('detailsMissing')}
+                </span>
               </button>
             ))}
           </nav>
@@ -956,17 +963,20 @@ export default function ConcertForm({
         {/* Tab Content */}
         <div className="mt-6">
           {locales.map((loc) => (
-            <div key={loc} className={activeTab === loc ? 'block' : 'hidden'}>
+            <div key={loc} data-editor-locale={loc} className={activeTab === loc ? 'block' : 'hidden'}>
               <div className="space-y-6">
                 {/* Basic Translation Fields */}
+                <div hidden={editorSection !== 'details'} data-editor-section="details" className="space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('title')} *
+                    <label htmlFor={`concert-title-${loc}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('title')} *
                     </label>
                     <input
                       type="text"
-                      value={translations[loc].title}
+                      id={`concert-title-${loc}`}
+                    aria-label={`${t('title')} (${localeNames[loc as keyof typeof localeNames]})`}
+                    value={translations[loc].title}
                       onChange={(e) => handleTranslationChange(loc, 'title', e.target.value)}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
@@ -975,11 +985,12 @@ export default function ConcertForm({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Subtitle
+                      {t('concertSubtitle')}
                     </label>
                     <input
                       type="text"
-                      value={translations[loc].subtitle || ''}
+                      aria-label={t('concertSubtitle')}
+                    value={translations[loc].subtitle || ''}
                       onChange={(e) => handleTranslationChange(loc, 'subtitle', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
@@ -987,47 +998,50 @@ export default function ConcertForm({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor={`concert-venue-${loc}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('venue')} *
                   </label>
                   <input
                     type="text"
+                    id={`concert-venue-${loc}`}
+                    aria-label={`${t('venue')} (${localeNames[loc as keyof typeof localeNames]})`}
                     value={translations[loc].venue}
                     onChange={(e) => handleTranslationChange(loc, 'venue', e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
+                  <button type="button" onClick={() => { handleTranslationChange(loc, 'venue', getDefaultVenue(loc)); setTouched(true); }} className="mt-2 text-sm text-orange-600 hover:underline dark:text-orange-400">{t('useCathedral')}</button>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor={`concert-description-${loc}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('description')}
                   </label>
                   <textarea
+                    id={`concert-description-${loc}`}
+                    aria-label={`${t('description')} (${localeNames[loc as keyof typeof localeNames]})`}
                     value={translations[loc].description}
                     onChange={(e) => handleTranslationChange(loc, 'description', e.target.value)}
-                    rows={4}
+                    rows={6}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
 
+                </div>
                 {/* Performers Section */}
-                <div>
+                <div hidden={editorSection !== 'performers'} data-editor-section="performers">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         {t('performerInfo')}
                       </label>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Drag performers by the grip icon to reorder them
+                        {t('performerHelp')}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        const newPerformers = [...(translations[loc].performers || [])];
-                        newPerformers.push({ name: '', img: '', fileName: '', selectedFile: null, opis: '' });
-                        
                         // Add performer to all locales - name and image are shared, but description is locale-specific
                         const allLocales = Object.keys(translations);
                         allLocales.forEach(locale => {
@@ -1039,7 +1053,7 @@ export default function ConcertForm({
                       }}
                       className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm w-full sm:w-auto"
                     >
-                      + Add Performer
+                      + {t('addPerformer')}
                     </button>
                   </div>
 
@@ -1062,14 +1076,6 @@ export default function ConcertForm({
                         <div 
                           key={index} 
                           className="p-3 border border-gray-200 dark:border-gray-600 rounded-lg space-y-4"
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData('text/plain', index.toString());
-                            e.currentTarget.style.opacity = '0.5';
-                          }}
-                          onDragEnd={(e) => {
-                            e.currentTarget.style.opacity = '1';
-                          }}
                           onDragOver={(e) => {
                             e.preventDefault();
                             e.currentTarget.style.borderColor = '#f97316';
@@ -1080,44 +1086,45 @@ export default function ConcertForm({
                           onDrop={(e) => {
                             e.preventDefault();
                             e.currentTarget.style.borderColor = '';
-                            const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'));
-                            
-                            // Update performers for all locales, preserving locale-specific descriptions
-                            const allLocales = Object.keys(translations);
-                            allLocales.forEach(locale => {
-                              const currentPerformers = [...(translations[locale].performers || [])];
-                              const draggedPerformer = currentPerformers[draggedIndex];
-                              currentPerformers.splice(draggedIndex, 1);
-                              currentPerformers.splice(index, 0, draggedPerformer);
-                              handlePerformersChange(locale, currentPerformers);
-                            });
+                            const source = e.dataTransfer.getData('application/x-concert-performer');
+                            if (!source) return;
+                            const draggedIndex = Number(source);
+                            const order = getPerformerOrder();
+                            if (!Number.isInteger(draggedIndex) || draggedIndex < 0 || draggedIndex >= order.length) return;
+                            order.splice(index, 0, order.splice(draggedIndex, 1)[0]);
+                            applyPerformerOrder(order);
                           }}
                         >
                           {/* Header with Drag Handle, Name and Remove button */}
                           <div className="flex justify-between items-start">
                             <div className="flex items-center gap-2">
-                              <div className="cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title="Drag to reorder">
+                              <div draggable onDragStart={(event) => event.dataTransfer.setData('application/x-concert-performer', index.toString())} className="cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" title={t('dragToReorder')}>
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                   <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
                                 </svg>
                               </div>
-                              <h4 className="text-base font-semibold text-gray-900 dark:text-white">Performer #{index + 1}</h4>
+                              <h4 className="text-base font-semibold text-gray-900 dark:text-white">{performer.name || `${t('performer')} ${index + 1}`}</h4>
                             </div>
+                            <div className="flex flex-wrap gap-2">
+                              {([-1, 1] as const).map(direction => (
+                                <button key={direction} type="button" aria-label={t(direction === -1 ? 'moveUp' : 'moveDown')}
+                                  disabled={index + direction < 0 || index + direction >= getPerformerOrder().length}
+                                  onClick={() => {
+                                    const order = getPerformerOrder();
+                                    [order[index], order[index + direction]] = [order[index + direction], order[index]];
+                                    applyPerformerOrder(order);
+                                  }} className="rounded border border-gray-300 px-3 py-2 text-sm disabled:opacity-30 dark:border-gray-600">{direction === -1 ? '↑' : '↓'}</button>
+                              ))}
                             <button
                               type="button"
                               onClick={() => {
-                                const newPerformers = (translations[loc].performers || []).filter((_, i) => i !== index);
-                                
-                                // Remove performer from all locales since they are shared
-                                const allLocales = Object.keys(translations);
-                                allLocales.forEach(locale => {
-                                  handlePerformersChange(locale, newPerformers);
-                                });
+                                applyPerformerOrder(getPerformerOrder().filter(i => i !== index));
                               }}
                               className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm"
                             >
-                              Remove Performer
+                              {t('removePerformer')}
                             </button>
+                            </div>
                           </div>
 
                           {/* Compact vertical layout */}
@@ -1126,10 +1133,12 @@ export default function ConcertForm({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                  Name
+                                  {t('performerName')}
                                 </label>
                                 <input
                                   type="text"
+                                  id={`performer-name-${loc}-${index}`}
+                                  aria-label={t('performerName')}
                                   value={performer.name}
                                   onChange={(e) => {
                                     // Update name across all locales since it's shared
@@ -1137,19 +1146,19 @@ export default function ConcertForm({
                                     allLocales.forEach(locale => {
                                       const newPerformers = [...(translations[locale].performers || [])];
                                       if (newPerformers[index]) {
-                                        newPerformers[index].name = e.target.value;
+                                        newPerformers[index] = { ...newPerformers[index], name: e.target.value };
                                         handlePerformersChange(locale, newPerformers);
                                       }
                                     });
                                   }}
                                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                  placeholder="Performer name"
+                                  placeholder={t('performerName')}
                                 />
                               </div>
 
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                  Performer Image
+                                  {t('performerImage')}
                                 </label>
                                 <ImageUpload
                                   currentImageUrl={sharedImageUrl}
@@ -1169,19 +1178,20 @@ export default function ConcertForm({
                             {/* Description full width below */}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Description
+                                {t('biography')}
                               </label>
                               <textarea
+                                aria-label={`${t('biography')} (${localeNames[loc as keyof typeof localeNames]})`}
                                 value={performer.opis}
                                 onChange={(e) => {
                                   // Update description only for current locale since it's language-specific
                                   const newPerformers = [...(translations[loc].performers || [])];
-                                  newPerformers[index].opis = e.target.value;
+                                  newPerformers[index] = { ...newPerformers[index], opis: e.target.value };
                                   handlePerformersChange(loc, newPerformers);
                                 }}
                                 rows={4}
                                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-vertical min-h-[80px]"
-                                placeholder="Detailed biography and description (1-2 paragraphs)"
+                                placeholder={t('biographyHelp')}
                               />
                             </div>
                           </div>
@@ -1190,7 +1200,7 @@ export default function ConcertForm({
                     })}
                     {(translations[loc].performers || []).length === 0 && (
                       <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        No performers added yet. Click &quot;Add Performer&quot; to add one.
+                        {t('noPerformers')}
                       </div>
                     )}
                   </div>
@@ -1204,7 +1214,7 @@ export default function ConcertForm({
       </div>
 
       {/* Program Editor (Slovenian & Original) */}
-      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mt-8">
+      <div hidden={editorSection !== 'program'} data-editor-section="program" className="rounded-xl border border-gray-200 bg-white p-4 sm:p-6 dark:border-gray-700 dark:bg-gray-800">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('program')}</h3>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
@@ -1237,16 +1247,31 @@ export default function ConcertForm({
         <div className="space-y-4">
           {program[programActiveTab].map((piece, index) => (
             <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('title')}
+              <div className="md:col-span-3 flex items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-gray-500">{t('programEntry')} {index + 1}</span>
+                <div className="flex gap-2">
+                  {([-1, 1] as const).map(direction => (
+                    <button key={direction} type="button" aria-label={t(direction === -1 ? 'moveUp' : 'moveDown')}
+                      disabled={index + direction < 0 || index + direction >= program[programActiveTab].length}
+                      onClick={() => moveProgramPiece(index, direction)} className="rounded border border-gray-300 px-3 py-1 disabled:opacity-30 dark:border-gray-600">{direction === -1 ? '↑' : '↓'}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label htmlFor={`program-title-${programActiveTab}-${index}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('programTitles')}
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  id={`program-title-${programActiveTab}-${index}`}
+                  rows={3}
+                  aria-describedby={`program-title-help-${programActiveTab}-${index}`}
                   value={piece.title}
                   onChange={(e) => handleProgramChange(programActiveTab, index, 'title', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
+                <p id={`program-title-help-${programActiveTab}-${index}`} className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {t('programTitlesHelp')}
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1254,12 +1279,13 @@ export default function ConcertForm({
                 </label>
                 <input
                   type="text"
+                  aria-label={t('composer')}
                   value={piece.composer}
                   onChange={(e) => handleProgramChange(programActiveTab, index, 'composer', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
               </div>
-              <div className="flex items-end">
+              <div className="md:col-span-3 flex justify-end">
                 <button
                   type="button"
                   onClick={() => removeProgramPiece(programActiveTab, index)}
@@ -1269,15 +1295,16 @@ export default function ConcertForm({
                   {t('removePiece')}
                 </button>
               </div>
-              <div className="md:col-span-3">
+              <details open={(piece.subtitles || []).length > 0 || undefined} className="md:col-span-3">
+                <summary className="cursor-pointer text-sm text-gray-500 mb-3">{t('subtitlesOptional')}</summary>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Subtitles</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('subtitles')}</span>
                   <button
                     type="button"
                     onClick={() => addSubtitle(programActiveTab, index)}
                     className="text-xs bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 px-2 py-1 rounded"
                   >
-                    + Add subtitle
+                    + {t('addSubtitle')}
                   </button>
                 </div>
                 <div className="space-y-2">
@@ -1288,39 +1315,62 @@ export default function ConcertForm({
                         value={sub}
                         onChange={(e) => updateSubtitle(programActiveTab, index, sIdx, e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                        placeholder={`Subtitle ${sIdx + 1}`}
+                        placeholder={`${t('subtitle')} ${sIdx + 1}`}
                       />
                       <button
                         type="button"
                         onClick={() => removeSubtitle(programActiveTab, index, sIdx)}
                         className="bg-red-500 hover:bg-red-600 text-white px-2 rounded"
-                        aria-label="Remove subtitle"
+                        aria-label={t('removeSubtitle')}
                       >
                         ×
                       </button>
                     </div>
                   ))}
                 </div>
-              </div>
+              </details>
             </div>
           ))}
         </div>
+        <button type="button" onClick={addProgramPiece} className="mt-4 w-full rounded-lg border-2 border-dashed border-orange-300 py-3 text-sm font-medium text-orange-600 hover:bg-orange-50 dark:hover:bg-gray-700">+ {t('addPiece')}</button>
       </div>
 
+      <details open hidden={editorSection !== 'program'} className="rounded-xl border border-orange-200 bg-orange-50/40 p-4 sm:p-6 dark:border-gray-600 dark:bg-gray-800">
+        <summary className="cursor-pointer font-medium">{t('programPreview')}</summary>
+        <p className="mt-2 text-sm text-gray-500">{programActiveTab === 'sl' ? 'Slovensko' : 'Original'}</p>
+        <div className="mt-3 space-y-4">
+          {program[programActiveTab].map((piece, index) => (
+            <div key={index}>
+              <div className="whitespace-pre-line break-words font-medium">{piece.title}</div>
+              {(piece.subtitles || []).filter(Boolean).map((subtitle, subtitleIndex) => (
+                <div key={subtitleIndex} className="ml-4 text-sm italic text-gray-500">{subtitle}</div>
+              ))}
+              <div className="text-xs text-gray-600 dark:text-gray-400">{piece.composer}</div>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      </fieldset>
+
       {/* Form Actions */}
-      <div className="flex flex-col sm:flex-row sm:justify-end sm:space-x-4 space-y-3 sm:space-y-0 pt-6 border-t border-gray-200 dark:border-gray-600">
+      <div className="sticky bottom-0 z-20 flex flex-wrap items-center justify-end gap-3 rounded-xl border border-gray-200 bg-white/95 p-4 shadow-lg backdrop-blur dark:border-gray-600 dark:bg-gray-800/95">
+        <span role="status" className="mr-auto text-sm text-gray-500 dark:text-gray-400">{loading ? t('saving') : !detailsLoaded ? t('loadingDetails') : unsavedChanges ? t('unsavedChanges') : t('noUnsavedChanges')}</span>
         <button
           type="button"
-          onClick={onCancel}
+          disabled={loading}
+          onClick={() => {
+            if (!unsavedChanges || window.confirm(t('discardChanges'))) onCancel();
+          }}
           className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 order-2 sm:order-1"
         >
           {t('cancel')}
         </button>
         <button
           type="submit"
-          disabled={loading || (isEditing ? !hasChanges() : false)}
+          disabled={loading || !detailsLoaded || (isEditing ? !hasChanges() : false)}
           className={`px-6 py-2 rounded-lg transition-colors duration-200 order-1 sm:order-2 ${
-            loading || (isEditing ? !hasChanges() : false)
+            loading || !detailsLoaded || (isEditing ? !hasChanges() : false)
               ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
               : 'bg-orange-500 hover:bg-orange-600 text-white'
           }`}

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface ImageUploadProps {
   onImageSelected: (file: File) => void;
@@ -24,9 +25,22 @@ export default function ImageUpload({
   maxSize = 5,
   acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 }: ImageUploadProps) {
+  const t = useTranslations('admin.form');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [preview, setPreview] = useState<{ file: File; url: string } | null>(null);
+  useEffect(() => {
+    if (!selectedFile) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(selectedFile);
+    setPreview({ file: selectedFile, url });
+    return () => URL.revokeObjectURL(url);
+  }, [selectedFile]);
+  const previewUrl = selectedFile ? (preview?.file === selectedFile ? preview.url : undefined) : currentImageUrl;
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -84,6 +98,7 @@ export default function ImageUpload({
     const files = e.target.files;
     if (files && files.length > 0) {
       handleFileSelected(files[0]);
+      e.target.value = '';
     }
   };
 
@@ -99,31 +114,23 @@ export default function ImageUpload({
         </label>
       )}
 
+      <input ref={fileInputRef} type="file" onChange={handleFileSelect} accept={acceptedTypes.join(',')} className="hidden" />
       <div className="flex flex-col items-center space-y-4">
         {/* Current Image Preview or Selected File Preview */}
         {(currentImageUrl || selectedFile) && (
           <div className="relative">
             <div className="relative w-40 h-40 border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-              {currentImageUrl ? (
+              {previewUrl && (
                 <Image
-                  src={currentImageUrl}
-                  alt="Current image"
+                  src={previewUrl}
+                  alt={selectedFile ? selectedFile.name : 'Current image'}
                   fill
+                  sizes="160px"
+                  unoptimized={Boolean(selectedFile)}
                   className="object-cover"
-                  onError={() => {
-                    setUploadError('Failed to load image');
-                  }}
+                  onError={() => setUploadError('Failed to load image')}
                 />
-              ) : selectedFile ? (
-                <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📸</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedFile.name}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
+              )}
             </div>
             <button
               type="button"
@@ -134,6 +141,10 @@ export default function ImageUpload({
               ×
             </button>
           </div>
+        )}
+
+        {(currentImageUrl || selectedFile) && (
+          <button type="button" onClick={openFileDialog} className="text-sm font-medium text-orange-600 hover:underline dark:text-orange-400">{t('changePhoto')}</button>
         )}
 
         {/* Upload Area - Show if no current image and no selected file */}
@@ -149,32 +160,25 @@ export default function ImageUpload({
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileSelect}
-              accept={acceptedTypes.join(',')}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
+
 
             <div className="space-y-4">
               <div className="flex flex-col items-center">
-                <div className="text-4xl mb-2">📸</div>
+
                 <p className="text-lg font-medium text-gray-900 dark:text-white">
-                  {dragActive ? 'Drop image here' : 'Drag & drop image here'}
+                  {t('dropPhoto')}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  or{' '}
                   <button
                     type="button"
                     onClick={openFileDialog}
                     className="text-orange-500 hover:text-orange-600 font-medium"
                   >
-                    browse files
+                    {t('choosePhoto')}
                   </button>
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Max size: {maxSize}MB • Formats: {acceptedTypes.map(type => type.split('/')[1].toUpperCase()).join(', ')}
+                  {t('photoSize', { size: maxSize })} · {acceptedTypes.map(type => type.split('/')[1].toUpperCase()).join(', ')}
                 </p>
               </div>
             </div>

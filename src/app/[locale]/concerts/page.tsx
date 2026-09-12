@@ -124,16 +124,7 @@ export default function ConcertsPage() {
             </div>
           </div>
         ) : (
-          <div
-            className={
-              `grid gap-6 ` +
-              (concerts.length === 1
-                ? 'grid-cols-1 md:grid-cols-1 lg:grid-cols-1'
-                : concerts.length === 2
-                  ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-2'
-                  : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3')
-            }
-          >
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 items-start">
             {concerts.map((concert) => (
               <div key={concert.id} className="w-full h-full bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col">
                 
@@ -180,18 +171,20 @@ export default function ConcertsPage() {
 
                   </div>
 
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 break-words whitespace-normal">
-                    {concert.description}
-                  </p>
+                  {concert.description?.trim() && (
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 break-words whitespace-normal">
+                      {concert.description}
+                    </p>
+                  )}
 
                   {/* Program Preview */}
                   <div className="mb-4">
                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{t('concerts.programHighlights')}:</h4>
-                    <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                    <ul className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
                       {concert.program.slice(0, 2).map((piece) => (
-                        <li key={piece.id} className="flex items-center break-words whitespace-normal">
+                        <li key={piece.id} className="flex items-start break-words whitespace-normal">
                           <span className="mr-2">♪</span>
-                          {piece.title}
+                          <span className="min-w-0 whitespace-pre-line">{piece.title}</span>
                         </li>
                       ))}
                       {concert.program.length > 2 && (
@@ -201,10 +194,11 @@ export default function ConcertsPage() {
                   </div>
 
                   {/* View Concert Button */}
-                  <Link href={`/${locale}/concerts/${concert.id}${isAdminView ? '?admin=true' : ''}`}>
-                    <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg">
-                      {t('concerts.viewDetails')}
-                    </button>
+                  <Link
+                    href={`/${locale}/concerts/${concert.id}${isAdminView ? '?admin=true' : ''}`}
+                    className="mt-auto self-start bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                  >
+                    {t('concerts.viewDetails')}
                   </Link>
                 </div>
               </div>
