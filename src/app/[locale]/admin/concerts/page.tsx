@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
+import ConcertGroupBadges from '@/components/ConcertGroupBadges';
 import { LocalizedConcert } from '@/types/concert';
 import ConcertForm from '@/components/admin/ConcertForm';
 
@@ -191,6 +192,7 @@ export default function AdminConcertsPage() {
                         <div className="flex items-center">
                           
                           <div>
+                            <ConcertGroupBadges groups={concert.groups} />
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                               {concert.title}
                             </div>

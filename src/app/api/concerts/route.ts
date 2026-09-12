@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
     const findManyArgs = Prisma.validator<Prisma.ConcertFindManyArgs>()({
       where: admin ? {} : { isVisible: true },
       include: {
+        groups: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
         program: {
           include: {
             translations: {
@@ -92,6 +93,7 @@ export async function GET(request: NextRequest) {
         // Return a fallback concert instead of throwing an error
         return {
           id: concert.id,
+          groups: concert.groups,
           title: `Concert ${concert.id}`,
           subtitle: undefined,
           date: concert.date.toISOString(),
@@ -107,6 +109,7 @@ export async function GET(request: NextRequest) {
 
       const base = {
         id: concert.id,
+        groups: concert.groups,
         title: translation.title,
         subtitle: translation.subtitle || undefined,
         date: concert.date.toISOString(),

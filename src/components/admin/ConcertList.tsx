@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import ConcertGroupBadges from '@/components/ConcertGroupBadges';
 import { LocalizedConcert } from '@/types/concert';
 
 interface ConcertListProps {
@@ -202,6 +203,7 @@ export default function ConcertList({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="ml-0">
+                        <ConcertGroupBadges groups={concert.groups} />
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {concert.title}
                         </div>

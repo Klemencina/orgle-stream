@@ -88,6 +88,7 @@ export async function GET(
         ...(admin ? {} : { isVisible: true })
       },
       include: {
+        groups: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
         program: {
           include: {
             translations: allTranslations ? true : {
@@ -121,6 +122,7 @@ export async function GET(
       // Return all translations for editing
       const allTranslationsData = {
         id: concert.id,
+        groups: concert.groups,
         date: concert.date.toISOString(),
         stripeProductId: (concert as unknown as { stripeProductId?: string | null }).stripeProductId || null,
         stripePriceId: (concert as unknown as { stripePriceId?: string | null }).stripePriceId || null,
@@ -178,6 +180,7 @@ export async function GET(
 
     const localizedConcert: LocalizedConcert & { stripeProductId?: string | null; stripePriceId?: string | null; priceAmountCents?: number; priceCurrency?: string } = {
       id: concert.id,
+      groups: concert.groups,
       title: translation.title,
       subtitle: translation.subtitle || undefined,
       date: concert.date.toISOString(),
@@ -338,6 +341,7 @@ export async function PUT(
         }
       },
       include: {
+        groups: { select: { id: true, name: true }, orderBy: { name: 'asc' } },
         program: {
           include: {
             translations: {
@@ -372,6 +376,7 @@ export async function PUT(
 
     const localizedConcert: LocalizedConcert = {
       id: concert.id,
+      groups: concert.groups,
       title: translation.title,
       subtitle: translation.subtitle || undefined,
       date: concert.date.toISOString(),

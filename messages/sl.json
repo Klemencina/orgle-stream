@@ -393,6 +393,10 @@
     }
   },
   "concertGroups": {
+    "futureOnly": "Samo prihodnji koncerti",
+    "hiddenSelected": "Število izbranih koncertov, skritih zaradi filtrov: {count}. Ostanejo v skupini.",
+    "noMatches": "Noben koncert ne ustreza filtrom.",
+    "memberOf": "Skupina: {name}",
     "title": "Skupine koncertov",
     "back": "Nazaj na administracijo",
     "create": "Ustvari skupino",

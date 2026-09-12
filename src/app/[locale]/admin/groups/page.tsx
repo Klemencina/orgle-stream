@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import AdminGuard from '@/components/admin/AdminGuard';
 
 type Group = { id?: string; name: string; stripePriceId: string; salesEnabled: boolean; concertIds: string[]; membershipLocked?: boolean };
-type Concert = { id: string; title: string; date: string; isVisible: boolean };
+type Concert = { id: string; title: string; subtitle?: string | null; date: string; isVisible: boolean };
 const emptyGroup = (): Group => ({ name: '', stripePriceId: '', salesEnabled: false, concertIds: [] });
 
 export default function GroupsPage() {
@@ -21,6 +21,7 @@ function Groups() {
   const [editing, setEditing] = useState<Group | null>(null);
   const [originalIds, setOriginalIds] = useState<string[]>([]);
   const [query, setQuery] = useState('');
+  const [futureOnly, setFutureOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -60,6 +61,15 @@ function Groups() {
     finally { setSaving(false); }
   }
 
+  const now = Date.now();
+  const filteredConcerts = concerts.filter(concert =>
+    [concert.title, concert.subtitle || ''].some(text => text.toLocaleLowerCase().includes(query.toLocaleLowerCase())) &&
+    (!futureOnly || new Date(concert.date).getTime() > now)
+  );
+  const hiddenSelectedCount = editing
+    ? editing.concertIds.filter(id => !filteredConcerts.some(concert => concert.id === id)).length
+    : 0;
+
   const field = 'w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 p-3';
   const button = 'rounded bg-orange-500 px-4 py-2 text-white disabled:opacity-50';
   return (
@@ -85,14 +95,23 @@ function Groups() {
               <p className="mt-2 text-sm">{t('membershipHelp')}</p>
               {editing.membershipLocked && <p className="mt-2 text-sm text-orange-700 dark:text-orange-300">{t('locked')}</p>}
               <label className="mt-3 block">{t('search')}<input type="search" value={query} onChange={e => setQuery(e.target.value)} className={field} /></label>
+              <label className="mt-3 flex items-center gap-3">
+                <input type="checkbox" checked={futureOnly} onChange={e => setFutureOnly(e.target.checked)} />
+                {t('futureOnly')}
+              </label>
+              {hiddenSelectedCount > 0 && <p role="status" className="mt-2 text-sm text-gray-600 dark:text-gray-300">{t('hiddenSelected', { count: hiddenSelectedCount })}</p>}
               <div className="mt-3 max-h-80 space-y-2 overflow-auto rounded border border-gray-200 dark:border-gray-700 p-3">
-                {concerts.filter(c => c.title.toLocaleLowerCase().includes(query.toLocaleLowerCase())).map(concert => (
+                {filteredConcerts.map(concert => (
                   <label key={concert.id} className="flex items-start gap-3 rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
                     <input type="checkbox" className="mt-1" checked={editing.concertIds.includes(concert.id)} disabled={editing.membershipLocked && originalIds.includes(concert.id)} onChange={e => setEditing({ ...editing, concertIds: e.target.checked ? [...editing.concertIds, concert.id] : editing.concertIds.filter(id => id !== concert.id) })} />
-                    <span>{concert.title}<span className="block text-sm text-gray-600 dark:text-gray-300">{new Date(concert.date).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Ljubljana' })}{!concert.isVisible && ` · ${t('hidden')}`}</span></span>
+                    <span className="min-w-0 break-words">
+                      {concert.title}
+                      {concert.subtitle?.trim() && <span className="block text-sm italic text-gray-600 dark:text-gray-300">{concert.subtitle}</span>}
+                      <span className="block text-sm text-gray-600 dark:text-gray-300">{new Date(concert.date).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Ljubljana' })}{!concert.isVisible && ` · ${t('hidden')}`}</span>
+                    </span>
                   </label>
                 ))}
-                {!concerts.length && <p>{t('noConcerts')}</p>}
+                {!filteredConcerts.length && <p>{t(concerts.length ? 'noMatches' : 'noConcerts')}</p>}
               </div>
             </fieldset>
             <label className="flex items-center gap-3"><input type="checkbox" checked={editing.salesEnabled} onChange={e => setEditing({ ...editing, salesEnabled: e.target.checked })} />{t('salesEnabled')}</label>
@@ -106,7 +125,14 @@ function Groups() {
           {groups.map(group => <article key={group.id} className="rounded-xl border border-gray-300 dark:border-gray-700 p-5">
             <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-semibold">{group.name}</h2><button className={button} onClick={() => edit(group)}>{t('edit')}</button></div>
             <p className="mt-2">{t(group.salesEnabled ? 'onSale' : 'offSale')} · {t('concerts', { count: group.concertIds.length })}</p>
-            <ul className="mt-3 list-inside list-disc text-sm">{concerts.filter(c => group.concertIds.includes(c.id)).map(c => <li key={c.id}>{c.title}{!c.isVisible && ` · ${t('hidden')}`}</li>)}</ul>
+            <ul className="mt-3 list-inside list-disc space-y-2 text-sm">
+              {concerts.filter(c => group.concertIds.includes(c.id)).map(c => (
+                <li key={c.id} className="break-words">
+                  {c.title}{!c.isVisible && ` · ${t('hidden')}`}
+                  {c.subtitle?.trim() && <span className="ml-4 block text-xs italic text-gray-600 dark:text-gray-300">{c.subtitle}</span>}
+                </li>
+              ))}
+            </ul>
           </article>)}
         </div>
       )}

@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
     ])
     return json({
       groups: groups.map(g => ({ id: g.id, name: g.name, stripePriceId: g.stripePriceId || '', salesEnabled: g.salesEnabled, concertIds: g.concerts.map(c => c.id), membershipLocked: g._count.passes > 0 })),
-      concerts: concerts.map(c => ({ id: c.id, date: c.date, isVisible: c.isVisible, title: (c.translations.find(t => t.locale === locale) || c.translations[0])?.title || c.id })),
+      concerts: concerts.map(c => {
+        const translation = c.translations.find(t => t.locale === locale) || c.translations[0]
+        return { id: c.id, date: c.date, isVisible: c.isVisible, title: translation?.title || c.id, subtitle: translation?.subtitle || null }
+      }),
     })
   } catch (error) {
     console.error('Group list failed:', error)

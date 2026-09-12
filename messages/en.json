@@ -370,6 +370,10 @@
     }
   },
   "concertGroups": {
+    "futureOnly": "Future concerts only",
+    "hiddenSelected": "{count} selected concerts are hidden by the filters. They remain in the group.",
+    "noMatches": "No concerts match these filters.",
+    "memberOf": "Group: {name}",
     "title": "Concert groups",
     "back": "Back to admin",
     "create": "Create group",

@@ -131,6 +131,13 @@ export default function ConcertsPage() {
 
                 {/* Concert Details */}
                 <div className="p-6 flex-1 flex flex-col">
+                  {!!concert.groups?.length && (
+                    <ul aria-label={t('concertGroups.title')} className="mb-3 space-y-1 text-xl font-semibold text-orange-700 dark:text-orange-400 break-words">
+                      {concert.groups.map(group => (
+                        <li key={group.id}>{group.name}</li>
+                      ))}
+                    </ul>
+                  )}
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 break-words whitespace-normal">
                     {concert.title}
                   </h2>

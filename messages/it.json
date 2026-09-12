@@ -370,6 +370,10 @@
     }
   },
   "concertGroups": {
+    "futureOnly": "Solo concerti futuri",
+    "hiddenSelected": "Concerti selezionati nascosti dai filtri: {count}. Restano nel gruppo.",
+    "noMatches": "Nessun concerto corrisponde ai filtri.",
+    "memberOf": "Gruppo: {name}",
     "title": "Gruppi di concerti",
     "back": "Torna all'amministrazione",
     "create": "Crea gruppo",
