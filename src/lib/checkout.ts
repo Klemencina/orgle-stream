@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import type Stripe from 'stripe'
 import type { PrismaClient } from '@prisma/client'
 import { fulfillCheckout, isSettledCheckout } from './tickets'
+import { hasFestivalPass } from './festival-pass'
 
 export class CheckoutError extends Error {
   constructor(message: string, public status = 400) { super(message) }
@@ -16,6 +17,7 @@ export async function createCheckout(db: PrismaClient, stripe: Stripe, input: {
   if (Date.now() > concert.date.getTime() + 3 * 60 * 60 * 1000) {
     throw new CheckoutError('Ticket sales for this concert have ended')
   }
+  if (await hasFestivalPass(db, userId, concert.id)) return { alreadyOwned: true }
   if (!concert.stripePriceId) throw new CheckoutError('Concert is not purchasable yet')
 
   const ticket = await db.ticket.upsert({

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 
 type Ticket = {
   ticketId: string;
+  passName: string | null;
   concertId: string;
   date: string;
   title: string;
@@ -16,6 +17,8 @@ type Ticket = {
   currency: string;
   purchasedAt: string;
 };
+
+type Pass = { id: string; name: string; amountCents: number; currency: string };
 
 export default function Dashboard() {
   const t = useTranslations('dashboard');
@@ -43,6 +46,8 @@ export default function Dashboard() {
 function DashboardContent() {
   const t = useTranslations('dashboard');
   const locale = useLocale();
+  const passText = useTranslations('festivalPass');
+  const [passes, setPasses] = useState<Pass[]>([]);
   const [tickets, setTickets] = useState<{ past: Ticket[]; upcoming: Ticket[] }>({ past: [], upcoming: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -61,7 +66,10 @@ function DashboardContent() {
           if (!response.ok) throw new Error('Failed to load tickets');
           return response.json();
         }));
-        if (!controller.signal.aborted) setTickets({ past: results[0].items, upcoming: results[1].items });
+        if (!controller.signal.aborted) {
+          setTickets({ past: results[0].items, upcoming: results[1].items });
+          setPasses(results[1].passes || []);
+        }
       } catch {
         if (!controller.signal.aborted) setError(true);
       } finally {
@@ -84,6 +92,12 @@ function DashboardContent() {
           </button>
         </div>
       )}
+      {!loading && !error && passes.map(pass => (
+        <div key={pass.id} className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mt-6">
+          <p>{passText('owned', { name: pass.name })}</p>
+          <p className="text-sm">{(pass.amountCents / 100).toLocaleString(locale, { style: 'currency', currency: pass.currency })}</p>
+        </div>
+      ))}
       {!loading && !error && (['upcoming', 'past'] as const).map(section => (
         <section key={section} className="bg-white dark:bg-gray-800 rounded-lg p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4">{t(section)}</h2>
@@ -99,9 +113,9 @@ function DashboardContent() {
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('timezone')}</p>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {t('purchased', { date: new Date(item.purchasedAt).toLocaleDateString(locale), amount: (item.amountCents / 100).toLocaleString(locale, { style: 'currency', currency: item.currency.toUpperCase() }) })}
+                    {item.passName ? passText('included', { name: item.passName }) : t('purchased', { date: new Date(item.purchasedAt).toLocaleDateString(locale), amount: (item.amountCents / 100).toLocaleString(locale, { style: 'currency', currency: item.currency.toUpperCase() }) })}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-all">{t('ticketId', { id: item.ticketId })}</div>
+                  {!item.passName && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-all">{t('ticketId', { id: item.ticketId })}</div>}
                 </div>
                 <Link href={`/${locale}/concerts/${item.concertId}`} className="shrink-0 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-3 py-2 rounded">
                   {t('viewConcert')}

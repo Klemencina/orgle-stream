@@ -9,6 +9,7 @@ export function isSettledCheckout(session: Stripe.Checkout.Session) {
 }
 
 export async function fulfillCheckout(db: PrismaClient, session: Stripe.Checkout.Session) {
+  if (session.metadata?.purchaseType === 'festivalPass') return fulfillFestivalPass(db, session)
   const { userId, concertId } = session.metadata || {}
   if (!userId || !concertId || !isSettledCheckout(session)) return false
 
@@ -36,8 +37,31 @@ export async function fulfillCheckout(db: PrismaClient, session: Stripe.Checkout
 }
 
 export async function closeUnpaidCheckout(db: PrismaClient, session: Stripe.Checkout.Session, status: 'failed' | 'expired') {
+  if (session.metadata?.purchaseType === 'festivalPass') {
+    await db.festivalPass.updateMany({ where: { stripeCheckoutSessionId: session.id, status: 'pending' }, data: { status } })
+    return
+  }
   await db.ticket.updateMany({
     where: { stripeCheckoutSessionId: session.id, status: 'pending' },
     data: { status },
   })
+}
+
+async function fulfillFestivalPass(db: PrismaClient, session: Stripe.Checkout.Session) {
+  const { userId, passId, groupId, year, priceId, attempt } = session.metadata || {}
+  if (!userId || !passId || (!groupId && !year) || !priceId || !isSettledCheckout(session)) return false
+  // Only fulfill an order created by our checkout, even after sales configuration changes.
+  const pass = await db.festivalPass.findUnique({ where: { id: passId } })
+  if (!pass || pass.userId !== userId || (groupId ? pass.groupId !== groupId : pass.year == null || String(pass.year) !== year) || pass.stripePriceId !== priceId) return false
+  if (attempt == null ? pass.checkoutAttempt !== 0 : attempt !== String(pass.checkoutAttempt)) return false
+  const paymentIntent = session.payment_intent
+  await db.festivalPass.updateMany({
+    where: { id: passId, checkoutAttempt: pass.checkoutAttempt, stripePriceId: priceId, status: { in: ['pending', 'failed', 'expired'] } },
+    data: {
+      status: 'paid', amountCents: session.amount_total ?? 0, currency: session.currency || 'eur',
+      stripeCheckoutSessionId: session.id,
+      stripePaymentIntentId: typeof paymentIntent === 'string' ? paymentIntent : paymentIntent?.id,
+    },
+  })
+  return true
 }

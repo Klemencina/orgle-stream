@@ -18,6 +18,7 @@ model Concert {
   translations    ConcertTranslation[]
   program         ProgramPiece[]
   tickets         Ticket[]
+  groups          ConcertGroup[]
 
   @@map("concerts")
 }
@@ -96,4 +97,37 @@ model SupportReport {
   userAgent  String?
 
   @@map("support_reports")
+}
+
+model ConcertGroup {
+  id            String         @id @default(cuid())
+  name          String
+  stripePriceId String?        @db.VarChar(255)
+  salesEnabled  Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  concerts      Concert[]
+  passes        FestivalPass[]
+
+  @@map("concert_groups")
+}
+
+/// A purchase of a selected concert group, separate from individual tickets.
+model FestivalPass {
+  id                      String   @id @default(cuid())
+  userId                  String
+  year                    Int? // Retained only to verify pre-group checkout sessions.
+  groupId                 String
+  checkoutPath            String?
+  checkoutAttempt         Int      @default(0)
+  group                   ConcertGroup @relation(fields: [groupId], references: [id], onDelete: Restrict)
+  amountCents             Int      @default(0)
+  currency                String   @default("eur")
+  status                  String
+  stripePriceId           String   @db.VarChar(255)
+  stripePaymentIntentId   String?  @db.VarChar(255)
+  stripeCheckoutSessionId String?  @db.VarChar(255)
+  createdAt               DateTime @default(now())
+
+  @@unique([userId, groupId])
+  @@map("festival_passes")
 }

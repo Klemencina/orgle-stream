@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import { getStripe } from '@/lib/stripe'
 import { CheckoutError, createCheckout } from '@/lib/checkout'
+import { createFestivalCheckout } from '@/lib/festival-checkout'
 
 export const runtime = 'nodejs'
 
@@ -17,6 +18,13 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL
     if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL is required')
     const locale = ['sl', 'en', 'it'].includes(body.locale) ? body.locale : 'sl'
+    if (body.purchaseType && !['concert', 'festivalPass'].includes(body.purchaseType)) {
+      return NextResponse.json({ error: 'Invalid purchase type' }, { status: 400 })
+    }
+    if (body.purchaseType === 'festivalPass') {
+      if (typeof body.groupId !== 'string' || !body.groupId.trim()) return NextResponse.json({ error: 'Festival pass unavailable' }, { status: 400 })
+      return NextResponse.json(await createFestivalCheckout(prisma, getStripe(), { userId, concertId: body.concertId, groupId: body.groupId, locale, appUrl }))
+    }
     return NextResponse.json(await createCheckout(prisma, getStripe(), {
       userId, concertId: body.concertId, locale, appUrl,
     }))

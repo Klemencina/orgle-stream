@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client'
+import { hasConcertAccess } from './festival-pass'
 
 import { getViewingWindow } from './viewing-window'
 export { getViewingWindow } from './viewing-window'
@@ -37,10 +38,7 @@ export async function getStreamResponse(options: {
   }
   const userId = await options.getUserId()
   if (!userId) return json({ error: 'Authentication required', code: 'signIn' }, 401)
-  const ticket = await db.ticket.findUnique({
-    where: { userId_concertId: { userId, concertId } }, select: { status: true },
-  })
-  if (ticket?.status !== 'paid' && !admin && !(await options.isAdmin())) {
+  if (!admin && !(await options.isAdmin()) && !(await hasConcertAccess(db, userId, concert))) {
     return json({ error: 'Purchase required', code: 'purchaseRequired' }, 403)
   }
   if (!playbackUrl) return json({ error: 'Stream is not configured', code: 'notConfigured' }, 503)
