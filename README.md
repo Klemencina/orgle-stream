@@ -1,6 +1,5 @@
 # Orgle Stream 🎼
 
-See [testing](TESTING.md) for local checks. Back up existing databases and verify recovery before applying schema changes.
 
 A modern concert streaming platform built with Next.js that enables live and on-demand streaming of classical music concerts with multi-language support and comprehensive admin management
 
@@ -112,7 +111,6 @@ The application includes a comprehensive admin system. To set up admin users:
 2. Use the [Clerk Dashboard](https://dashboard.clerk.com) to assign admin roles
 3. Add `{"role": "admin"}` to the user's public metadata
 
-For detailed instructions, see [ADMIN_SETUP.md](./ADMIN_SETUP.md).
 
 ## 🌐 Multi-language Support
 
@@ -177,8 +175,6 @@ pnpm prisma generate # Regenerate Prisma client
 
 ## 📚 Additional Resources
 
-- [Admin Setup Guide](./ADMIN_SETUP.md) - Complete admin configuration
-- [Cloudflare R2 Setup](./R2_SETUP.md) - Image storage configuration
 - [Next.js Documentation](https://nextjs.org/docs) - Framework documentation
 - [Prisma Documentation](https://www.prisma.io/docs) - Database toolkit
 - [Clerk Documentation](https://docs.clerk.com) - Authentication service

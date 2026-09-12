@@ -17,7 +17,7 @@ export async function createCheckout(db: PrismaClient, stripe: Stripe, input: {
   if (Date.now() > concert.date.getTime() + 3 * 60 * 60 * 1000) {
     throw new CheckoutError('Ticket sales for this concert have ended')
   }
-  if (await hasFestivalPass(db, userId, concert.date)) return { alreadyOwned: true }
+  if (await hasFestivalPass(db, userId, concert.id)) return { alreadyOwned: true }
   if (!concert.stripePriceId) throw new CheckoutError('Concert is not purchasable yet')
 
   const ticket = await db.ticket.upsert({

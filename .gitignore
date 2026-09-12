@@ -36,8 +36,6 @@ yarn-error.log*
 !.env.example
 /backups/
 /private-notes/
-/DATABASE_RECOVERY.md
-/FESTIVAL_READINESS.md
 snapshot-*.json
 *.backup
 *.dump

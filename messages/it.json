@@ -1,11 +1,11 @@
 {
   "festivalPass": {
-    "title": "Pacchetto festival {year}",
-    "description": "Un solo acquisto dà accesso online a tutti i concerti del festival del {year}, compresi quelli aggiunti successivamente.",
+    "title": "{name}",
+    "description": "Un acquisto dà accesso online ai concerti elencati e a quelli aggiunti al gruppo in seguito.",
     "liveOnly": "Solo dirette, durante il periodo di visione di ciascun concerto. Gli orari sono quelli della Slovenia. Le registrazioni non sono incluse.",
     "noCredit": "I biglietti singoli restano disponibili. Gli acquisti precedenti non vengono detratti dal prezzo del pacchetto.",
-    "owned": "Hai un pacchetto festival {year}.",
-    "included": "Incluso nel tuo pacchetto festival {year}",
+    "owned": "Hai un pass per {name}.",
+    "included": "Incluso nel tuo pass per {name}",
     "buy": "Acquista il pacchetto festival",
     "opening": "Apertura del pagamento...",
     "signIn": "Accedi per acquistare il pacchetto",
@@ -31,7 +31,7 @@
     "notConfigured": "La diretta non è ancora pronta. Riprova più tardi.",
     "unsupported": "Questo browser non supporta la diretta. Usa un browser recente.",
     "connection": "Impossibile connettersi alla diretta. Controlla la connessione e riprova."
-},
+  },
   "nav": {
     "home": "Home",
     "concerts": "Concerti",
@@ -47,7 +47,7 @@
     "intro": "Offriamo rimborsi solo nei seguenti casi:",
     "listCancelled": "Lo stream è annullato.",
     "listTechnical": "Si verifica un grave problema tecnico da parte nostra che impedisce la visione.",
-      "manualProcess": "I rimborsi vengono gestiti manualmente. Se ritieni di avere diritto a un rimborso, contattaci tramite il modulo di supporto nella pagina del concerto o invia un'email a {email} con i dettagli dell'acquisto e il nome del concerto.",
+    "manualProcess": "I rimborsi vengono gestiti manualmente. Se ritieni di avere diritto a un rimborso, contattaci tramite il modulo di supporto nella pagina del concerto o invia un'email a {email} con i dettagli dell'acquisto e il nome del concerto.",
     "minorIssues": "Per problemi minori, come brevi interruzioni o temporanee fluttuazioni di qualità tipiche dei live, i rimborsi non sono previsti. Faremo comunque del nostro meglio per aiutarti a risolvere i problemi.",
     "backToConcerts": "← Torna ai concerti"
   },
@@ -325,5 +325,35 @@
       "deleteFailed": "Impossibile archiviare il concerto. Riprova.",
       "deleteError": "Impossibile archiviare il concerto"
     }
+  },
+  "concertGroups": {
+    "title": "Gruppi di concerti",
+    "back": "Torna all'amministrazione",
+    "create": "Crea gruppo",
+    "intro": "Scegli i concerti esistenti inclusi nel pass e collega un prezzo Stripe per tutto il gruppo.",
+    "loadError": "Impossibile caricare i gruppi di concerti.",
+    "saveError": "Impossibile salvare il gruppo.",
+    "retry": "Riprova",
+    "saved": "Gruppo salvato.",
+    "loading": "Caricamento dei gruppi...",
+    "edit": "Modifica gruppo",
+    "name": "Nome del gruppo",
+    "priceId": "ID prezzo Stripe",
+    "stripeHelp": "In Stripe, crea un prodotto con il nome del gruppo e aggiungi un prezzo fisso una tantum. Incolla qui il suo ID prezzo. Usa la stessa modalità di test o produzione dell'app. Il prezzo mostrato agli acquirenti proviene da Stripe.",
+    "openStripe": "Apri i prodotti Stripe",
+    "concerts": "{count} concerti selezionati",
+    "membershipHelp": "Le date non determinano quali concerti sono inclusi. I concerti aggiunti saranno disponibili anche per chi possiede già il pass. I concerti nascosti restano inaccessibili fino alla pubblicazione. Gli orari sono quelli della Slovenia.",
+    "locked": "Un acquisto è già stato avviato per questo gruppo. Puoi aggiungere concerti, ma non rimuovere quelli già selezionati.",
+    "search": "Cerca un concerto",
+    "hidden": "Nascosto",
+    "noConcerts": "Crea prima i concerti, poi selezionali qui.",
+    "salesEnabled": "Abilita la vendita del pass",
+    "salesHelp": "Disattivare le vendite nasconde l'offerta ai nuovi acquirenti. Chi possiede già il pass mantiene l'accesso.",
+    "saving": "Salvataggio...",
+    "save": "Salva gruppo",
+    "cancel": "Annulla",
+    "empty": "Non ci sono ancora gruppi di concerti.",
+    "onSale": "Vendite abilitate",
+    "offSale": "Vendite disabilitate"
   }
 }

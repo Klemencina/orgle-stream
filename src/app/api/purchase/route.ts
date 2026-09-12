@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import { getStripe } from '@/lib/stripe'
 import { fulfillCheckout } from '@/lib/tickets'
-import { festivalYear, hasConcertAccess, hasFestivalPass } from '@/lib/festival-pass'
+import { hasConcertAccess } from '@/lib/festival-pass'
 
 export const runtime = 'nodejs'
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         const sessionConcertId = metadata.concertId
         const isOwner = Boolean(sessionUserId && sessionUserId === userId)
         const isSameConcert = metadata.purchaseType === 'festivalPass'
-          ? metadata.year === String(festivalYear(concert.date))
+          ? Boolean(await prisma.festivalPass.findFirst({ where: { id: metadata.passId || '', userId, group: { concerts: { some: { id: concertId } } } } }))
           : Boolean(sessionConcertId && sessionConcertId === concertId)
 
         if (!isOwner || !isSameConcert) {
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         }
         await fulfillCheckout(prisma, session)
         checkoutPending = metadata.purchaseType === 'festivalPass'
-          ? !(await hasFestivalPass(prisma, userId, concert.date))
+          ? !Boolean(await prisma.festivalPass.findFirst({ where: { id: metadata.passId || '', userId, status: 'paid' } }))
           : !(await hasConcertAccess(prisma, userId, concert))
       } catch (err) {
         console.error('Session verify failed:', err)

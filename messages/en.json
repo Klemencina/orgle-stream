@@ -1,11 +1,11 @@
 {
   "festivalPass": {
-    "title": "{year} festival pass",
-    "description": "One purchase gives you online access to every festival concert in {year}, including concerts added later.",
+    "title": "{name}",
+    "description": "One purchase gives you online access to the concerts listed below, including concerts added to this group later.",
     "liveOnly": "Live streams only, during each concert’s viewing window. Times shown are in Slovenia. Recordings are not included.",
     "noCredit": "Individual tickets remain available. Earlier ticket purchases are not deducted from the pass price.",
-    "owned": "You have a {year} festival pass.",
-    "included": "Included in your {year} festival pass",
+    "owned": "You have a pass for {name}.",
+    "included": "Included in your pass for {name}",
     "buy": "Buy festival pass",
     "opening": "Opening checkout...",
     "signIn": "Sign in to buy the pass",
@@ -31,7 +31,7 @@
     "notConfigured": "The stream is not ready. Please try again later.",
     "unsupported": "This browser cannot play the stream. Please use a recent browser.",
     "connection": "The stream could not connect. Check your connection and try again."
-},
+  },
   "nav": {
     "home": "Home",
     "concerts": "Concerts",
@@ -47,7 +47,7 @@
     "intro": "We offer refunds only in the following cases:",
     "listCancelled": "The stream is cancelled.",
     "listTechnical": "There is a major technical problem on our side that prevents viewing.",
-      "manualProcess": "Refunds are processed manually. If you believe you are eligible, please contact us via the support form on the concert page or email {email} with your purchase details and the concert name.",
+    "manualProcess": "Refunds are processed manually. If you believe you are eligible, please contact us via the support form on the concert page or email {email} with your purchase details and the concert name.",
     "minorIssues": "For minor issues such as brief buffering or temporary quality fluctuations typical for live streams, refunds are not provided. We will, however, do our best to help you troubleshoot.",
     "backToConcerts": "← Back to concerts"
   },
@@ -325,5 +325,35 @@
       "deleteFailed": "Could not archive the concert. Please try again.",
       "deleteError": "Could not archive the concert"
     }
+  },
+  "concertGroups": {
+    "title": "Concert groups",
+    "back": "Back to admin",
+    "create": "Create group",
+    "intro": "Choose which existing concerts a pass includes and connect one Stripe price for the whole group.",
+    "loadError": "Could not load concert groups.",
+    "saveError": "Could not save the group.",
+    "retry": "Try again",
+    "saved": "Group saved.",
+    "loading": "Loading groups...",
+    "edit": "Edit group",
+    "name": "Group name",
+    "priceId": "Stripe Price ID",
+    "stripeHelp": "In Stripe, create a product named after this group and add a fixed one-time price. Paste its Price ID here. Use the same test or live mode as the app. The amount shown to buyers comes from Stripe.",
+    "openStripe": "Open Stripe products",
+    "concerts": "{count} selected concerts",
+    "membershipHelp": "Dates do not determine membership. Concerts added here also become available to existing pass holders. Hidden concerts stay unavailable until published. Times are shown in Slovenia.",
+    "locked": "Checkout has started for this group. Existing selections cannot be removed, but you can add concerts.",
+    "search": "Find a concert",
+    "hidden": "Hidden",
+    "noConcerts": "Create concerts first, then select them here.",
+    "salesEnabled": "Enable pass sales",
+    "salesHelp": "Turning sales off hides the offer from new buyers. Existing pass holders keep access.",
+    "saving": "Saving...",
+    "save": "Save group",
+    "cancel": "Cancel",
+    "empty": "No concert groups yet.",
+    "onSale": "Sales enabled",
+    "offSale": "Sales disabled"
   }
 }

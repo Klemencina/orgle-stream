@@ -4,7 +4,6 @@ import { prisma } from '@/lib/db'
 import { getStripe } from '@/lib/stripe'
 import { CheckoutError, createCheckout } from '@/lib/checkout'
 import { createFestivalCheckout } from '@/lib/festival-checkout'
-import { getFestivalPassConfig } from '@/lib/festival-pass'
 
 export const runtime = 'nodejs'
 
@@ -23,9 +22,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid purchase type' }, { status: 400 })
     }
     if (body.purchaseType === 'festivalPass') {
-      const config = getFestivalPassConfig()
-      if (!config || body.year !== config.year) return NextResponse.json({ error: 'Festival pass unavailable' }, { status: 400 })
-      return NextResponse.json(await createFestivalCheckout(prisma, getStripe(), { userId, concertId: body.concertId, locale, appUrl }, config))
+      if (typeof body.groupId !== 'string' || !body.groupId.trim()) return NextResponse.json({ error: 'Festival pass unavailable' }, { status: 400 })
+      return NextResponse.json(await createFestivalCheckout(prisma, getStripe(), { userId, concertId: body.concertId, groupId: body.groupId, locale, appUrl }))
     }
     return NextResponse.json(await createCheckout(prisma, getStripe(), {
       userId, concertId: body.concertId, locale, appUrl,

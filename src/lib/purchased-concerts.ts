@@ -1,6 +1,5 @@
 import type { PrismaClient } from '@prisma/client'
 import { getTicketDateFilter } from './viewing-window'
-import { festivalDates } from './festival-pass'
 
 export async function listPurchasedConcerts(db: PrismaClient, userId: string, locale: string, when: string) {
   const dateFilter = getTicketDateFilter(when)
@@ -31,7 +30,7 @@ export async function listPurchasedConcerts(db: PrismaClient, userId: string, lo
     const tr = t.concert.translations[0]
     return {
       ticketId: t.id,
-      passYear: null as number | null,
+      passName: null as string | null,
       stripePaymentIntentId: t.stripePaymentIntentId || null,
       stripeCheckoutSessionId: t.stripeCheckoutSessionId || null,
       concertId: t.concert.id,
@@ -45,19 +44,20 @@ export async function listPurchasedConcerts(db: PrismaClient, userId: string, lo
     }
   })
 
-  const passes = await db.festivalPass.findMany({ where: { userId, status: 'paid' }, orderBy: { year: 'desc' } })
+  const passes = await db.festivalPass.findMany({ where: { userId, status: 'paid' }, orderBy: { createdAt: 'desc' }, include: { group: true } })
   const existing = new Set(items.map(item => item.concertId))
   for (const pass of passes) {
     const concerts = await db.concert.findMany({
-      where: { isVisible: true, AND: [{ date: festivalDates(pass.year) }, ...(dateFilter ? [{ date: dateFilter }] : [])] },
+      where: { isVisible: true, groups: { some: { id: pass.groupId } }, ...(dateFilter ? { date: dateFilter } : {}) },
       orderBy: { date: 'asc' },
       select: { id: true, date: true, translations: { where: { locale }, select: { title: true, subtitle: true, venue: true } } },
     })
     for (const concert of concerts) {
       if (existing.has(concert.id)) continue
+      existing.add(concert.id)
       const tr = concert.translations[0]
       items.push({
-        ticketId: `pass:${pass.id}:${concert.id}`, passYear: pass.year,
+        ticketId: `pass:${pass.id}:${concert.id}`, passName: pass.group.name,
         stripePaymentIntentId: null, stripeCheckoutSessionId: null,
         concertId: concert.id, date: concert.date, title: tr?.title || '', subtitle: tr?.subtitle || null, venue: tr?.venue || '',
         amountCents: 0, currency: pass.currency, purchasedAt: pass.createdAt,
@@ -65,5 +65,5 @@ export async function listPurchasedConcerts(db: PrismaClient, userId: string, lo
     }
   }
   items.sort((a, b) => when === 'past' ? b.date.getTime() - a.date.getTime() : a.date.getTime() - b.date.getTime())
-  return { items, passes: passes.map(p => ({ id: p.id, year: p.year, amountCents: p.amountCents, currency: p.currency, purchasedAt: p.createdAt })) }
+  return { items, passes: passes.map(p => ({ id: p.id, name: p.group.name, amountCents: p.amountCents, currency: p.currency, purchasedAt: p.createdAt })) }
 }

@@ -5,8 +5,8 @@ import { useUser, SignInButton } from '@clerk/nextjs';
 import { useLocale, useTranslations } from 'next-intl';
 
 type Offer = {
-  available: boolean;
-  year: number;
+  groupId: string;
+  name: string;
   owned: boolean;
   amountCents: number;
   currency: string;
@@ -21,23 +21,27 @@ export default function FestivalPassOffer(props: { concertId?: string; refreshKe
 }
 
 function OfferContent({ concertId, signedIn }: { concertId?: string; signedIn: boolean }) {
-  const t = useTranslations('festivalPass');
   const locale = useLocale();
-  const [offer, setOffer] = useState<Offer | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [offers, setOffers] = useState<Offer[]>([]);
   useEffect(() => {
     const controller = new AbortController();
-    setOffer(null);
+    setOffers([]);
     const query = new URLSearchParams({ locale });
     if (concertId) query.set('concertId', concertId);
     void fetch(`/api/festival-pass?${query}`, { cache: 'no-store', signal: controller.signal })
-      .then(async res => { if (res.ok) { const data = await res.json(); if (!controller.signal.aborted) setOffer(data); } })
+      .then(async res => { if (res.ok) { const data = await res.json(); if (!controller.signal.aborted) setOffers(data.offers || []); } })
       .catch(() => {});
     return () => controller.abort();
   }, [concertId, locale]);
-  if (!offer?.available) return null;
-  if (offer.owned) return <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 my-6" role="status">{t('owned', { year: offer.year })}</div>;
+  return <>{offers.map(offer => <GroupOffer key={offer.groupId} offer={offer} signedIn={signedIn} />)}</>;
+}
+
+function GroupOffer({ offer, signedIn }: { offer: Offer; signedIn: boolean }) {
+  const t = useTranslations('festivalPass');
+  const locale = useLocale();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(false);
+  if (offer.owned) return <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 my-6" role="status">{t('owned', { name: offer.name })}</div>;
 
   async function buy() {
     if (busy || !offer) return;
@@ -46,7 +50,7 @@ function OfferContent({ concertId, signedIn }: { concertId?: string; signedIn: b
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purchaseType: 'festivalPass', year: offer.year, concertId: offer.concertId, locale }),
+        body: JSON.stringify({ purchaseType: 'festivalPass', groupId: offer.groupId, concertId: offer.concertId, locale }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error('Checkout unavailable');
@@ -61,8 +65,8 @@ function OfferContent({ concertId, signedIn }: { concertId?: string; signedIn: b
 
   return (
     <section className="bg-orange-50 dark:bg-gray-800 border border-orange-200 dark:border-orange-800 rounded-xl p-6 my-6">
-      <h2 className="text-xl font-bold">{t('title', { year: offer.year })}</h2>
-      <p className="mt-2">{t('description', { year: offer.year })}</p>
+      <h2 className="text-xl font-bold">{offer.name}</h2>
+      <p className="mt-2">{t('description')}</p>
       <ul className="mt-3 space-y-1 text-sm">
         {offer.concerts.map(c => <li key={c.id}>{new Date(c.date).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Ljubljana' })} · {c.title}</li>)}
       </ul>

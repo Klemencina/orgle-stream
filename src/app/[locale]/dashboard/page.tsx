@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 
 type Ticket = {
   ticketId: string;
-  passYear: number | null;
+  passName: string | null;
   concertId: string;
   date: string;
   title: string;
@@ -18,7 +18,7 @@ type Ticket = {
   purchasedAt: string;
 };
 
-type Pass = { id: string; year: number; amountCents: number; currency: string };
+type Pass = { id: string; name: string; amountCents: number; currency: string };
 
 export default function Dashboard() {
   const t = useTranslations('dashboard');
@@ -94,7 +94,7 @@ function DashboardContent() {
       )}
       {!loading && !error && passes.map(pass => (
         <div key={pass.id} className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 mt-6">
-          <p>{passText('owned', { year: pass.year })}</p>
+          <p>{passText('owned', { name: pass.name })}</p>
           <p className="text-sm">{(pass.amountCents / 100).toLocaleString(locale, { style: 'currency', currency: pass.currency })}</p>
         </div>
       ))}
@@ -113,9 +113,9 @@ function DashboardContent() {
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">{t('timezone')}</p>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {item.passYear ? passText('included', { year: item.passYear }) : t('purchased', { date: new Date(item.purchasedAt).toLocaleDateString(locale), amount: (item.amountCents / 100).toLocaleString(locale, { style: 'currency', currency: item.currency.toUpperCase() }) })}
+                    {item.passName ? passText('included', { name: item.passName }) : t('purchased', { date: new Date(item.purchasedAt).toLocaleDateString(locale), amount: (item.amountCents / 100).toLocaleString(locale, { style: 'currency', currency: item.currency.toUpperCase() }) })}
                   </div>
-                  {!item.passYear && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-all">{t('ticketId', { id: item.ticketId })}</div>}
+                  {!item.passName && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-all">{t('ticketId', { id: item.ticketId })}</div>}
                 </div>
                 <Link href={`/${locale}/concerts/${item.concertId}`} className="shrink-0 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white px-3 py-2 rounded">
                   {t('viewConcert')}

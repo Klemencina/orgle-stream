@@ -1,11 +1,11 @@
 {
   "festivalPass": {
-    "title": "Festivalski paket {year}",
-    "description": "En nakup omogoča spletni ogled vseh festivalskih koncertov v letu {year}, tudi naknadno dodanih.",
+    "title": "{name}",
+    "description": "En nakup omogoča spletni dostop do spodaj navedenih koncertov in koncertov, ki bodo pozneje dodani tej skupini.",
     "liveOnly": "Samo prenosi v živo v času ogleda posameznega koncerta. Naveden je čas v Sloveniji. Posnetki niso vključeni.",
     "noCredit": "Posamezne vstopnice ostajajo na voljo. Prejšnji nakupi vstopnic se ne odštejejo od cene paketa.",
-    "owned": "Imate festivalski paket {year}.",
-    "included": "Vključeno v vaš festivalski paket {year}",
+    "owned": "Imate vstopnico za {name}.",
+    "included": "Vključeno v vašo vstopnico za {name}",
     "buy": "Kupi festivalski paket",
     "opening": "Odpiranje plačila...",
     "signIn": "Prijavite se za nakup paketa",
@@ -31,7 +31,7 @@
     "notConfigured": "Prenos še ni pripravljen. Poskusite pozneje.",
     "unsupported": "Ta brskalnik ne podpira prenosa. Uporabite novejši brskalnik.",
     "connection": "Povezava s prenosom ni uspela. Preverite povezavo in poskusite znova."
-},
+  },
   "nav": {
     "home": "Domov",
     "concerts": "Koncerti",
@@ -47,7 +47,7 @@
     "intro": "Vračila nudimo samo v naslednjih primerih:",
     "listCancelled": "Prenos je odpovedan.",
     "listTechnical": "Na naši strani pride do večje tehnične težave, ki onemogoča ogled.",
-      "manualProcess": "Vračila obdelujemo ročno. Če menite, da ste upravičeni, nas kontaktirajte preko obrazca za podporo na strani koncerta ali pišite na {email} in priložite podatke o nakupu ter ime koncerta.",
+    "manualProcess": "Vračila obdelujemo ročno. Če menite, da ste upravičeni, nas kontaktirajte preko obrazca za podporo na strani koncerta ali pišite na {email} in priložite podatke o nakupu ter ime koncerta.",
     "minorIssues": "Za manjše težave, kot so kratkotrajno nalaganje (buffering) ali začasna nihanja kakovosti, ki so značilna za prenose v živo, vračila niso predvidena. Vseeno vam bomo pomagali pri odpravljanju težav.",
     "backToConcerts": "← Nazaj na koncerte"
   },
@@ -348,5 +348,35 @@
       "deleteFailed": "Koncerta ni bilo mogoče arhivirati. Poskusite znova.",
       "deleteError": "Koncerta ni bilo mogoče arhivirati"
     }
+  },
+  "concertGroups": {
+    "title": "Skupine koncertov",
+    "back": "Nazaj na administracijo",
+    "create": "Ustvari skupino",
+    "intro": "Izberite obstoječe koncerte za festivalsko vstopnico in povežite eno ceno Stripe za celotno skupino.",
+    "loadError": "Skupin koncertov ni bilo mogoče naložiti.",
+    "saveError": "Skupine ni bilo mogoče shraniti.",
+    "retry": "Poskusi znova",
+    "saved": "Skupina je shranjena.",
+    "loading": "Nalaganje skupin ...",
+    "edit": "Uredi skupino",
+    "name": "Ime skupine",
+    "priceId": "ID cene Stripe",
+    "stripeHelp": "V Stripe ustvarite izdelek z imenom skupine in dodajte fiksno enkratno ceno. Tukaj prilepite ID cene. Uporabite isti testni ali produkcijski način kot aplikacija. Znesek za kupce se prebere iz Stripe.",
+    "openStripe": "Odpri izdelke v Stripe",
+    "concerts": "{count} izbranih koncertov",
+    "membershipHelp": "Datumi ne določajo članstva. Dodani koncerti bodo dostopni tudi obstoječim imetnikom vstopnice. Skriti koncerti so nedostopni do objave. Časi so prikazani za Slovenijo.",
+    "locked": "Za to skupino se je nakup že začel. Izbranih koncertov ni mogoče odstraniti, lahko pa dodate nove.",
+    "search": "Poišči koncert",
+    "hidden": "Skrito",
+    "noConcerts": "Najprej ustvarite koncerte, nato jih izberite tukaj.",
+    "salesEnabled": "Omogoči prodajo vstopnice",
+    "salesHelp": "Izklop prodaje skrije ponudbo novim kupcem. Obstoječi imetniki ohranijo dostop.",
+    "saving": "Shranjevanje ...",
+    "save": "Shrani skupino",
+    "cancel": "Prekliči",
+    "empty": "Skupin koncertov še ni.",
+    "onSale": "Prodaja je omogočena",
+    "offSale": "Prodaja je izklopljena"
   }
 }

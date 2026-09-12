@@ -23,6 +23,7 @@ function AdminContent() {
   const params = useParams();
   const locale = params.locale as string;
   const t = useTranslations('admin.dashboard');
+  const groupText = useTranslations('concertGroups');
   const [concerts, setConcerts] = useState<LocalizedConcert[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +129,8 @@ function AdminContent() {
               {t('subtitle')} {user?.firstName || 'Admin'}
             </p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
+            <Link href={`/${locale}/admin/groups`} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg">{groupText('title')}</Link>
             <Link href={`/${locale}/concerts`}>
               <button className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
                 {t('viewPublicConcerts')}
