@@ -124,9 +124,9 @@ export default function ConcertsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 items-start">
+          <div className="flex flex-wrap justify-center items-stretch gap-6">
             {concerts.map((concert) => (
-              <div key={concert.id} className="w-full h-full bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col">
+              <div key={concert.id} className="w-full md:w-[calc((100%-1.5rem)/2)] xl:w-[calc((100%-3rem)/3)] min-w-0 bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col">
                 
 
                 {/* Concert Details */}
