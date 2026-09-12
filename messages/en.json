@@ -279,6 +279,7 @@
       "detailsMissing": "Title or venue missing",
       "concertSubtitle": "Subtitle",
       "useCathedral": "Use Koper Cathedral",
+      "useOrganConcert": "Use Organ concert",
       "performerHelp": "Names, photos and order are shared across languages. Write each biography in the selected language.",
       "addPerformer": "Add performer",
       "removePerformer": "Remove performer",

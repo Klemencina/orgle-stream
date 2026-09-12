@@ -77,6 +77,12 @@ const getDefaultVenue = (locale: string): string => {
   return defaultVenues[locale as keyof typeof defaultVenues] || '';
 };
 
+const defaultTitles = {
+  en: 'Organ concert',
+  sl: 'Orgelski koncert',
+  it: "Concerto d'organo"
+};
+
 export default function ConcertForm({ 
   concert, 
   onConcertCreated, 
@@ -975,12 +981,23 @@ export default function ConcertForm({
                     <input
                       type="text"
                       id={`concert-title-${loc}`}
+                      list={`concert-title-options-${loc}`}
                     aria-label={`${t('title')} (${localeNames[loc as keyof typeof localeNames]})`}
                     value={translations[loc].title}
                       onChange={(e) => handleTranslationChange(loc, 'title', e.target.value)}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     />
+                    <datalist id={`concert-title-options-${loc}`}>
+                      <option value={defaultTitles[loc]} />
+                    </datalist>
+                    <button
+                      type="button"
+                      onClick={() => { handleTranslationChange(loc, 'title', defaultTitles[loc]); setTouched(true); }}
+                      className="mt-2 text-sm text-orange-600 hover:underline dark:text-orange-400"
+                    >
+                      {t('useOrganConcert')}
+                    </button>
                   </div>
 
                   <div>

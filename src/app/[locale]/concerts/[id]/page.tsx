@@ -694,7 +694,7 @@ export default function ConcertPage() {
                         <div className="mt-1 ml-4 space-y-0.5">
                           {((chosen as unknown as { subtitles?: string[] }).subtitles || []).map((s, idx) => (
                             <div key={idx} className="text-sm text-gray-500 dark:text-gray-400 italic">
-                              — {s}
+                              {s}
                             </div>
                           ))}
                         </div>
