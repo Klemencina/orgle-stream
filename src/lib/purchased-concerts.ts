@@ -1,9 +1,10 @@
 import { getGroupName } from './group-name'
 import type { PrismaClient } from '@prisma/client'
-import { getTicketDateFilter } from './viewing-window'
+import { getTicketDateFilter, VIEWING_DURATION_MS } from './viewing-window'
 
 export async function listPurchasedConcerts(db: PrismaClient, userId: string, locale: string, when: string) {
-  const dateFilter = getTicketDateFilter(when)
+  const now = Date.now()
+  const dateFilter = getTicketDateFilter(when, now)
   const tickets = await db.ticket.findMany({
     where: { userId, status: 'paid', ...(dateFilter ? { concert: { date: dateFilter } } : {}) },
     orderBy: { createdAt: 'desc' },
@@ -45,14 +46,30 @@ export async function listPurchasedConcerts(db: PrismaClient, userId: string, lo
     }
   })
 
-  const passes = await db.festivalPass.findMany({ where: { userId, status: 'paid' }, orderBy: { createdAt: 'desc' }, include: { group: true } })
+  const passes = await db.festivalPass.findMany({
+    where: { userId, status: 'paid' },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      group: {
+        include: {
+          concerts: {
+            where: { isVisible: true },
+            orderBy: { date: 'asc' },
+            select: {
+              id: true, date: true,
+              translations: { where: { locale }, select: { title: true, subtitle: true, venue: true } },
+            },
+          },
+        },
+      },
+    },
+  })
   const existing = new Set(items.map(item => item.concertId))
   for (const pass of passes) {
-    const concerts = await db.concert.findMany({
-      where: { isVisible: true, groups: { some: { id: pass.groupId } }, ...(dateFilter ? { date: dateFilter } : {}) },
-      orderBy: { date: 'asc' },
-      select: { id: true, date: true, translations: { where: { locale }, select: { title: true, subtitle: true, venue: true } } },
-    })
+    const cutoff = now - VIEWING_DURATION_MS
+    const concerts = pass.group.concerts.filter(concert =>
+      when === 'past' ? concert.date.getTime() < cutoff : when === 'upcoming' ? concert.date.getTime() >= cutoff : true
+    )
     for (const concert of concerts) {
       if (existing.has(concert.id)) continue
       existing.add(concert.id)
@@ -66,5 +83,21 @@ export async function listPurchasedConcerts(db: PrismaClient, userId: string, lo
     }
   }
   items.sort((a, b) => when === 'past' ? b.date.getTime() - a.date.getTime() : a.date.getTime() - b.date.getTime())
-  return { items, passes: passes.map(p => ({ id: p.id, name: getGroupName(p.group, locale), amountCents: p.amountCents, currency: p.currency, purchasedAt: p.createdAt })) }
+  return {
+    items,
+    passes: passes.map(pass => ({
+      id: pass.id,
+      name: getGroupName(pass.group, locale),
+      amountCents: pass.amountCents,
+      currency: pass.currency,
+      purchasedAt: pass.createdAt,
+      concerts: pass.group.concerts.map(concert => ({
+        concertId: concert.id,
+        date: concert.date,
+        title: concert.translations[0]?.title || '',
+        subtitle: concert.translations[0]?.subtitle || null,
+        venue: concert.translations[0]?.venue || '',
+      })),
+    })),
+  }
 }

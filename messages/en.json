@@ -35,7 +35,7 @@
   "nav": {
     "home": "Home",
     "concerts": "Concerts",
-    "dashboard": "Dashboard",
+    "dashboard": "My concerts",
     "backToHome": "Back to Home",
     "backToConcerts": "Back to Concerts",
     "browseConcerts": "Browse Concerts"
@@ -78,7 +78,7 @@
     "getStarted": "Get Started",
     "welcomeBack": "Welcome back!",
     "signedInMessage": "You're already signed in. Ready to watch Orgle Koper streams?",
-    "goToDashboard": "Go to Dashboard"
+    "goToDashboard": "Go to My concerts"
   },
   "home": {
     "title": "Koper Cathedral Organ",
@@ -209,7 +209,7 @@
     }
   },
   "dashboard": {
-    "title": "Your tickets",
+    "title": "My concerts",
     "welcome": "Welcome to your Dashboard",
     "listeningTime": "Listening Time",
     "favoritePieces": "Favorite Pieces",
@@ -234,7 +234,17 @@
     "purchased": "Purchased {date} · {amount}",
     "ticketId": "Ticket ID: {id}",
     "viewConcert": "View concert",
-    "timezone": "Concert time in Slovenia"
+    "timezone": "Concert time in Slovenia",
+    "nextConcert": "Your next concert",
+    "availableNow": "Available to watch",
+    "watchNow": "Watch now",
+    "viewingAvailable": "Stream access is open",
+    "purchaseDetails": "Purchase details",
+    "browseConcerts": "Browse concerts",
+    "yourPasses": "Your group passes",
+    "includedConcerts": "Concerts included in this pass",
+    "ended": "Ended",
+    "noPublishedConcerts": "Concerts will appear here once published."
   },
   "languages": {
     "english": "English",
@@ -320,7 +330,7 @@
       "subtitle": "Manage concerts and content for",
       "loading": "Loading Admin Dashboard...",
       "viewPublicConcerts": "View Public Concerts",
-      "userDashboard": "User Dashboard",
+      "userDashboard": "My concerts",
       "totalConcerts": "Total Concerts",
       "upcoming": "Upcoming",
       "hidden": "Hidden",

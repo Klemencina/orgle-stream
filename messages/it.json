@@ -35,7 +35,7 @@
   "nav": {
     "home": "Home",
     "concerts": "Concerti",
-    "dashboard": "Dashboard",
+    "dashboard": "I miei concerti",
     "backToHome": "Torna alla Home",
     "backToConcerts": "Torna ai Concerti",
     "browseConcerts": "Sfoglia Concerti"
@@ -78,7 +78,7 @@
     "getStarted": "Inizia",
     "welcomeBack": "Bentornato!",
     "signedInMessage": "Sei già connesso. Pronto a esplorare la tua libreria di musica per organo?",
-    "goToDashboard": "Vai alla Dashboard"
+    "goToDashboard": "Vai ai miei concerti"
   },
   "home": {
     "title": "Organo del Duomo di Capodistria",
@@ -209,7 +209,7 @@
     }
   },
   "dashboard": {
-    "title": "I tuoi biglietti",
+    "title": "I miei concerti",
     "welcome": "Benvenuto nella tua Dashboard",
     "listeningTime": "Tempo di Ascolto",
     "favoritePieces": "Pezzi Preferiti",
@@ -234,7 +234,17 @@
     "purchased": "Acquistato il {date} · {amount}",
     "ticketId": "Numero del biglietto: {id}",
     "viewConcert": "Vai al concerto",
-    "timezone": "Orario del concerto in Slovenia"
+    "timezone": "Orario del concerto in Slovenia",
+    "nextConcert": "Il tuo prossimo concerto",
+    "availableNow": "Disponibile per la visione",
+    "watchNow": "Guarda ora",
+    "viewingAvailable": "Accesso alla trasmissione aperto",
+    "purchaseDetails": "Dettagli dell'acquisto",
+    "browseConcerts": "Sfoglia i concerti",
+    "yourPasses": "I tuoi pass di gruppo",
+    "includedConcerts": "Concerti inclusi in questo pass",
+    "ended": "Terminato",
+    "noPublishedConcerts": "I concerti appariranno qui dopo la pubblicazione."
   },
   "languages": {
     "english": "English",
@@ -320,7 +330,7 @@
       "subtitle": "Gestisci concerti e contenuti per",
       "loading": "Caricamento Dashboard Amministratore...",
       "viewPublicConcerts": "Visualizza Concerti Pubblici",
-      "userDashboard": "Dashboard Utente",
+      "userDashboard": "I miei concerti",
       "totalConcerts": "Concerti Totali",
       "upcoming": "Prossimi",
       "hidden": "Nascosti",

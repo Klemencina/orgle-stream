@@ -105,7 +105,7 @@ export default function Header() {
               )}
               <Link href={`/${currentLocale}/dashboard`}>
                 <button className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-sm">
-                  Dashboard
+                  {t('dashboard.title')}
                 </button>
               </Link>
               <UserButton />
@@ -198,7 +198,7 @@ export default function Header() {
                 )}
                 <Link href={`/${currentLocale}/dashboard`} onClick={() => setIsMobileMenuOpen(false)}>
                   <button className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm">
-                    Dashboard
+                    {t('dashboard.title')}
                   </button>
                 </Link>
                 <div className="pt-2">

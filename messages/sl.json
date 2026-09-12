@@ -35,7 +35,7 @@
   "nav": {
     "home": "Domov",
     "concerts": "Koncerti",
-    "dashboard": "Nadzorna plošča",
+    "dashboard": "Moji koncerti",
     "backToHome": "Nazaj na domov",
     "backToConcerts": "Nazaj na koncerte",
     "browseConcerts": "Prebrskaj koncerte"
@@ -78,7 +78,7 @@
     "getStarted": "Začnite",
     "welcomeBack": "Dobrodošli nazaj!",
     "signedInMessage": "Že ste prijavljeni. Pripravljeni na ogled prenosov Orgle Koper?",
-    "goToDashboard": "Pojdite na nadzorno ploščo"
+    "goToDashboard": "Pojdi na Moje koncerte"
   },
   "home": {
     "title": "Orgle koprske stolnice",
@@ -232,7 +232,7 @@
     }
   },
   "dashboard": {
-    "title": "Vaše vstopnice",
+    "title": "Moji koncerti",
     "welcome": "Dobrodošli na nadzorni plošči",
     "listeningTime": "Čas poslušanja",
     "favoritePieces": "Priljubljene skladbe",
@@ -257,7 +257,17 @@
     "purchased": "Kupljeno {date} · {amount}",
     "ticketId": "Številka vstopnice: {id}",
     "viewConcert": "Ogled koncerta",
-    "timezone": "Čas koncerta v Sloveniji"
+    "timezone": "Čas koncerta v Sloveniji",
+    "nextConcert": "Vaš naslednji koncert",
+    "availableNow": "Na voljo za ogled",
+    "watchNow": "Oglej si prenos",
+    "viewingAvailable": "Dostop do prenosa je odprt",
+    "purchaseDetails": "Podrobnosti nakupa",
+    "browseConcerts": "Prebrskaj koncerte",
+    "yourPasses": "Vaše skupinske vstopnice",
+    "includedConcerts": "Koncerti, vključeni v to vstopnico",
+    "ended": "Zaključen",
+    "noPublishedConcerts": "Koncerti bodo tukaj prikazani po objavi."
   },
   "languages": {
     "english": "English",
@@ -343,7 +353,7 @@
       "subtitle": "Upravljaj koncerte in vsebino za",
       "loading": "Nalagam administratorsko nadzorno ploščo...",
       "viewPublicConcerts": "Ogled javnih koncertov",
-      "userDashboard": "Uporabniška nadzorna plošča",
+      "userDashboard": "Moji koncerti",
       "totalConcerts": "Skupaj koncertov",
       "upcoming": "Prihajajoči",
       "hidden": "Skriti",
