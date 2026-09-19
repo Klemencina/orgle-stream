@@ -1,12 +1,18 @@
 {
   "festivalPass": {
+    "passLabel": "Pacchetto festival",
+    "discount": "−{percent}%",
+    "concertCount": "{count, plural, one {# concerto in diretta} other {# concerti in diretta}}",
+    "individualPrice": "Biglietti singoli",
+    "save": "Risparmia {amount}",
+    "details": "Dettagli",
     "title": "{name}",
     "description": "Un acquisto dà accesso online ai concerti elencati e a quelli aggiunti al gruppo in seguito.",
     "liveOnly": "Solo dirette, durante il periodo di visione di ciascun concerto. Gli orari sono quelli della Slovenia. Le registrazioni non sono incluse.",
     "noCredit": "I biglietti singoli restano disponibili. Gli acquisti precedenti non vengono detratti dal prezzo del pacchetto.",
     "owned": "Hai un pass per {name}.",
     "included": "Incluso nel tuo pass per {name}",
-    "buy": "Acquista il pacchetto festival",
+    "buy": "Acquista il pass",
     "opening": "Apertura del pagamento...",
     "signIn": "Accedi per acquistare il pacchetto",
     "error": "Impossibile aprire il pagamento. Se hai già avviato un pagamento, completalo o verificane lo stato prima di riprovare. Se il problema persiste, contatta l'assistenza."

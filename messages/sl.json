@@ -1,12 +1,18 @@
 {
   "festivalPass": {
+    "passLabel": "Festivalski paket",
+    "discount": "−{percent} %",
+    "concertCount": "{count, plural, one {# koncert v živo} two {# koncerta v živo} few {# koncerti v živo} other {# koncertov v živo}}",
+    "individualPrice": "Posamezne vstopnice",
+    "save": "Prihranite {amount}",
+    "details": "Podrobnosti",
     "title": "{name}",
     "description": "En nakup omogoča spletni dostop do spodaj navedenih koncertov in koncertov, ki bodo pozneje dodani tej skupini.",
     "liveOnly": "Samo prenosi v živo v času ogleda posameznega koncerta. Naveden je čas v Sloveniji. Posnetki niso vključeni.",
     "noCredit": "Posamezne vstopnice ostajajo na voljo. Prejšnji nakupi vstopnic se ne odštejejo od cene paketa.",
     "owned": "Imate vstopnico za {name}.",
     "included": "Vključeno v vašo vstopnico za {name}",
-    "buy": "Kupi festivalski paket",
+    "buy": "Kupi paket",
     "opening": "Odpiranje plačila...",
     "signIn": "Prijavite se za nakup paketa",
     "error": "Plačila ni bilo mogoče odpreti. Če ste plačilo že začeli, ga dokončajte ali preverite, preden poskusite znova. Če težava ostaja, se obrnite na podporo."

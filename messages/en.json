@@ -1,5 +1,11 @@
 {
   "festivalPass": {
+    "passLabel": "Festival pass",
+    "discount": "−{percent}%",
+    "concertCount": "{count, plural, one {# live concert} other {# live concerts}}",
+    "individualPrice": "Individual tickets",
+    "save": "Save {amount}",
+    "details": "Details",
     "title": "{name}",
     "description": "One purchase gives you online access to the concerts listed below, including concerts added to this group later.",
     "liveOnly": "Live streams only, during each concert’s viewing window. Times shown are in Slovenia. Recordings are not included.",

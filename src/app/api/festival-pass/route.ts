@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { getStripe } from '@/lib/stripe'
 import { VIEWING_DURATION_MS } from '@/lib/viewing-window'
 import { festivalOfferPriceId } from '@/lib/festival-checkout'
+import { individualTicketTotal } from '@/lib/festival-pricing'
 
 export const runtime = 'nodejs'
 
@@ -38,10 +39,16 @@ export async function GET(request: NextRequest) {
         if (!priceId) return null
         const price = await stripe.prices.retrieve(priceId)
         if (!price.active || price.type !== 'one_time' || price.unit_amount == null) return null
+        const individualPrices = await Promise.all(remaining.map(async concert => {
+          if (!concert.stripePriceId) return null
+          try { return await stripe.prices.retrieve(concert.stripePriceId) }
+          catch { return null }
+        }))
         return {
           ...base, owned: false, amountCents: price.unit_amount, currency: price.currency,
+          individualTotalCents: individualTicketTotal(individualPrices, price.currency),
           concertId: concertId || remaining[0].id,
-          concerts: group.concerts.map(c => ({ id: c.id, date: c.date, title: c.translations[0]?.title || '' })),
+          concerts: remaining.map(c => ({ id: c.id, date: c.date, title: c.translations[0]?.title || '', subtitle: c.translations[0]?.subtitle || null })),
         }
       } catch (error) {
         console.error('Group price unavailable:', group.id, error)
