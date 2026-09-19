@@ -9,6 +9,7 @@ import { LocalizedConcert, ProgramPiece } from '@/types/concert';
 import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import FestivalPassOffer from '@/components/FestivalPassOffer';
+import ConcertDescription from '@/components/ConcertDescription';
 import { startPurchaseCheck, type PurchaseCheck } from '@/lib/purchase-check';
 import { REPORT_EMAIL_LIMIT, REPORT_MESSAGE_LIMIT } from '@/lib/support-report';
 import { getViewingWindow } from '@/lib/viewing-window';
@@ -284,15 +285,11 @@ export default function ConcertPage() {
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="min-w-0 lg:col-span-2 space-y-6">
             {/* Concert Info Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex flex-col md:flex-row md:items-center gap-6">
-                <div className="flex-1">
-                  {concert.description && concert.description.trim().length > 0 && (
-                    <p className="text-gray-600 dark:text-gray-300 mb-4">{concert.description}</p>
-                  )}
-                  
+                <div className="min-w-0 flex-1">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">📅</span>
@@ -316,6 +313,7 @@ export default function ConcertPage() {
                       <span>{concert.venue}</span>
                     </div>
                   </div>
+                  <ConcertDescription key={`${concert.id}:${locale}`} description={concert.description || ''} />
                 </div>
               </div>
             </div>

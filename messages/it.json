@@ -128,6 +128,8 @@
     }
   },
   "concert": {
+    "readMore": "Leggi di più",
+    "readLess": "Leggi di meno",
     "notFound": "Concerto Non Trovato",
     "notFoundMessage": "Il concerto che stai cercando non esiste.",
     "viewAllConcerts": "Visualizza Tutti i Concerti",

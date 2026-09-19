@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { LocalizedConcert } from '@/types/concert';
+import { formatDescription } from '@/lib/description';
 
 export default function ConcertsPage() {
   const t = useTranslations();
@@ -179,8 +180,8 @@ export default function ConcertsPage() {
                   </div>
 
                   {concert.description?.trim() && (
-                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 break-words whitespace-normal">
-                      {concert.description}
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3 [overflow-wrap:anywhere] whitespace-pre-line">
+                      {formatDescription(concert.description)}
                     </p>
                   )}
 
