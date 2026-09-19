@@ -1,5 +1,6 @@
 {
   "festivalPass": {
+    "loading": "Caricamento dei pass festival",
     "passLabel": "Pacchetto festival",
     "discount": "−{percent}%",
     "concertCount": "{count, plural, one {# concerto in diretta} other {# concerti in diretta}}",

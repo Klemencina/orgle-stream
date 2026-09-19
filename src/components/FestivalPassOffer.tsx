@@ -1,41 +1,44 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { useUser, SignInButton } from '@clerk/nextjs';
 import { useLocale, useTranslations } from 'next-intl';
 import Link from 'next/link';
 
-type Offer = {
-  groupId: string;
-  name: string;
-  owned: boolean;
-  amountCents: number;
-  currency: string;
-  individualTotalCents?: number | null;
-  concertId: string;
-  concerts: Array<{ id: string; date: string; title: string; subtitle?: string | null }>;
-};
+import { festivalOfferCache, festivalOfferKey, type FestivalOffer as Offer } from '@/lib/festival-offer-cache';
+
+function OfferPlaceholder({ horizontal = false }: { horizontal?: boolean }) {
+  const t = useTranslations('festivalPass');
+  return <div role="status" aria-label={t('loading')} className={`min-h-72 w-full rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800 ${horizontal ? 'mb-6 md:min-h-36' : ''}`}>
+    <div aria-hidden="true" className={`motion-safe:animate-pulse space-y-4 ${horizontal ? 'md:space-y-3' : ''}`}>
+      <div className="h-5 w-2/3 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="h-4 w-1/3 rounded bg-gray-200 dark:bg-gray-700" />
+      <div className="h-8 w-1/4 rounded bg-gray-200 dark:bg-gray-700" />
+    </div>
+  </div>;
+}
 
 export default function FestivalPassOffer(props: { concertId?: string; refreshKey?: string; horizontal?: boolean }) {
   const { user, isLoaded } = useUser();
-  if (!isLoaded) return null;
-  return <OfferContent key={`${user?.id || 'guest'}:${props.concertId || ''}:${props.refreshKey}`} {...props} signedIn={!!user} />;
+  const locale = useLocale();
+  if (!isLoaded) return <OfferPlaceholder horizontal={props.horizontal} />;
+  return <OfferContent key={`${locale}:${user?.id || 'guest'}:${props.concertId || ''}:${props.refreshKey}`} {...props} userId={user?.id || null} />;
 }
 
-function OfferContent({ concertId, signedIn, horizontal = false }: { concertId?: string; signedIn: boolean; horizontal?: boolean }) {
+function OfferContent({ concertId, userId, refreshKey, horizontal = false }: { concertId?: string; userId: string | null; refreshKey?: string; horizontal?: boolean }) {
   const locale = useLocale();
-  const [offers, setOffers] = useState<Offer[]>([]);
-  useEffect(() => {
-    const controller = new AbortController();
-    setOffers([]);
-    const query = new URLSearchParams({ locale });
-    if (concertId) query.set('concertId', concertId);
-    void fetch(`/api/festival-pass?${query}`, { cache: 'no-store', signal: controller.signal })
-      .then(async res => { if (res.ok) { const data = await res.json(); if (!controller.signal.aborted) setOffers(data.offers || []); } })
-      .catch(() => {});
-    return () => controller.abort();
-  }, [concertId, locale]);
-  return <>{offers.map(offer => <GroupOffer key={offer.groupId} offer={offer} signedIn={signedIn} horizontal={horizontal} />)}</>;
+  const key = festivalOfferKey(locale, userId, concertId);
+  const [offers, setOffers] = useState<Offer[] | null>(null);
+  useLayoutEffect(() => {
+    let active = true;
+    setOffers(festivalOfferCache.read(key));
+    void festivalOfferCache.load(key, refreshKey !== undefined)
+      .then(data => { if (active) setOffers(data); })
+      .catch(() => { if (active) setOffers(previous => previous ?? []); });
+    return () => { active = false; };
+  }, [key, refreshKey]);
+  if (offers === null) return <OfferPlaceholder horizontal={horizontal} />;
+  return <>{offers.map(offer => <GroupOffer key={offer.groupId} offer={offer} signedIn={!!userId} horizontal={horizontal} />)}</>;
 }
 
 function GroupOffer({ offer, signedIn, horizontal }: { offer: Offer; signedIn: boolean; horizontal: boolean }) {
@@ -50,7 +53,7 @@ function GroupOffer({ offer, signedIn, horizontal }: { offer: Offer; signedIn: b
   const discount = savings > 0 && offer.individualTotalCents ? Math.floor(savings / offer.individualTotalCents * 100) : 0;
 
   async function buy() {
-    if (busy || !offer) return;
+    if (busy || offer.owned) return;
     setBusy(true);
     setError(false);
     try {

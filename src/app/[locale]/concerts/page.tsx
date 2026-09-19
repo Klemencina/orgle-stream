@@ -7,10 +7,14 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { LocalizedConcert } from '@/types/concert';
 import { formatDescription } from '@/lib/description';
+import { concertCache, upcomingConcerts } from '@/lib/concert-cache';
+import { festivalOfferCache, festivalOfferKey } from '@/lib/festival-offer-cache';
+import { useUser } from '@clerk/nextjs';
 
 export default function ConcertsPage() {
   const t = useTranslations();
   const params = useParams();
+  const { user, isLoaded } = useUser();
   const locale = params.locale as string;
   const [concerts, setConcerts] = useState<LocalizedConcert[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,42 +22,40 @@ export default function ConcertsPage() {
   const [isAdminView, setIsAdminView] = useState(false);
 
   useEffect(() => {
-    async function fetchConcerts() {
+    if (!locale || !isLoaded || new URLSearchParams(window.location.search).get('admin') === 'true') return;
+    void festivalOfferCache.load(festivalOfferKey(locale, user?.id || null)).catch(() => {});
+  }, [locale, isLoaded, user?.id]);
+
+  useEffect(() => {
+    if (!locale) return;
+    let active = true;
+    const adminParam = new URLSearchParams(window.location.search).get('admin') === 'true';
+    setIsAdminView(adminParam);
+    setError(null);
+    const cached = adminParam ? null : concertCache.read(locale);
+    setConcerts(upcomingConcerts(cached || []));
+    setLoading(cached === null);
+
+    async function refresh() {
       try {
-        const currentLocale = locale || 'en';
-        const adminParam = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('admin') === 'true';
-        setIsAdminView(Boolean(adminParam));
-        const response = await fetch(`/api/concerts?locale=${currentLocale}${adminParam ? '&admin=true' : ''}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch concerts');
+        let data: LocalizedConcert[];
+        if (adminParam) {
+          const response = await fetch(`/api/concerts?locale=${encodeURIComponent(locale)}&admin=true`, { cache: 'no-store' });
+          if (!response.ok) throw new Error('Failed to fetch concerts');
+          data = await response.json();
+        } else {
+          data = await concertCache.load(locale);
         }
-        const data = await response.json();
-        
-        // Filter concerts to show future concerts and concerts that started within the last 3 hours
-        const now = new Date();
-        const filteredConcerts = data.filter((concert: LocalizedConcert) => {
-          const concertDate = new Date(concert.date);
-          const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-          // Show concerts that are either in the future OR started within the last 3 hours
-          return concertDate > threeHoursAgo;
-        });
-        
-        setConcerts(filteredConcerts);
+        if (active) setConcerts(upcomingConcerts(data));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        if (active && cached === null) setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
 
-    if (locale) {
-      fetchConcerts();
-    }
+    void refresh();
+    return () => { active = false; };
   }, [locale]);
 
   if (loading) {

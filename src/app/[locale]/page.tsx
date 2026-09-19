@@ -3,14 +3,36 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from 'next-intl';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { concertCache } from '@/lib/concert-cache';
+import { festivalOfferCache, festivalOfferKey } from '@/lib/festival-offer-cache';
+import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
   const t = useTranslations();
   const params = useParams();
+  const router = useRouter();
+  const { user, isLoaded } = useUser();
   const locale = params.locale as string;
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (!locale) return;
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (connection?.saveData || ['slow-2g', '2g'].includes(connection?.effectiveType || '')) return;
+    const preload = () => {
+      router.prefetch(`/${locale}/concerts`);
+      void concertCache.load(locale).catch(() => {});
+      if (isLoaded) void festivalOfferCache.load(festivalOfferKey(locale, user?.id || null)).catch(() => {});
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(preload, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(preload, 500);
+    return () => window.clearTimeout(id);
+  }, [locale, router, isLoaded, user?.id]);
 
   // Detect theme changes
   useEffect(() => {

@@ -363,73 +363,79 @@ export default function ConcertPage() {
               </div>
             )}
 
-            {!isAdminClient && <FestivalPassOffer concertId={concertId} refreshKey={`${purchased}:${purchaseStatus}`} />}
+            {!isAdminClient && (
+              <div className={purchased === false && !hasEnded
+                ? 'grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] items-start gap-6 empty:hidden'
+                : 'space-y-6 empty:hidden'}>
+                <FestivalPassOffer concertId={concertId} refreshKey={`${purchased}:${purchaseStatus}`} />
 
-            {/* Purchase/Login CTA - hidden for admins */}
-            {purchased === false && !isAdminClient && !hasEnded && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                  {t('concert.purchaseToWatch')}
-                </h3>
-                {typeof (concert as Partial<LocalizedConcert> & { priceAmountCents?: number; priceCurrency?: string }).priceAmountCents === 'number' && (
-                  <p className="text-center text-gray-700 dark:text-gray-200 mb-4">
-                    {new Intl.NumberFormat(locale, { style: 'currency', currency: ((concert as Partial<LocalizedConcert> & { priceCurrency?: string }).priceCurrency || 'eur').toUpperCase() }).format((((concert as Partial<LocalizedConcert> & { priceAmountCents?: number }).priceAmountCents || 0) / 100))}
-                  </p>
-                )}
-                <div className="flex flex-col gap-3 justify-center">
-                  <SignedIn>
-                    {concert.stripePriceId ? (
-                      <>
-                        <button
-                          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl mx-auto"
-                          disabled={checkoutLoading}
-                          onClick={async () => {
-                            if (checkoutLoading) return;
-                            setCheckoutLoading(true);
-                            setCheckoutError(null);
-                            try {
-                              const res = await fetch('/api/checkout', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ concertId: concert.id, locale }),
-                              });
-                              const data = await res.json();
-                              if (!res.ok) throw new Error(data.error || t('concert.checkoutFailed'));
-                              if (data.alreadyOwned) setPurchased(true);
-                              else if (data.url) window.location.href = data.url;
-                              else throw new Error(t('concert.checkoutFailed'));
-                            } catch (err) {
-                              setCheckoutError(err instanceof Error ? err.message : t('concert.checkoutFailed'));
-                            } finally {
-                              setCheckoutLoading(false);
-                            }
-                          }}
-                          type="button"
-                        >
-                          {checkoutLoading ? t('concert.checkoutLoading') : t('concert.buyTicket')}
-                        </button>
-                        {checkoutError && <p role="alert" className="text-sm text-red-600 text-center">{checkoutError}</p>}
-                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                          {t('policy.refundNotice')} <a href={`/${locale}/refund-policy`} className="underline hover:text-orange-500 dark:hover:text-orange-400">{t('policy.refundPolicy')}</a>.
-                        </p>
-                      </>
-                    ) : (
-                      <div className="text-center">
-                        <p className="text-gray-600 dark:text-gray-400 font-medium">
-                          {t('concert.ticketNotAvailable')}
-                        </p>
-                      </div>
+                {/* Purchase/Login CTA - hidden for admins */}
+                {purchased === false && !hasEnded && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+                      {t('concert.purchaseToWatch')}
+                    </h3>
+                    {typeof (concert as Partial<LocalizedConcert> & { priceAmountCents?: number; priceCurrency?: string }).priceAmountCents === 'number' && (
+                      <p className="text-center text-gray-700 dark:text-gray-200 mb-4">
+                        {new Intl.NumberFormat(locale, { style: 'currency', currency: ((concert as Partial<LocalizedConcert> & { priceCurrency?: string }).priceCurrency || 'eur').toUpperCase() }).format((((concert as Partial<LocalizedConcert> & { priceAmountCents?: number }).priceAmountCents || 0) / 100))}
+                      </p>
                     )}
-                  </SignedIn>
-                  <SignedOut>
-                    <a
-                      className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 text-center"
-                      href={`/${locale}/sign-in?redirect=/${locale}/concerts/${concert.id}`}
-                    >
-                      {t('concert.loginToPurchase')}
-                    </a>
-                  </SignedOut>
-                </div>
+                    <div className="flex flex-col gap-3 justify-center">
+                      <SignedIn>
+                        {concert.stripePriceId ? (
+                          <>
+                            <button
+                              className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl mx-auto"
+                              disabled={checkoutLoading}
+                              onClick={async () => {
+                                if (checkoutLoading) return;
+                                setCheckoutLoading(true);
+                                setCheckoutError(null);
+                                try {
+                                  const res = await fetch('/api/checkout', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ concertId: concert.id, locale }),
+                                  });
+                                  const data = await res.json();
+                                  if (!res.ok) throw new Error(data.error || t('concert.checkoutFailed'));
+                                  if (data.alreadyOwned) setPurchased(true);
+                                  else if (data.url) window.location.href = data.url;
+                                  else throw new Error(t('concert.checkoutFailed'));
+                                } catch (err) {
+                                  setCheckoutError(err instanceof Error ? err.message : t('concert.checkoutFailed'));
+                                } finally {
+                                  setCheckoutLoading(false);
+                                }
+                              }}
+                              type="button"
+                            >
+                              {checkoutLoading ? t('concert.checkoutLoading') : t('concert.buyTicket')}
+                            </button>
+                            {checkoutError && <p role="alert" className="text-sm text-red-600 text-center">{checkoutError}</p>}
+                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                              {t('policy.refundNotice')} <a href={`/${locale}/refund-policy`} className="underline hover:text-orange-500 dark:hover:text-orange-400">{t('policy.refundPolicy')}</a>.
+                            </p>
+                          </>
+                        ) : (
+                          <div className="text-center">
+                            <p className="text-gray-600 dark:text-gray-400 font-medium">
+                              {t('concert.ticketNotAvailable')}
+                            </p>
+                          </div>
+                        )}
+                      </SignedIn>
+                      <SignedOut>
+                        <a
+                          className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 text-center"
+                          href={`/${locale}/sign-in?redirect=/${locale}/concerts/${concert.id}`}
+                        >
+                          {t('concert.loginToPurchase')}
+                        </a>
+                      </SignedOut>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

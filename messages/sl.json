@@ -1,5 +1,6 @@
 {
   "festivalPass": {
+    "loading": "Nalaganje festivalskih paketov",
     "passLabel": "Festivalski paket",
     "discount": "−{percent} %",
     "concertCount": "{count, plural, one {# koncert v živo} two {# koncerta v živo} few {# koncerti v živo} other {# koncertov v živo}}",

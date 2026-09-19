@@ -1,5 +1,6 @@
 {
   "festivalPass": {
+    "loading": "Loading festival passes",
     "passLabel": "Festival pass",
     "discount": "−{percent}%",
     "concertCount": "{count, plural, one {# live concert} other {# live concerts}}",
