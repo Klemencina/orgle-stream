@@ -51,26 +51,26 @@ export default function Home() {
   }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <div className="flex flex-col items-center justify-center md:min-h-screen px-4 py-6 md:p-8">
         <div className="max-w-4xl mx-auto text-center">
           {/* Logo */}
           
           
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
             {t('home.subtitle')}
           </h1>
-          <div className="mb-8 flex justify-center">
+          <div className="mb-4 md:mb-8 flex justify-center">
             <Image
               src={isDarkMode ? "/logo.svg" : "/logo-white.svg"}
               alt="Koper Cathedral Organ Logo"
               width={320}
               height={320}
-              className="drop-shadow-lg"
+              className="w-48 h-48 md:w-80 md:h-80 drop-shadow-lg"
               priority
               onLoad={() => console.log('Main page logo loaded:', isDarkMode ? "/logo.svg" : "/logo-white.svg")}
             />
           </div>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-6 md:mb-8 max-w-2xl mx-auto">
             {t('home.tagline')}
           </p>
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
