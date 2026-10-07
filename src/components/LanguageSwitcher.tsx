@@ -20,17 +20,18 @@ export default function LanguageSwitcher() {
 
   const switchLanguage = (newLocale: string) => {
     startTransition(() => {
-      // Always use the current pathname and replace the locale
+      // Keep checkout confirmation parameters and the current anchor.
+      const suffix = window.location.search + window.location.hash;
       const segments = pathname.split('/').filter(Boolean);
       if (segments.length > 0 && ['en', 'sl', 'it'].includes(segments[0])) {
         // Replace the locale segment
         segments[0] = newLocale;
         const newPathname = '/' + segments.join('/');
-        router.replace(newPathname);
+        router.replace(newPathname + suffix);
       } else {
         // Add locale prefix to the current path
         const newPathname = `/${newLocale}${pathname === '/' ? '' : pathname}`;
-        router.replace(newPathname);
+        router.replace(newPathname + suffix);
       }
     });
   };
