@@ -269,7 +269,7 @@ export default function ConcertPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 [overflow-wrap:anywhere]">
         {/* Header */}
         <div className="mb-8">
           <Link href={`/${locale}/concerts`}>
@@ -285,7 +285,7 @@ export default function ConcertPage() {
           )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="min-w-0 lg:col-span-2 space-y-6">
             {/* Concert Info Card */}
@@ -323,7 +323,7 @@ export default function ConcertPage() {
                     {t('concert.waitingForStream')}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-4 gap-4 text-center">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                     <div className="bg-orange-100 dark:bg-orange-900 p-4 rounded-lg">
                       <div className="text-3xl font-bold text-orange-500 dark:text-orange-400">{timeLeft.days}</div>
                       <div className="text-sm text-gray-600 dark:text-gray-300">{getSlovenianPlural(timeLeft.days, 'days', t)}</div>
@@ -645,10 +645,10 @@ export default function ConcertPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {/* Concert Program */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <span>🎼</span>
                   {t('concert.program')}

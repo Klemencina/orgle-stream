@@ -58,24 +58,25 @@ export default function Header() {
   return (
     <header className="relative bg-white dark:bg-gray-800 shadow-sm">
       {/* Desktop Header */}
-      <div className="hidden md:flex items-center justify-between p-4 h-16">
+      <div className="hidden lg:flex items-center justify-between p-4 h-16">
         {/* Left side - Title */}
-        <div className="flex items-center flex-shrink-0">
-          <Link href={`/${currentLocale}`} className="text-xl font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
+        <div className="flex min-w-0 items-center">
+          <Link href={`/${currentLocale}`} className="min-w-0 text-xl font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
             <Image 
               src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} 
-              alt="Logo" 
+              alt="Logo"
+              className="shrink-0"
               width={48} 
               height={48} 
               priority 
               onLoad={() => console.log('Desktop logo loaded:', isDarkMode ? "/logo.svg" : "/logo-white.svg")}
             />
-            {t('home.title')}
+            <span className="truncate">{t('home.title')}</span>
           </Link>
         </div>
 
         {/* Right side - Navigation and auth */}
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-4">
           <Link href={`/${currentLocale}/concerts`} className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 font-medium transition-colors">
             {t('nav.concerts')}
           </Link>
@@ -115,13 +116,14 @@ export default function Header() {
       </div>
 
       {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 h-16">
+      <div className="lg:hidden flex items-center justify-between p-4 h-16">
         {/* Left side - Title */}
-        <div className="flex items-center flex-shrink-0">
-          <Link href={`/${currentLocale}`} className="text-lg font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center mr-3">
+          <Link href={`/${currentLocale}`} className="min-w-0 text-lg font-bold text-orange-500 dark:text-orange-400 flex items-center gap-2">
             <Image 
               src={isDarkMode ? "/logo.svg" : "/logo-white.svg"} 
-              alt="Logo" 
+              alt="Logo"
+              className="shrink-0"
               width={36} 
               height={36} 
               priority 
@@ -134,7 +136,7 @@ export default function Header() {
         {/* Mobile menu button */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          className="shrink-0 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           aria-label="Toggle mobile menu"
         >
           <svg
@@ -154,7 +156,7 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+        <div className="lg:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
           <div className="px-4 py-4 space-y-4">
             {/* Navigation Links */}
             <div className="space-y-2">
