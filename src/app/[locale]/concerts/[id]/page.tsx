@@ -285,9 +285,9 @@ export default function ConcertPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="min-w-0 lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-[auto_1fr] gap-x-8 gap-y-6">
+          {/* Concert details */}
+          <div className="min-w-0 lg:col-span-2">
             {/* Concert Info Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -310,7 +310,72 @@ export default function ConcertPage() {
                 </div>
               </div>
             </div>
+          </div>
 
+          {/* Program follows concert details on mobile and sits alongside them on desktop. */}
+          <div className="min-w-0 self-start lg:col-start-3 lg:row-start-1 lg:row-span-2">
+            {/* Concert Program */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <span>🎼</span>
+                  {t('concert.program')}
+                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                    <button
+                      className={`px-3 py-1 text-sm ${programView === 'sl' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+                      onClick={() => setProgramView('sl')}
+                      type="button"
+                    >
+                      Slovensko
+                    </button>
+                    <button
+                      className={`px-3 py-1 text-sm ${programView === 'original' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
+                      onClick={() => setProgramView('original')}
+                      type="button"
+                    >
+                      Original
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Program list: show either Slovenian or Original based on user choice */}
+              <div className="space-y-2">
+                {(fullProgram ?? []).sort((a, b) => a.order - b.order).map((piece) => {
+                  const sl = piece.translations.find(t => t.locale === 'sl') || null;
+                  const original = piece.translations.find(t => t.locale === 'original') || null;
+                  const chosen = programView === 'sl' ? sl : original;
+                  const isIntermission = !chosen?.composer;
+                  return (
+                    <div key={piece.id} className={`py-2 px-3 rounded-lg ${
+                      isIntermission ? 'bg-gray-100 dark:bg-gray-700 italic' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}>
+                      <div className={`whitespace-pre-line break-words font-medium ${isIntermission ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                        {chosen?.title || ''}
+                      </div>
+                      {(chosen as unknown as { subtitles?: string[] })?.subtitles?.length ? (
+                        <div className="mt-1 ml-4 space-y-0.5">
+                          {((chosen as unknown as { subtitles?: string[] }).subtitles || []).map((s, idx) => (
+                            <div key={idx} className="text-sm text-gray-500 dark:text-gray-400 italic">
+                              {s}
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
+                      {chosen?.composer && (
+                        <div className="text-xs text-gray-600 dark:text-gray-400">{chosen.composer}</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Viewing access and performer details */}
+          <div className="min-w-0 space-y-6 lg:col-span-2 lg:col-start-1 lg:row-start-2">
             {/* Countdown Timer - only show if concert hasn't started and hasn't ended */}
             {!isLive && !everLive && !hasEnded && (
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
@@ -643,70 +708,6 @@ export default function ConcertPage() {
             )}
 
           </div>
-
-          {/* Sidebar */}
-          <div className="min-w-0 space-y-6">
-            {/* Concert Program */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <span>🎼</span>
-                  {t('concert.program')}
-                </h3>
-                <div className="flex items-center gap-3">
-                  <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
-                    <button
-                      className={`px-3 py-1 text-sm ${programView === 'sl' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
-                      onClick={() => setProgramView('sl')}
-                      type="button"
-                    >
-                      Slovensko
-                    </button>
-                    <button
-                      className={`px-3 py-1 text-sm ${programView === 'original' ? 'bg-orange-500 text-white' : 'bg-transparent text-gray-700 dark:text-gray-300'}`}
-                      onClick={() => setProgramView('original')}
-                      type="button"
-                    >
-                      Original
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Program list: show either Slovenian or Original based on user choice */}
-              <div className="space-y-2">
-                {(fullProgram ?? []).sort((a, b) => a.order - b.order).map((piece) => {
-                  const sl = piece.translations.find(t => t.locale === 'sl') || null;
-                  const original = piece.translations.find(t => t.locale === 'original') || null;
-                  const chosen = programView === 'sl' ? sl : original;
-                  const isIntermission = !chosen?.composer;
-                  return (
-                    <div key={piece.id} className={`py-2 px-3 rounded-lg ${
-                      isIntermission ? 'bg-gray-100 dark:bg-gray-700 italic' : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                    }`}>
-                      <div className={`whitespace-pre-line break-words font-medium ${isIntermission ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
-                        {chosen?.title || ''}
-                      </div>
-                      {(chosen as unknown as { subtitles?: string[] })?.subtitles?.length ? (
-                        <div className="mt-1 ml-4 space-y-0.5">
-                          {((chosen as unknown as { subtitles?: string[] }).subtitles || []).map((s, idx) => (
-                            <div key={idx} className="text-sm text-gray-500 dark:text-gray-400 italic">
-                              {s}
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-                      {chosen?.composer && (
-                        <div className="text-xs text-gray-600 dark:text-gray-400">{chosen.composer}</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-
         </div>
       </div>
       {lightboxOpen && lightboxSrc && (
