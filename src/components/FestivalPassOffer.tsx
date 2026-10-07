@@ -1,5 +1,7 @@
 'use client';
 
+import { formatConcertDateTime } from '@/lib/concert-time';
+
 import { useLayoutEffect, useState } from 'react';
 import { useUser, SignInButton } from '@clerk/nextjs';
 import { useLocale, useTranslations } from 'next-intl';
@@ -102,7 +104,7 @@ function GroupOffer({ offer, signedIn, horizontal }: { offer: Offer; signedIn: b
                 <span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" />
                 <div className="min-w-0">
                   <Link href={`/${locale}/concerts/${c.id}`} className="break-words font-medium text-gray-900 hover:text-orange-600 dark:text-gray-100 dark:hover:text-orange-400">{c.title}{c.subtitle?.trim() ? `, ${c.subtitle.trim()}` : ''}</Link>
-                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{new Date(c.date).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Ljubljana' })}</p>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{formatConcertDateTime(c.date, locale)}</p>
                 </div>
               </li>
             ))}

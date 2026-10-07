@@ -1,5 +1,7 @@
 'use client';
 
+import { formatConcertDateTime } from '@/lib/concert-time';
+
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -68,13 +70,7 @@ export default function SuccessPage() {
               </h3>
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 <p>
-                  <strong>{t('success.date')}:</strong> {new Date(concert.date).toLocaleDateString(locale, {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  <strong>{t('success.date')}:</strong> {formatConcertDateTime(concert.date, locale)}
                 </p>
                 {concert.venue && (
                   <p>

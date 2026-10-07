@@ -1,5 +1,7 @@
 'use client';
 
+import { formatConcertDateTime } from '@/lib/concert-time';
+
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -48,13 +50,7 @@ export default function CancelPage() {
                 {concert.title}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                {new Date(concert.date).toLocaleDateString(locale, {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatConcertDateTime(concert.date, locale)}
               </p>
             </div>
           )}

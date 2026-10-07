@@ -1,5 +1,7 @@
 'use client';
 
+import { formatConcertDateTime } from '@/lib/concert-time';
+
 import { SignedIn, SignedOut, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
@@ -90,7 +92,7 @@ function DashboardContent() {
   const past = tickets.filter(ticket => new Date(ticket.date).getTime() + VIEWING_DURATION_MS < now)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const next = upcoming[0];
-  const formatDate = (date: string) => new Date(date).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Ljubljana' });
+  const formatDate = (date: string) => formatConcertDateTime(date, locale);
   const formatPrice = (amount: number, currency: string) => (amount / 100).toLocaleString(locale, { style: 'currency', currency });
 
   function concertRow(item: Ticket, featured = false) {

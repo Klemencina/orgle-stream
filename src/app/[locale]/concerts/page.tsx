@@ -1,5 +1,7 @@
 'use client';
 
+import { formatConcertDate, formatConcertTime } from '@/lib/concert-time';
+
 import Link from "next/link";
 import FestivalPassOffer from '@/components/FestivalPassOffer';
 import { useTranslations } from 'next-intl';
@@ -155,23 +157,14 @@ export default function ConcertsPage() {
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">📅</span>
                       <span className="text-sm">
-                        {new Date(concert.date).toLocaleDateString(locale, {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
+                        {formatConcertDate(concert.date, locale)}
                       </span>
                     </div>
 
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">🕒</span>
                       <span className="text-sm">
-                        {new Date(concert.date).toLocaleTimeString(locale, {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
-                        })}
+                        {formatConcertTime(concert.date, locale)}
                       </span>
                     </div>
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { formatConcertDate, formatConcertTime } from '@/lib/concert-time';
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -293,20 +295,11 @@ export default function ConcertPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">📅</span>
-                      <span className="text-base md:text-lg font-semibold">{new Date(concert.date).toLocaleDateString(locale, {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}</span>
+                      <span className="text-base md:text-lg font-semibold">{formatConcertDate(concert.date, locale)}</span>
                     </div>
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">🕒</span>
-                      <span className="text-base md:text-lg font-semibold">{new Date(concert.date).toLocaleTimeString(locale, {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                      })}</span>
+                      <span className="text-base md:text-lg font-semibold">{formatConcertTime(concert.date, locale)}</span>
                     </div>
                     <div className="flex items-center text-gray-600 dark:text-gray-300">
                       <span className="text-lg mr-2">📍</span>
