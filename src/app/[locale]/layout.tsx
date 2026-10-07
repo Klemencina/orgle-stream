@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Header from "@/components/Header";
@@ -29,10 +30,12 @@ export default async function LocaleLayout({
   }
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <Header />
-      {children}
-      <Footer />
-    </NextIntlClientProvider>
+    <ClerkProvider signInUrl={`/${locale}/sign-in`} signUpUrl={`/${locale}/sign-up`}>
+      <NextIntlClientProvider messages={messages}>
+        <Header />
+        {children}
+        <Footer />
+      </NextIntlClientProvider>
+    </ClerkProvider>
   );
 }
