@@ -31,7 +31,7 @@ export default async function LocaleLayout({
 
   return (
     <ClerkProvider signInUrl={`/${locale}/sign-in`} signUpUrl={`/${locale}/sign-up`}>
-      <NextIntlClientProvider messages={messages}>
+      <NextIntlClientProvider locale={locale} messages={messages}>
         <Header />
         {children}
         <Footer />

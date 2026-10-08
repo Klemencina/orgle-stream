@@ -4,16 +4,11 @@ import { getRequestConfig } from 'next-intl/server';
 export const locales = ['en', 'sl', 'it'] as const;
 export type Locale = typeof locales[number];
 
-export default getRequestConfig(async ({ locale }) => {
-  // If no locale is provided, default to Slovenian
-  if (!locale) {
-    locale = 'sl';
-  }
-
-  // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as unknown as Locale)) {
-    locale = 'sl';
-  }
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requestedLocale = await requestLocale;
+  const locale = locales.includes(requestedLocale as Locale)
+    ? requestedLocale as Locale
+    : 'sl';
 
   try {
     const messages = (await import(`../../messages/${locale}.json`)).default;
