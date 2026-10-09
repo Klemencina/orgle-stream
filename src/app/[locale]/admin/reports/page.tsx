@@ -1,6 +1,7 @@
 'use client';
 
 import AdminGuard from '@/components/admin/AdminGuard';
+import { formatConcertDateTime } from '@/lib/concert-time';
 import { useEffect, useState } from 'react';
 
 interface SupportReport {
@@ -116,7 +117,7 @@ function ReportsContent() {
           <div key={r.id} className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="font-medium text-gray-900 dark:text-white">{r.email} • {r.type}</div>
-              <div className="text-xs text-gray-500">{new Date(r.createdAt).toLocaleString()}</div>
+              <div className="text-xs text-gray-500">{formatConcertDateTime(r.createdAt, 'en-GB')}</div>
             </div>
             {r.message && <div className="mt-2 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{r.message}</div>}
             <div className="mt-2 text-xs text-gray-500 break-all">
@@ -143,5 +144,4 @@ function ReportsContent() {
     </div>
   );
 }
-
 
