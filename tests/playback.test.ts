@@ -27,10 +27,51 @@ function setup(video = new Video(), getAccess: (signal: AbortSignal) => Promise<
   const states: PlaybackState[] = []
   const controller = startPlayback(video as unknown as HTMLVideoElement, {
     getAccess, onState: state => states.push(state),
-    loadHls: async () => { throw new Error('Native playback should not load HLS') },
+    loadHls: async () => ({ isSupported: () => false }) as unknown as typeof Hls,
   })
   return { video, states, controller }
 }
+
+test('uses HLS playback when supported even if the browser advertises native HLS', async (t) => {
+  const video = new Video()
+  let attached: HTMLVideoElement | undefined
+  let source: string | undefined
+  let destroyed = 0
+  class FakeHls {
+    static Events = { ERROR: 'error' }
+    static isSupported() { return true }
+    on() {}
+    attachMedia(media: HTMLVideoElement) { attached = media }
+    loadSource(url: string) { source = url }
+    destroy() { destroyed++ }
+  }
+  const states: PlaybackState[] = []
+  const controller = startPlayback(video as unknown as HTMLVideoElement, {
+    getAccess: async () => ({ playbackUrl: 'https://example.com/live.m3u8' }),
+    loadHls: async () => FakeHls as unknown as typeof Hls,
+    onState: state => states.push(state),
+  })
+  t.after(() => controller.dispose())
+  await flush()
+  assert.equal(source, 'https://example.com/live.m3u8')
+  assert.equal(attached, video)
+  assert.equal(video.src, '')
+  video.dispatchEvent(new Event('canplay'))
+  await flush()
+  assert.equal(states.at(-1)?.status, 'playing')
+  controller.dispose()
+  assert.equal(destroyed, 1)
+})
+
+test('reports unsupported playback when neither HLS nor native playback is available', async (t) => {
+  const video = new Video()
+  video.native = false
+  const f = setup(video)
+  t.after(() => f.controller.dispose())
+  await flush()
+  assert.deepEqual(f.states.at(-1), { status: 'error', error: 'unsupported' })
+  assert.equal(video.src, '')
+})
 
 test('cleanup cancels pending access and ignores its eventual result', async () => {
   let resolve!: (value: { playbackUrl: string }) => void

@@ -101,13 +101,9 @@ export function startPlayback(video: HTMLVideoElement, options: {
     try {
       const { playbackUrl } = await options.getAccess(request.signal)
       if (disposed || current !== generation) return
-      if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = playbackUrl
-        video.load()
-      } else {
-        const Hls = await options.loadHls()
-        if (disposed || current !== generation) return
-        if (!Hls.isSupported()) throw new PlaybackAccessError('unsupported')
+      const Hls = await options.loadHls()
+      if (disposed || current !== generation) return
+      if (Hls.isSupported()) {
         const instance = new Hls({
           lowLatencyMode: true,
           enableWorker: true,
@@ -134,6 +130,11 @@ export function startPlayback(video: HTMLVideoElement, options: {
         })
         instance.attachMedia(video)
         instance.loadSource(playbackUrl)
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = playbackUrl
+        video.load()
+      } else {
+        throw new PlaybackAccessError('unsupported')
       }
     } catch (error) {
       if (disposed || current !== generation) return
