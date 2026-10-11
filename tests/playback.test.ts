@@ -143,17 +143,20 @@ test('late HLS imports do not create a player after disposal', async () => {
   assert.equal(created, 0)
 })
 
-test('repeated buffering events cannot postpone recovery indefinitely', async (t) => {
+test('buffering does not discard an established live stream on a timer', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] })
-  const f = setup()
+  let requests = 0
+  const f = setup(new Video(), async () => { requests++; return { playbackUrl: 'https://example.com/live.m3u8' } })
   await flush()
   f.video.dispatchEvent(new Event('canplay'))
   await flush()
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 6; i++) {
     f.video.dispatchEvent(new Event('waiting'))
     t.mock.timers.tick(5000)
   }
-  assert.equal(f.states.at(-1)?.status, 'reconnecting')
+  assert.equal(f.states.at(-1)?.status, 'playing')
+  assert.equal(requests, 1)
+  assert.equal(f.video.src, 'https://example.com/live.m3u8')
   f.controller.dispose()
 })
 
@@ -166,6 +169,7 @@ test('fatal HLS errors destroy the old instance before reconnecting', async (t) 
   let fail!: () => void
   class FakeHls {
     static Events = { ERROR: 'error' }
+    static ErrorTypes = { NETWORK_ERROR: 'networkError', MEDIA_ERROR: 'mediaError' }
     static isSupported() { return true }
     constructor() { created++ }
     on(_event: string, handler: (event: string, data: { fatal: boolean }) => void) { fail = () => handler('error', { fatal: true }) }
@@ -185,4 +189,46 @@ test('fatal HLS errors destroy the old instance before reconnecting', async (t) 
   assert.equal(created, 2)
   controller.dispose()
   assert.equal(destroyed, 2)
+})
+
+test('HLS network and media errors recover without destroying playback or fetching access again', async () => {
+  const video = new Video()
+  video.native = false
+  let requests = 0
+  let destroyed = 0
+  let networkRecoveries = 0
+  let mediaRecoveries = 0
+  let fail!: (type: string) => void
+  class FakeHls {
+    static Events = { ERROR: 'error' }
+    static ErrorTypes = { NETWORK_ERROR: 'networkError', MEDIA_ERROR: 'mediaError' }
+    static isSupported() { return true }
+    on(_event: string, handler: (event: string, data: { fatal: boolean; type: string }) => void) {
+      fail = type => handler('error', { fatal: true, type })
+    }
+    attachMedia() {}
+    loadSource() {}
+    startLoad() { networkRecoveries++ }
+    recoverMediaError() { mediaRecoveries++ }
+    destroy() { destroyed++ }
+  }
+  const states: PlaybackState[] = []
+  const controller = startPlayback(video as unknown as HTMLVideoElement, {
+    getAccess: async () => { requests++; return { playbackUrl: 'https://example.com/live.m3u8' } },
+    loadHls: async () => FakeHls as unknown as typeof Hls,
+    onState: state => states.push(state),
+  })
+  await flush()
+  video.dispatchEvent(new Event('canplay'))
+  await flush()
+  fail('networkError')
+  video.fail()
+  fail('mediaError')
+  assert.equal(networkRecoveries, 1)
+  assert.equal(mediaRecoveries, 1)
+  assert.equal(destroyed, 0)
+  assert.equal(requests, 1)
+  assert.equal(states.at(-1)?.status, 'playing')
+  controller.dispose()
+  assert.equal(destroyed, 1)
 })

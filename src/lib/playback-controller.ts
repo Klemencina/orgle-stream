@@ -108,10 +108,29 @@ export function startPlayback(video: HTMLVideoElement, options: {
         const Hls = await options.loadHls()
         if (disposed || current !== generation) return
         if (!Hls.isSupported()) throw new PlaybackAccessError('unsupported')
-        const instance = new Hls({ enableWorker: true, maxBufferLength: 30, maxMaxBufferLength: 60 })
+        const instance = new Hls({
+          lowLatencyMode: true,
+          enableWorker: true,
+          maxBufferLength: 30,
+          maxMaxBufferLength: 600,
+          levelLoadingMaxRetry: 4,
+          levelLoadingMaxRetryTimeout: 4000,
+          fragLoadingMaxRetry: 6,
+          fragLoadingMaxRetryTimeout: 4000,
+        })
         hls = instance
         instance.on(Hls.Events.ERROR, (_event, data) => {
-          if (!disposed && current === generation && data.fatal) reconnect()
+          if (disposed || current !== generation || !data.fatal) return
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              instance.startLoad()
+              break
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              instance.recoverMediaError()
+              break
+            default:
+              reconnect()
+          }
         })
         instance.attachMedia(video)
         instance.loadSource(playbackUrl)
@@ -148,16 +167,11 @@ export function startPlayback(video: HTMLVideoElement, options: {
       state({ status: 'ready' })
     }
   }
-  const onWaiting = () => {
-    if (!disposed && !releasing && wantsPlayback && !retryTimer && status !== 'error') watchForStall()
-  }
   const onEnded = () => { if (wantsPlayback) reconnect() }
-  const onError = () => { if (video.error) reconnect() }
+  const onError = () => { if (video.error && !hls) reconnect() }
   video.addEventListener('canplay', onReady)
   video.addEventListener('playing', onPlaying)
   video.addEventListener('pause', onPause)
-  video.addEventListener('waiting', onWaiting)
-  video.addEventListener('stalled', onWaiting)
   video.addEventListener('error', onError)
   video.addEventListener('ended', onEnded)
   void setup()
@@ -172,8 +186,6 @@ export function startPlayback(video: HTMLVideoElement, options: {
       video.removeEventListener('canplay', onReady)
       video.removeEventListener('playing', onPlaying)
       video.removeEventListener('pause', onPause)
-      video.removeEventListener('waiting', onWaiting)
-      video.removeEventListener('stalled', onWaiting)
       video.removeEventListener('error', onError)
       video.removeEventListener('ended', onEnded)
       release()
