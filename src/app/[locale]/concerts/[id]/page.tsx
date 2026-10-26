@@ -485,7 +485,7 @@ export default function ConcertPage() {
                       </SignedIn>
                       <SignedOut>
                         <a
-                          className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 text-center"
+                          className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl text-center"
                           href={`/${locale}/sign-in?redirect=/${locale}/concerts/${concert.id}`}
                         >
                           {t('concert.loginToPurchase')}
